@@ -27,9 +27,7 @@ function computePendingFromHash(hash: string): PendingImport {
   if (!result.ok) return null
   const existing = useSession.getState()
   const hasWork = existing.people.length > 0 || existing.expenses.length > 0
-  return hasWork
-    ? { kind: 'overwrite', session: result.session }
-    : { kind: 'fresh', session: result.session }
+  return hasWork ? { kind: 'overwrite', session: result.session } : { kind: 'fresh', session: result.session }
 }
 
 export function useUrlImport(): {

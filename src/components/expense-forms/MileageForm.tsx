@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { Button, Input } from '../ui'
+import { Button, Input, MoneyInput, NumericInput } from '../ui'
 import { useSession } from '../../store/session'
 import { LIMITS } from '../../lib/validation'
 import { usePeople, parseMoney, clampMoney } from './form-utils'
 import type { Expense, MileageExpense } from '../../types'
+import type { CurrencyCode } from '../../lib/currencies'
 
 export function MileageForm({ editing, onDone }: { editing: Expense | null; onDone: () => void }) {
   const people = usePeople()
+  const currency = useSession((s) => s.currency) as CurrencyCode
   const addExpense = useSession((s) => s.addExpense)
   const updateExpense = useSession((s) => s.updateExpense)
   const initial = editing?.type === 'mileage' ? (editing as MileageExpense) : null
@@ -17,7 +19,9 @@ export function MileageForm({ editing, onDone }: { editing: Expense | null; onDo
   const [unitLabel, setUnitLabel] = useState(initial?.unitLabel ?? 'miles')
   const [units, setUnits] = useState<Record<string, string>>(() => {
     const obj: Record<string, string> = {}
-    for (const p of people) obj[p.id] = String(initial?.units?.[p.id] ?? 0)
+    for (const p of people) {
+      obj[p.id] = initial?.units?.[p.id] != null ? String(initial.units[p.id]) : ''
+    }
     return obj
   })
 
@@ -38,60 +42,88 @@ export function MileageForm({ editing, onDone }: { editing: Expense | null; onDo
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <label className="flex flex-col gap-1 text-sm">
-        Title
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={LIMITS.expenseTitle} />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Total
-        <Input type="number" min={0} step={0.01} value={total} onChange={(e) => setTotal(e.target.value)} />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Paid by
-        <select
-          value={paidById}
-          onChange={(e) => setPaidById(e.target.value)}
-          className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
-        >
-          {people.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Unit label
-        <Input
-          value={unitLabel}
-          onChange={(e) => setUnitLabel(e.target.value)}
-          maxLength={LIMITS.unitLabel}
-        />
-      </label>
-      <div className="flex flex-col gap-2 text-sm">
-        <span className="text-[var(--color-muted)]">{unitLabel || 'units'} per person</span>
-        {people.map((p) => (
-          <label key={p.id} className="flex items-center gap-2">
-            <span className="flex-1">{p.name}</span>
-            <Input
-              type="number"
-              min={0}
-              step={0.1}
-              aria-label={`units for ${p.name}`}
-              value={units[p.id] ?? '0'}
-              onChange={(e) => setUnits({ ...units, [p.id]: e.target.value })}
-              className="w-24"
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        save()
+      }}
+      className="flex flex-col gap-4"
+    >
+      <section className="flex flex-col gap-3">
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="font-medium">Title</span>
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={LIMITS.expenseTitle}
+            placeholder="e.g. Gas to Tahoe"
+            autoFocus
+          />
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">Total</span>
+            <MoneyInput
+              aria-label="Total"
+              value={total}
+              onChange={setTotal}
+              currency={currency}
+              placeholder="0.00"
             />
           </label>
-        ))}
-      </div>
-      <div className="flex justify-end gap-2 pt-2">
-        <Button variant="ghost" onClick={onDone}>
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">Paid by</span>
+            <select
+              value={paidById}
+              onChange={(e) => setPaidById(e.target.value)}
+              className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
+            >
+              {people.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="font-medium">Unit label</span>
+          <Input
+            value={unitLabel}
+            onChange={(e) => setUnitLabel(e.target.value)}
+            maxLength={LIMITS.unitLabel}
+            placeholder="miles, hours, kWh…"
+          />
+        </label>
+      </section>
+      <fieldset className="flex flex-col gap-2 rounded-xl border border-[var(--color-border)] p-3 text-sm">
+        <legend className="px-1 text-xs font-medium tracking-wide text-[var(--color-muted)] uppercase">
+          {unitLabel || 'units'} per person
+        </legend>
+        <div className="flex flex-col gap-2">
+          {people.map((p) => (
+            <div key={p.id} className="flex items-center gap-3">
+              <span className="flex-1 text-sm">{p.name}</span>
+              <div className="w-36">
+                <NumericInput
+                  aria-label={`units for ${p.name}`}
+                  value={units[p.id] ?? ''}
+                  onChange={(v) => setUnits({ ...units, [p.id]: v })}
+                  unit={unitLabel || 'u'}
+                  max={LIMITS.unitsMax}
+                  placeholder="0"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </fieldset>
+      <div className="flex justify-end gap-2 pt-1">
+        <Button type="button" variant="ghost" onClick={onDone}>
           Cancel
         </Button>
-        <Button onClick={save}>Save</Button>
+        <Button type="submit">Save</Button>
       </div>
-    </div>
+    </form>
   )
 }

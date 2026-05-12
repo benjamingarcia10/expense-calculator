@@ -8,6 +8,18 @@ import { buildSummaryText, downloadJson, downloadImage, EXPENSE_TYPE_LABELS } fr
 import { expenseTotal, type Session } from '../../types'
 import type { CurrencyCode } from '../../lib/currencies'
 
+function makeSerial(createdAt: string, total: number): string {
+  // A short stable "receipt number" derived from the session — purely cosmetic.
+  const date = new Date(createdAt)
+  const ymd = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`
+  const seed = Math.floor(total * 100)
+    .toString(36)
+    .toUpperCase()
+    .padStart(4, '0')
+    .slice(-4)
+  return `№ ${ymd}-${seed}`
+}
+
 export function SummaryView({ open, onClose }: { open: boolean; onClose: () => void }) {
   const v = useSession((s) => s.v)
   const currency = useSession((s) => s.currency)
@@ -22,62 +34,157 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
   const debts = useMemo(() => simplifyDebts(computeBalances(people, expenses)), [people, expenses])
   const totalSpent = expenses.reduce((s, e) => s + expenseTotal(e), 0)
   const c = currency as CurrencyCode
+  const displayTitle = title?.trim() || 'Split Receipt'
+  const serial = makeSerial(createdAt, totalSpent)
 
   return (
     <Dialog open={open} onClose={onClose} title="Summary">
       <div className="flex flex-col gap-3">
-        <div ref={cardRef} className="flex flex-col gap-4 rounded-xl bg-white p-5 text-slate-900">
-          <header className="text-center">
-            <h3 className="text-xl font-semibold">{title ?? 'Expense Summary'}</h3>
-            <p className="text-xs text-slate-500">{formatDate(createdAt)}</p>
+        <div
+          ref={cardRef}
+          className="receipt-card relative mx-auto w-full max-w-md px-7 py-9"
+          style={{ fontFamily: 'var(--font-sans)' }}
+        >
+          {/* Header */}
+          <header className="flex flex-col items-center gap-1 text-center">
+            <p
+              style={{ fontFamily: 'var(--font-mono)' }}
+              className="text-[10px] tracking-[0.3em] text-[color:var(--muted)] uppercase"
+            >
+              The Split · {formatDate(createdAt)}
+            </p>
+            <h3
+              style={{ fontFamily: 'var(--font-display)', fontVariationSettings: '"opsz" 144' }}
+              className="text-3xl leading-tight font-medium italic"
+            >
+              {displayTitle}
+            </h3>
+            <p
+              style={{ fontFamily: 'var(--font-mono)' }}
+              className="text-[10px] tracking-[0.2em] text-[color:var(--muted)] uppercase"
+            >
+              {serial}
+            </p>
           </header>
-          <div className="text-center">
-            <p className="text-xs tracking-wide text-slate-500 uppercase">Total spent</p>
-            <p className="font-mono text-3xl font-semibold">{formatMoney(totalSpent, c)}</p>
-            <p className="text-xs text-slate-500">
-              {people.length} {people.length === 1 ? 'person' : 'people'} · {expenses.length}{' '}
+
+          <hr className="receipt-rule my-5" />
+
+          {/* Total */}
+          <div className="flex flex-col items-center gap-1 text-center">
+            <p
+              style={{ fontFamily: 'var(--font-mono)' }}
+              className="text-[10px] tracking-[0.3em] text-[color:var(--muted)] uppercase"
+            >
+              Grand Total
+            </p>
+            <p
+              style={{ fontFamily: 'var(--font-display)', fontVariationSettings: '"opsz" 144' }}
+              className="text-5xl leading-none font-semibold tabular-nums"
+            >
+              {formatMoney(totalSpent, c)}
+            </p>
+            <p className="text-xs text-[color:var(--muted)]">
+              across {people.length} {people.length === 1 ? 'person' : 'people'} · {expenses.length}{' '}
               {expenses.length === 1 ? 'expense' : 'expenses'}
             </p>
           </div>
-          <div>
-            <h4 className="mb-1 text-sm font-semibold">Settle Up</h4>
+
+          <hr className="receipt-rule my-5" />
+
+          {/* Settle up */}
+          <section>
+            <h4
+              style={{ fontFamily: 'var(--font-mono)' }}
+              className="mb-3 text-center text-[10px] tracking-[0.3em] text-[color:var(--muted)] uppercase"
+            >
+              — Settle Up —
+            </h4>
             {debts.length === 0 ? (
-              <p className="text-sm text-slate-500">All even.</p>
+              <p style={{ fontFamily: 'var(--font-display)' }} className="text-center text-lg italic">
+                Everyone’s square.
+              </p>
             ) : (
-              <ul className="flex flex-col gap-1 font-mono text-sm">
+              <ul className="flex flex-col gap-2">
                 {debts.map((d) => (
-                  <li key={`${d.fromMemberId}-${d.toMemberId}`} className="flex justify-between">
-                    <span>
-                      {d.fromName} → {d.toName}
+                  <li key={`${d.fromMemberId}-${d.toMemberId}`} className="flex items-baseline gap-2 text-sm">
+                    <span className="font-medium">{d.fromName}</span>
+                    <span
+                      className="text-[color:var(--muted)]"
+                      style={{ fontFamily: 'var(--font-mono)' }}
+                      aria-hidden="true"
+                    >
+                      →
                     </span>
-                    <span className="tabular-nums">{formatMoney(d.amount, c)}</span>
+                    <span className="font-medium">{d.toName}</span>
+                    <span
+                      className="receipt-leaders mx-1 flex-1"
+                      aria-hidden="true"
+                      style={{ height: '1em' }}
+                    />
+                    <span style={{ fontFamily: 'var(--font-mono)' }} className="font-semibold tabular-nums">
+                      {formatMoney(d.amount, c)}
+                    </span>
                   </li>
                 ))}
               </ul>
             )}
-          </div>
+          </section>
+
           {expenses.length > 0 && (
-            <div>
-              <h4 className="mb-1 text-sm font-semibold">Breakdown</h4>
-              <ul className="flex flex-col gap-1 text-sm">
-                {expenses.map((e) => {
-                  const payer = people.find((p) => p.id === e.paidById)?.name ?? '?'
-                  return (
-                    <li key={e.id} className="flex flex-col">
-                      <div className="flex justify-between font-mono">
-                        <span className="font-sans">{e.title}</span>
-                        <span className="tabular-nums">{formatMoney(expenseTotal(e), c)}</span>
-                      </div>
-                      <span className="text-xs text-slate-500">
-                        {payer} paid · {EXPENSE_TYPE_LABELS[e.type]}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
+            <>
+              <hr className="receipt-rule my-5" />
+              <section>
+                <h4
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                  className="mb-3 text-center text-[10px] tracking-[0.3em] text-[color:var(--muted)] uppercase"
+                >
+                  — Itemized —
+                </h4>
+                <ul className="flex flex-col gap-2 text-sm">
+                  {expenses.map((e) => {
+                    const payer = people.find((p) => p.id === e.paidById)?.name ?? '?'
+                    return (
+                      <li key={e.id} className="flex flex-col gap-0.5">
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-medium">{e.title}</span>
+                          <span
+                            className="receipt-leaders mx-1 flex-1"
+                            aria-hidden="true"
+                            style={{ height: '1em' }}
+                          />
+                          <span style={{ fontFamily: 'var(--font-mono)' }} className="tabular-nums">
+                            {formatMoney(expenseTotal(e), c)}
+                          </span>
+                        </div>
+                        <span
+                          style={{ fontFamily: 'var(--font-mono)' }}
+                          className="text-[10px] tracking-wide text-[color:var(--muted)] uppercase"
+                        >
+                          {payer} · {EXPENSE_TYPE_LABELS[e.type]}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            </>
           )}
+
+          <hr className="receipt-rule my-5" />
+
+          <footer className="flex flex-col items-center gap-0.5 text-center">
+            <p style={{ fontFamily: 'var(--font-display)' }} className="text-sm italic">
+              thanks, come again
+            </p>
+            <p
+              style={{ fontFamily: 'var(--font-mono)' }}
+              className="text-[9px] tracking-[0.2em] text-[color:var(--muted)] uppercase"
+            >
+              split with expensecalc
+            </p>
+          </footer>
         </div>
+
         {copyState !== 'idle' && (
           <p
             className={`text-xs ${copyState === 'copied' ? 'text-emerald-600' : 'text-red-500'}`}

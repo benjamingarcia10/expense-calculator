@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
-import { Button, Input } from '../ui'
+import { Button, Input, MoneyInput } from '../ui'
 import { useSession } from '../../store/session'
 import { LIMITS } from '../../lib/validation'
 import { usePeople, parseMoney, clampMoney } from './form-utils'
 import type { Expense, RestaurantExpense, RestaurantItem } from '../../types'
+import { formatMoney } from '../../lib/format'
+import type { CurrencyCode } from '../../lib/currencies'
 
 function newItem(): RestaurantItem {
   return { id: `i_${Math.random().toString(36).slice(2, 10)}`, name: '', price: 0, assignedIds: [] }
@@ -12,17 +14,18 @@ function newItem(): RestaurantItem {
 
 export function RestaurantForm({ editing, onDone }: { editing: Expense | null; onDone: () => void }) {
   const people = usePeople()
+  const currency = useSession((s) => s.currency) as CurrencyCode
   const addExpense = useSession((s) => s.addExpense)
   const updateExpense = useSession((s) => s.updateExpense)
   const initial = editing?.type === 'restaurant' ? (editing as RestaurantExpense) : null
 
   const [title, setTitle] = useState(initial?.title ?? '')
   const [paidById, setPaidById] = useState(initial?.paidById ?? people[0]?.id ?? '')
-  const [items, setItems] = useState<RestaurantItem[]>(initial?.items ?? [])
-  const [tax, setTax] = useState<string>(initial?.tax != null ? String(initial.tax) : '0')
-  const [tip, setTip] = useState<string>(initial?.tip != null ? String(initial.tip) : '0')
+  const [items, setItems] = useState<RestaurantItem[]>(initial?.items ?? [newItem()])
+  const [tax, setTax] = useState<string>(initial?.tax != null ? String(initial.tax) : '')
+  const [tip, setTip] = useState<string>(initial?.tip != null ? String(initial.tip) : '')
   const [serviceFee, setServiceFee] = useState<string>(
-    initial?.serviceFee != null ? String(initial.serviceFee) : '0'
+    initial?.serviceFee != null ? String(initial.serviceFee) : ''
   )
 
   function updateItem(idx: number, patch: Partial<RestaurantItem>) {
@@ -50,6 +53,12 @@ export function RestaurantForm({ editing, onDone }: { editing: Expense | null; o
     setItems((cur) => cur.filter((_, i) => i !== idx))
   }
 
+  const subtotal = useMemo(() => items.reduce((s, it) => s + clampMoney(it.price), 0), [items])
+  const taxAmt = clampMoney(parseMoney(tax))
+  const tipAmt = clampMoney(parseMoney(tip))
+  const serviceAmt = clampMoney(parseMoney(serviceFee))
+  const grandTotal = subtotal + taxAmt + tipAmt + serviceAmt
+
   function save() {
     if (!title.trim() || items.length === 0) return
     const cleanItems = items.map((it) => ({ ...it, price: clampMoney(it.price) }))
@@ -58,9 +67,9 @@ export function RestaurantForm({ editing, onDone }: { editing: Expense | null; o
       title,
       paidById,
       items: cleanItems,
-      tax: clampMoney(parseMoney(tax)),
-      tip: clampMoney(parseMoney(tip)),
-      serviceFee: clampMoney(parseMoney(serviceFee)),
+      tax: taxAmt,
+      tip: tipAmt,
+      serviceFee: serviceAmt,
     } as const
     if (initial) updateExpense(initial.id, payload)
     else addExpense({ type: 'restaurant', ...payload })
@@ -68,112 +77,144 @@ export function RestaurantForm({ editing, onDone }: { editing: Expense | null; o
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <label className="flex flex-col gap-1 text-sm">
-        Title
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={LIMITS.expenseTitle} />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Paid by
-        <select
-          value={paidById}
-          onChange={(e) => setPaidById(e.target.value)}
-          className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
-        >
-          {people.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <div className="flex flex-col gap-2 text-sm">
-        <span className="text-[var(--color-muted)]">Items</span>
-        {items.map((it, idx) => (
-          <div key={it.id} className="rounded-lg border border-[var(--color-border)] p-2">
-            <div className="flex gap-2">
-              <Input
-                aria-label="item name"
-                placeholder="Item name"
-                value={it.name}
-                onChange={(e) => updateItem(idx, { name: e.target.value })}
-                maxLength={LIMITS.itemName}
-              />
-              <Input
-                aria-label="item price"
-                type="number"
-                min={0}
-                step={0.01}
-                placeholder="Price"
-                value={String(it.price)}
-                onChange={(e) => updateItem(idx, { price: parseMoney(e.target.value) })}
-                className="w-24"
-              />
-              <button
-                onClick={() => removeItem(idx)}
-                aria-label="remove item"
-                className="text-[var(--color-muted)] hover:text-red-600"
-              >
-                <Trash2 className="size-4" />
-              </button>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {people.map((p) => (
-                <label key={p.id} className="flex items-center gap-1 text-xs">
-                  <input
-                    type="checkbox"
-                    aria-label={`assign ${p.name}`}
-                    checked={it.assignedIds.includes(p.id)}
-                    onChange={() => toggleAssign(idx, p.id)}
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        save()
+      }}
+      className="flex flex-col gap-4"
+    >
+      <section className="flex flex-col gap-3">
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="font-medium">Title</span>
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={LIMITS.expenseTitle}
+            placeholder="e.g. Sushi at Nobu"
+            autoFocus
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="font-medium">Paid by</span>
+          <select
+            value={paidById}
+            onChange={(e) => setPaidById(e.target.value)}
+            className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
+          >
+            {people.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
+      <fieldset className="flex flex-col gap-3 rounded-xl border border-[var(--color-border)] p-3 text-sm">
+        <legend className="px-1 text-xs font-medium tracking-wide text-[var(--color-muted)] uppercase">
+          Items
+        </legend>
+        <div className="flex flex-col gap-2">
+          {items.map((it, idx) => (
+            <div
+              key={it.id}
+              className="flex flex-col gap-2 rounded-lg border border-[var(--color-border)] p-2"
+            >
+              <div className="flex items-center gap-2">
+                <Input
+                  aria-label="item name"
+                  placeholder="Item name"
+                  value={it.name}
+                  onChange={(e) => updateItem(idx, { name: e.target.value })}
+                  maxLength={LIMITS.itemName}
+                />
+                <div className="w-28 shrink-0">
+                  <MoneyInput
+                    aria-label="item price"
+                    value={it.price > 0 ? String(it.price) : ''}
+                    onChange={(v) => updateItem(idx, { price: parseMoney(v) })}
+                    currency={currency}
+                    placeholder="0.00"
                   />
-                  {p.name}
-                </label>
-              ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeItem(idx)}
+                  aria-label="remove item"
+                  className="grid size-9 shrink-0 place-items-center rounded-md text-[var(--color-muted)] hover:bg-red-600/15 hover:text-red-600"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs text-[var(--color-muted)]">Shared by</span>
+                {people.map((p) => (
+                  <label key={p.id} className="flex cursor-pointer items-center gap-1.5 text-xs">
+                    <input
+                      type="checkbox"
+                      aria-label={`assign ${p.name}`}
+                      checked={it.assignedIds.includes(p.id)}
+                      onChange={() => toggleAssign(idx, p.id)}
+                    />
+                    {p.name}
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={addItem}
           disabled={items.length >= LIMITS.maxItemsPerExpense}
+          className="self-start"
         >
           <Plus className="size-4" /> Add item
         </Button>
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        <label className="flex flex-col gap-1 text-sm">
-          Tax
-          <Input
-            type="number"
-            min={0}
-            step={0.01}
-            aria-label="tax"
-            value={tax}
-            onChange={(e) => setTax(e.target.value)}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Tip
-          <Input type="number" min={0} step={0.01} value={tip} onChange={(e) => setTip(e.target.value)} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Service
-          <Input
-            type="number"
-            min={0}
-            step={0.01}
-            value={serviceFee}
-            onChange={(e) => setServiceFee(e.target.value)}
-          />
-        </label>
-      </div>
-      <div className="flex justify-end gap-2 pt-2">
-        <Button variant="ghost" onClick={onDone}>
+      </fieldset>
+      <fieldset className="flex flex-col gap-3 rounded-xl border border-[var(--color-border)] p-3 text-sm">
+        <legend className="px-1 text-xs font-medium tracking-wide text-[var(--color-muted)] uppercase">
+          Tax, tip &amp; fees
+        </legend>
+        <div className="grid grid-cols-3 gap-2">
+          <label className="flex flex-col gap-1.5 text-xs">
+            <span className="font-medium">Tax</span>
+            <MoneyInput
+              aria-label="tax"
+              value={tax}
+              onChange={setTax}
+              currency={currency}
+              placeholder="0.00"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-xs">
+            <span className="font-medium">Tip</span>
+            <MoneyInput value={tip} onChange={setTip} currency={currency} placeholder="0.00" />
+          </label>
+          <label className="flex flex-col gap-1.5 text-xs">
+            <span className="font-medium">Service</span>
+            <MoneyInput value={serviceFee} onChange={setServiceFee} currency={currency} placeholder="0.00" />
+          </label>
+        </div>
+        <dl className="flex flex-col gap-1 border-t border-[var(--color-border)] pt-2 text-xs">
+          <div className="flex justify-between">
+            <dt className="text-[var(--color-muted)]">Subtotal</dt>
+            <dd className="font-mono tabular-nums">{formatMoney(subtotal, currency)}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="font-medium">Total</dt>
+            <dd className="font-mono font-medium tabular-nums">{formatMoney(grandTotal, currency)}</dd>
+          </div>
+        </dl>
+      </fieldset>
+      <div className="flex justify-end gap-2 pt-1">
+        <Button type="button" variant="ghost" onClick={onDone}>
           Cancel
         </Button>
-        <Button onClick={save}>Save</Button>
+        <Button type="submit">Save</Button>
       </div>
-    </div>
+    </form>
   )
 }

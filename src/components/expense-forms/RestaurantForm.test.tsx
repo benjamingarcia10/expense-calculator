@@ -17,7 +17,7 @@ describe('RestaurantForm', () => {
     const user = userEvent.setup()
     render(<RestaurantForm editing={null} onDone={() => {}} />)
     await user.type(screen.getByLabelText(/title/i), 'Pizza night')
-    await user.click(screen.getByRole('button', { name: /add item/i }))
+    // Form starts with one empty item by default — just fill it in.
     const itemName = screen.getAllByLabelText(/item name/i)[0]!
     const itemPrice = screen.getAllByLabelText(/item price/i)[0]!
     await user.type(itemName, 'Pizza')

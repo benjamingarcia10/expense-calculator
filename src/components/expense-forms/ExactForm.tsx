@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Button, Input } from '../ui'
+import { Button, Input, MoneyInput } from '../ui'
 import { useSession } from '../../store/session'
 import { LIMITS } from '../../lib/validation'
 import { usePeople, parseMoney, clampMoney } from './form-utils'
@@ -19,14 +19,17 @@ export function ExactForm({ editing, onDone }: { editing: Expense | null; onDone
   const [paidById, setPaidById] = useState(initial?.paidById ?? people[0]?.id ?? '')
   const [amounts, setAmounts] = useState<Record<string, string>>(() => {
     const obj: Record<string, string> = {}
-    for (const p of people) obj[p.id] = String(initial?.amounts?.[p.id] ?? 0)
+    for (const p of people) {
+      obj[p.id] = initial?.amounts?.[p.id] != null ? String(initial.amounts[p.id]) : ''
+    }
     return obj
   })
 
   const totalNum = clampMoney(parseMoney(total))
   const sum = useMemo(() => Object.values(amounts).reduce((s, v) => s + parseMoney(v), 0), [amounts])
   const delta = +(totalNum - sum).toFixed(2)
-  const valid = title.trim() !== '' && totalNum > 0 && Math.abs(delta) < 0.005
+  const deltaOk = Math.abs(delta) < 0.005
+  const valid = title.trim() !== '' && totalNum > 0 && deltaOk
 
   function save() {
     if (!valid) return
@@ -44,65 +47,86 @@ export function ExactForm({ editing, onDone }: { editing: Expense | null; onDone
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <label className="flex flex-col gap-1 text-sm">
-        Title
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={LIMITS.expenseTitle} />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Total
-        <Input
-          type="number"
-          inputMode="decimal"
-          min={0}
-          step={0.01}
-          value={total}
-          onChange={(e) => setTotal(e.target.value)}
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Paid by
-        <select
-          value={paidById}
-          onChange={(e) => setPaidById(e.target.value)}
-          className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
-        >
-          {people.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <div className="flex flex-col gap-2 text-sm">
-        <span className="text-[var(--color-muted)]">Amounts</span>
-        {people.map((p) => (
-          <label key={p.id} className="flex items-center gap-2">
-            <span className="flex-1">{p.name}</span>
-            <Input
-              type="number"
-              inputMode="decimal"
-              min={0}
-              step={0.01}
-              aria-label={`amount for ${p.name}`}
-              value={amounts[p.id] ?? '0'}
-              onChange={(e) => setAmounts({ ...amounts, [p.id]: e.target.value })}
-              className="w-28"
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        save()
+      }}
+      className="flex flex-col gap-4"
+    >
+      <section className="flex flex-col gap-3">
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="font-medium">Title</span>
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={LIMITS.expenseTitle}
+            placeholder="e.g. Concert tickets"
+            autoFocus
+          />
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">Total</span>
+            <MoneyInput
+              aria-label="Total"
+              value={total}
+              onChange={setTotal}
+              currency={currency}
+              placeholder="0.00"
             />
           </label>
-        ))}
-        <p className={`text-xs ${Math.abs(delta) < 0.005 ? 'text-[var(--color-muted)]' : 'text-red-500'}`}>
-          Sum: {formatMoney(sum, currency)} · Delta: {formatMoney(delta, currency)}
-        </p>
-      </div>
-      <div className="flex justify-end gap-2 pt-2">
-        <Button variant="ghost" onClick={onDone}>
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">Paid by</span>
+            <select
+              value={paidById}
+              onChange={(e) => setPaidById(e.target.value)}
+              className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
+            >
+              {people.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </section>
+      <fieldset className="flex flex-col gap-2 rounded-xl border border-[var(--color-border)] p-3 text-sm">
+        <legend className="px-1 text-xs font-medium tracking-wide text-[var(--color-muted)] uppercase">
+          Per-person amounts
+        </legend>
+        <div className="flex flex-col gap-2">
+          {people.map((p) => (
+            <div key={p.id} className="flex items-center gap-3">
+              <span className="flex-1 text-sm">{p.name}</span>
+              <div className="w-32">
+                <MoneyInput
+                  aria-label={`amount for ${p.name}`}
+                  value={amounts[p.id] ?? ''}
+                  onChange={(v) => setAmounts({ ...amounts, [p.id]: v })}
+                  currency={currency}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between border-t border-[var(--color-border)] pt-2 text-xs">
+          <span className="text-[var(--color-muted)]">Entered: {formatMoney(sum, currency)}</span>
+          <span className={deltaOk ? 'text-emerald-600' : 'text-red-500'} aria-live="polite">
+            {deltaOk ? '✓ matches total' : `Off by ${formatMoney(delta, currency)}`}
+          </span>
+        </div>
+      </fieldset>
+      <div className="flex justify-end gap-2 pt-1">
+        <Button type="button" variant="ghost" onClick={onDone}>
           Cancel
         </Button>
-        <Button onClick={save} disabled={!valid}>
+        <Button type="submit" disabled={!valid}>
           Save
         </Button>
       </div>
-    </div>
+    </form>
   )
 }

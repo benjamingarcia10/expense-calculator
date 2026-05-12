@@ -9,7 +9,7 @@ test('restaurant itemized — items + tax + tip', async ({ page }) => {
   await page.getByRole('button', { name: /Add expense/ }).click()
   await page.getByRole('button', { name: 'Restaurant' }).click()
   await page.getByLabel('Title', { exact: true }).fill('Pizza')
-  await page.getByRole('button', { name: /Add item/ }).click()
+  // Form starts with one empty item by default.
   await page.getByLabel('item name').fill('Margherita')
   await page.getByLabel('item price').fill('30')
   await page.getByLabel(/assign Alice/i).check()
