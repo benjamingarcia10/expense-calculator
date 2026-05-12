@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Header } from './components/Header'
 import { PeoplePanel } from './components/PeoplePanel'
+import { ExpensesPanel } from './components/ExpensesPanel'
 
 export default function App() {
   const [summaryOpen, setSummaryOpen] = useState(false)
@@ -17,9 +18,7 @@ export default function App() {
           <section className="rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
             Settle Up (placeholder)
           </section>
-          <section className="md:col-span-3 rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
-            Expenses (placeholder)
-          </section>
+          <ExpensesPanel />
         </div>
       </main>
       {summaryOpen && <div onClick={() => setSummaryOpen(false)}>Summary placeholder</div>}

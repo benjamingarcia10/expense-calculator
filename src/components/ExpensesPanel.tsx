@@ -1,0 +1,92 @@
+import { useState } from 'react'
+import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useSession } from '../store/session'
+import { Button } from './ui'
+import { ExpenseSheet } from './expense-forms/ExpenseSheet'
+import type { Expense } from '../types'
+import { expenseTotal } from '../types'
+import { formatMoney } from '../lib/format'
+import type { CurrencyCode } from '../lib/currencies'
+import { LIMITS } from '../lib/validation'
+
+const TYPE_LABELS: Record<Expense['type'], string> = {
+  equal: 'equal',
+  shares: 'shares',
+  exact: 'exact',
+  mileage: 'mileage',
+  restaurant: 'itemized',
+  lodging: 'lodging',
+}
+
+export function ExpensesPanel() {
+  const expenses = useSession((s) => s.expenses)
+  const currency = useSession((s) => s.currency) as CurrencyCode
+  const removeExpense = useSession((s) => s.removeExpense)
+  const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState<Expense | null>(null)
+
+  const atMax = expenses.length >= LIMITS.maxExpenses
+
+  function openNew() {
+    setEditing(null)
+    setOpen(true)
+  }
+  function openEdit(e: Expense) {
+    setEditing(e)
+    setOpen(true)
+  }
+
+  return (
+    <section className="flex flex-col gap-3 rounded-2xl border border-[--color-border] bg-[--color-surface] p-4 md:col-span-3">
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold">
+          Expenses <span className="text-[--color-muted]">({expenses.length})</span>
+        </h2>
+        <Button size="sm" onClick={openNew} disabled={atMax}>
+          <Plus className="size-4" /> Add expense
+        </Button>
+      </div>
+      <ul className="flex flex-col gap-1">
+        <AnimatePresence initial={false}>
+          {expenses.map((e) => (
+            <motion.li
+              key={e.id}
+              layout
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center justify-between rounded-md px-2 py-2 hover:bg-[--color-border]/30"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium">{e.title}</div>
+                <div className="text-xs text-[--color-muted]">{TYPE_LABELS[e.type]}</div>
+              </div>
+              <div className="ml-3 font-mono tabular-nums">{formatMoney(expenseTotal(e), currency)}</div>
+              <div className="ml-3 flex gap-1">
+                <button
+                  onClick={() => openEdit(e)}
+                  className="text-[--color-muted] hover:text-[--color-ink]"
+                  aria-label={`edit ${e.title}`}
+                >
+                  <Pencil className="size-4" />
+                </button>
+                <button
+                  onClick={() => removeExpense(e.id)}
+                  className="text-[--color-muted] hover:text-red-600"
+                  aria-label={`delete ${e.title}`}
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+            </motion.li>
+          ))}
+        </AnimatePresence>
+      </ul>
+      {expenses.length === 0 && (
+        <p className="text-sm text-[--color-muted]">No expenses yet. Add your first one.</p>
+      )}
+      <ExpenseSheet open={open} onClose={() => setOpen(false)} editing={editing} />
+    </section>
+  )
+}

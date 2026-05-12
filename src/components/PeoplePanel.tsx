@@ -67,9 +67,7 @@ export function PeoplePanel() {
           <UserPlus className="size-4" /> Add
         </Button>
       </form>
-      {atMax && (
-        <p className="text-xs text-[--color-muted]">Limit of {LIMITS.maxPeople} people reached.</p>
-      )}
+      {atMax && <p className="text-xs text-[--color-muted]">Limit of {LIMITS.maxPeople} people reached.</p>}
     </section>
   )
 }
