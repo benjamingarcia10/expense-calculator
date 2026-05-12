@@ -68,4 +68,108 @@ describe('validateSession', () => {
     }))
     expect(validateSession({ ...valid, expenses }).success).toBe(false)
   })
+
+  it('rejects unsupported currency code', () => {
+    const result = validateSession({ ...valid, currency: 'XXX' })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toMatch(/currency/i)
+  })
+
+  it('rejects expense referencing unknown payer', () => {
+    const result = validateSession({
+      ...valid,
+      expenses: [
+        {
+          id: 'e1',
+          title: 'd',
+          type: 'equal' as const,
+          total: 10,
+          paidById: 'ghost',
+          participantIds: ['p1'],
+        },
+      ],
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toMatch(/payer/i)
+  })
+
+  it('rejects expense referencing unknown participant', () => {
+    const result = validateSession({
+      ...valid,
+      expenses: [
+        {
+          id: 'e1',
+          title: 'd',
+          type: 'equal' as const,
+          total: 10,
+          paidById: 'p1',
+          participantIds: ['p1', 'ghost'],
+        },
+      ],
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toMatch(/person/i)
+  })
+
+  it('rejects restaurant expense with unknown assigned id', () => {
+    const result = validateSession({
+      ...valid,
+      expenses: [
+        {
+          id: 'e1',
+          title: 'Pizza',
+          type: 'restaurant' as const,
+          paidById: 'p1',
+          items: [{ id: 'i1', name: 'Pizza', price: 30, assignedIds: ['p1', 'ghost'] }],
+          tax: 0,
+          tip: 0,
+          serviceFee: 0,
+        },
+      ],
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toMatch(/person/i)
+  })
+
+  it('rejects lodging expense with unknown nights key', () => {
+    const result = validateSession({
+      ...valid,
+      expenses: [
+        {
+          id: 'e1',
+          title: 'Airbnb',
+          type: 'lodging' as const,
+          total: 100,
+          paidById: 'p1',
+          mode: 'simple' as const,
+          nights: { p1: 2, ghost: 1 },
+        },
+      ],
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toMatch(/person/i)
+  })
+
+  it('accepts a complete valid restaurant + lodging session', () => {
+    const result = validateSession({
+      ...valid,
+      people: [
+        { id: 'p1', name: 'Alice' },
+        { id: 'p2', name: 'Bob' },
+      ],
+      expenses: [
+        {
+          id: 'e1',
+          title: 'Pizza',
+          type: 'restaurant' as const,
+          paidById: 'p1',
+          items: [{ id: 'i1', name: 'Pizza', price: 30, assignedIds: ['p1', 'p2'] }],
+          tax: 3,
+          tip: 6,
+          serviceFee: 0,
+        },
+      ],
+    })
+    expect(result.success).toBe(true)
+  })
 })

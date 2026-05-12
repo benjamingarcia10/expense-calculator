@@ -3,13 +3,15 @@ import { Trash2, UserPlus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSession } from '../store/session'
 import { LIMITS } from '../lib/validation'
-import { Button, Input } from './ui'
+import { Button, Dialog, Input } from './ui'
 
 export function PeoplePanel() {
   const people = useSession((s) => s.people)
+  const expenses = useSession((s) => s.expenses)
   const addPerson = useSession((s) => s.addPerson)
   const removePerson = useSession((s) => s.removePerson)
   const [name, setName] = useState('')
+  const [pendingRemove, setPendingRemove] = useState<string | null>(null)
 
   const atMax = people.length >= LIMITS.maxPeople
 
@@ -17,6 +19,39 @@ export function PeoplePanel() {
     if (!name.trim() || atMax) return
     addPerson(name)
     setName('')
+  }
+
+  const removingPerson = people.find((p) => p.id === pendingRemove) ?? null
+  const removingPayerExpenses = pendingRemove
+    ? expenses.filter((e) => e.paidById === pendingRemove).length
+    : 0
+
+  function attemptRemove(personId: string) {
+    // Frictionless when they're not referenced anywhere; confirm if removing
+    // the person would cascade-delete expenses they paid for.
+    const isReferenced =
+      expenses.some((e) => e.paidById === personId) ||
+      expenses.some((e) => {
+        switch (e.type) {
+          case 'equal':
+            return e.participantIds.includes(personId)
+          case 'shares':
+            return personId in e.shares
+          case 'exact':
+            return personId in e.amounts
+          case 'mileage':
+            return personId in e.units
+          case 'restaurant':
+            return e.items.some((i) => i.assignedIds.includes(personId))
+          case 'lodging':
+            return personId in e.nights
+        }
+      })
+    if (isReferenced) {
+      setPendingRemove(personId)
+    } else {
+      removePerson(personId)
+    }
   }
 
   return (
@@ -40,7 +75,7 @@ export function PeoplePanel() {
               <span className="truncate">{p.name}</span>
               <button
                 aria-label={`remove ${p.name}`}
-                onClick={() => removePerson(p.id)}
+                onClick={() => attemptRemove(p.id)}
                 className="grid size-11 place-items-center rounded-md text-[var(--color-muted)] hover:bg-red-600/15 hover:text-red-600"
               >
                 <Trash2 className="size-4" />
@@ -68,8 +103,37 @@ export function PeoplePanel() {
         </Button>
       </form>
       {atMax && (
-        <p className="text-xs text-[var(--color-muted)]">Limit of {LIMITS.maxPeople} people reached.</p>
+        <p className="text-xs text-[var(--color-muted)]">
+          Limit of {LIMITS.maxPeople} people reached.
+        </p>
       )}
+      <Dialog
+        open={pendingRemove !== null}
+        onClose={() => setPendingRemove(null)}
+        title={`Remove ${removingPerson?.name ?? ''}?`}
+      >
+        <div className="flex flex-col gap-3">
+          <p className="text-sm">
+            {removingPayerExpenses > 0
+              ? `This will also delete ${removingPayerExpenses} expense${removingPayerExpenses === 1 ? '' : 's'} they paid for. This cannot be undone.`
+              : 'They will be removed from any expenses that include them. This cannot be undone.'}
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setPendingRemove(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (pendingRemove) removePerson(pendingRemove)
+                setPendingRemove(null)
+              }}
+            >
+              Remove
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </section>
   )
 }

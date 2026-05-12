@@ -105,13 +105,18 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => {
+            onClick={async () => {
               const node = cardRef.current
               if (!node) return
-              void downloadImage(
-                node,
-                `${(title ?? 'expense-summary').replace(/[^a-z0-9-]+/gi, '-').toLowerCase()}.png`
-              )
+              try {
+                await downloadImage(
+                  node,
+                  `${(title ?? 'expense-summary').replace(/[^a-z0-9-]+/gi, '-').toLowerCase()}.png`
+                )
+              } catch {
+                setCopyState('error')
+                setTimeout(() => setCopyState('idle'), 2500)
+              }
             }}
           >
             Download Image

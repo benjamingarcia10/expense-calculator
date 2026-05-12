@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSession } from '../store/session'
-import { Button } from './ui'
+import { Button, Dialog } from './ui'
 import { ExpenseSheet } from './expense-forms/ExpenseSheet'
 import type { Expense } from '../types'
 import { expenseTotal } from '../types'
@@ -17,6 +17,7 @@ export function ExpensesPanel() {
   const removeExpense = useSession((s) => s.removeExpense)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Expense | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<Expense | null>(null)
 
   const atMax = expenses.length >= LIMITS.maxExpenses
 
@@ -52,9 +53,13 @@ export function ExpensesPanel() {
             >
               <div className="min-w-0 flex-1">
                 <div className="truncate font-medium">{e.title}</div>
-                <div className="text-xs text-[var(--color-muted)]">{EXPENSE_TYPE_LABELS[e.type]}</div>
+                <div className="text-xs text-[var(--color-muted)]">
+                  {EXPENSE_TYPE_LABELS[e.type]}
+                </div>
               </div>
-              <div className="ml-3 font-mono tabular-nums">{formatMoney(expenseTotal(e), currency)}</div>
+              <div className="ml-3 font-mono tabular-nums">
+                {formatMoney(expenseTotal(e), currency)}
+              </div>
               <div className="ml-2 flex gap-0.5">
                 <button
                   onClick={() => openEdit(e)}
@@ -64,7 +69,7 @@ export function ExpensesPanel() {
                   <Pencil className="size-4" />
                 </button>
                 <button
-                  onClick={() => removeExpense(e.id)}
+                  onClick={() => setPendingDelete(e)}
                   className="grid size-11 place-items-center rounded-md text-[var(--color-muted)] hover:bg-red-600/15 hover:text-red-600"
                   aria-label={`delete ${e.title}`}
                 >
@@ -79,6 +84,29 @@ export function ExpensesPanel() {
         <p className="text-sm text-[var(--color-muted)]">No expenses yet. Add your first one.</p>
       )}
       <ExpenseSheet open={open} onClose={() => setOpen(false)} editing={editing} />
+      <Dialog
+        open={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        title={`Delete ${pendingDelete?.title ?? ''}?`}
+      >
+        <div className="flex flex-col gap-3">
+          <p className="text-sm">This cannot be undone.</p>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setPendingDelete(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (pendingDelete) removeExpense(pendingDelete.id)
+                setPendingDelete(null)
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </section>
   )
 }
