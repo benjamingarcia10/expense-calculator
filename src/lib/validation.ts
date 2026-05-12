@@ -19,7 +19,8 @@ export const LIMITS = {
   sharesMax: 99,
 } as const
 
-const ZW_RE = /[​-‍﻿⁠]/g
+// Strip zero-width and BOM-style characters (U+200B–U+200D, U+FEFF, U+2060)
+const ZW_RE = /\u200B|\u200C|\u200D|\uFEFF|\u2060/g
 
 function sanitize(input: string, max: number): string {
   return input.replace(ZW_RE, '').trim().slice(0, max)

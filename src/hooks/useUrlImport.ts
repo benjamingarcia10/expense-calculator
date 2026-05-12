@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { decodeShareHash } from '../lib/url-share'
 import { useSession } from '../store/session'
 import type { Session } from '../types'
@@ -8,23 +8,38 @@ export type PendingImport =
   | { kind: 'fresh'; session: Session }
   | null
 
+// Read the URL hash via useSyncExternalStore so React's hash-driven import dialog
+// computes the pending value during render rather than after-mount in an effect.
+function subscribeToHash(callback: () => void): () => void {
+  window.addEventListener('hashchange', callback)
+  return () => window.removeEventListener('hashchange', callback)
+}
+function getHashSnapshot(): string {
+  return window.location.hash
+}
+function getServerHashSnapshot(): string {
+  return ''
+}
+
+function computePendingFromHash(hash: string): PendingImport {
+  if (!hash.startsWith('#d=')) return null
+  const result = decodeShareHash(hash)
+  if (!result.ok) return null
+  const existing = useSession.getState()
+  const hasWork = existing.people.length > 0 || existing.expenses.length > 0
+  return hasWork
+    ? { kind: 'overwrite', session: result.session }
+    : { kind: 'fresh', session: result.session }
+}
+
 export function useUrlImport(): {
   pending: PendingImport
   accept: () => void
   reject: () => void
 } {
-  const [pending, setPending] = useState<PendingImport>(null)
-
-  useEffect(() => {
-    if (!window.location.hash.startsWith('#d=')) return
-    const result = decodeShareHash(window.location.hash)
-    if (!result.ok) return
-    const existing = useSession.getState()
-    const hasWork = existing.people.length > 0 || existing.expenses.length > 0
-    setPending(
-      hasWork ? { kind: 'overwrite', session: result.session } : { kind: 'fresh', session: result.session }
-    )
-  }, [])
+  const hash = useSyncExternalStore(subscribeToHash, getHashSnapshot, getServerHashSnapshot)
+  const [dismissed, setDismissed] = useState(false)
+  const pending = dismissed ? null : computePendingFromHash(hash)
 
   function accept() {
     if (!pending) return
@@ -46,12 +61,12 @@ export function useUrlImport(): {
     }
     useSession.getState().replaceSession(pending.session)
     history.replaceState(null, '', window.location.pathname + window.location.search)
-    setPending(null)
+    setDismissed(true)
   }
 
   function reject() {
     history.replaceState(null, '', window.location.pathname + window.location.search)
-    setPending(null)
+    setDismissed(true)
   }
 
   return { pending, accept, reject }
