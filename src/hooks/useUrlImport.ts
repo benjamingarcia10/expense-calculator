@@ -22,9 +22,7 @@ export function useUrlImport(): {
     const existing = useSession.getState()
     const hasWork = existing.people.length > 0 || existing.expenses.length > 0
     setPending(
-      hasWork
-        ? { kind: 'overwrite', session: result.session }
-        : { kind: 'fresh', session: result.session }
+      hasWork ? { kind: 'overwrite', session: result.session } : { kind: 'fresh', session: result.session }
     )
   }, [])
 

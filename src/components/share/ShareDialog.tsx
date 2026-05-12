@@ -36,8 +36,7 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
         <Input readOnly value={url} onFocus={(e) => e.currentTarget.select()} />
         {length > URL_WARN_LENGTH && (
           <p className="text-xs text-amber-600">
-            Long URL — may not render in some chat apps. Use the JSON download from Summary as a
-            fallback.
+            Long URL — may not render in some chat apps. Use the JSON download from Summary as a fallback.
           </p>
         )}
         <div className="flex justify-end gap-2">

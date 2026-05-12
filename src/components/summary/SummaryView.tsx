@@ -54,10 +54,7 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
             ) : (
               <ul className="flex flex-col gap-1 font-mono text-sm">
                 {debts.map((d) => (
-                  <li
-                    key={`${d.fromMemberId}-${d.toMemberId}`}
-                    className="flex justify-between"
-                  >
+                  <li key={`${d.fromMemberId}-${d.toMemberId}`} className="flex justify-between">
                     <span>
                       {d.fromName} → {d.toName}
                     </span>

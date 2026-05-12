@@ -11,18 +11,13 @@ export function SettleUpPanel() {
   const people = useSession((s) => s.people)
   const expenses = useSession((s) => s.expenses)
   const currency = useSession((s) => s.currency) as CurrencyCode
-  const debts = useMemo(
-    () => simplifyDebts(computeBalances(people, expenses)),
-    [people, expenses]
-  )
+  const debts = useMemo(() => simplifyDebts(computeBalances(people, expenses)), [people, expenses])
 
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
       <h2 className="font-semibold">Settle Up</h2>
       {debts.length === 0 ? (
-        <p className="text-sm text-[--color-muted]">
-          All even. Add expenses to see who owes whom.
-        </p>
+        <p className="text-sm text-[--color-muted]">All even. Add expenses to see who owes whom.</p>
       ) : (
         <ul className="flex flex-col gap-1 text-sm">
           <AnimatePresence initial={false}>
