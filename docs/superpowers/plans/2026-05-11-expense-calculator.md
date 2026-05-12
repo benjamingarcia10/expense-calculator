@@ -17,6 +17,7 @@
 ### Task 1: Initialize repo and Vite project
 
 **Files:**
+
 - Create: entire new repo at `/Users/ben/Documents/trippy/expense-calculator/`
 
 - [ ] **Step 1: Scaffold Vite app**
@@ -55,6 +56,7 @@ git commit -m "chore: scaffold Vite + React 19 + TS"
 ### Task 2: Install runtime + dev dependencies
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: Install runtime deps**
@@ -85,6 +87,7 @@ git commit -m "chore: add runtime and dev dependencies"
 ### Task 3: Configure Tailwind v4, TypeScript, Vite base path
 
 **Files:**
+
 - Modify: `vite.config.ts`
 - Create: `src/index.css`
 - Modify: `tsconfig.json`, `tsconfig.app.json`
@@ -110,7 +113,7 @@ export default defineConfig({
 - [ ] **Step 2: Replace `src/index.css`**
 
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --color-bg: oklch(98% 0.01 80);
@@ -119,8 +122,8 @@ export default defineConfig({
   --color-muted: oklch(50% 0.02 270);
   --color-accent: oklch(65% 0.18 25);
   --color-border: oklch(92% 0.01 270);
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -133,7 +136,12 @@ export default defineConfig({
   }
 }
 
-html, body { background: var(--color-bg); color: var(--color-ink); font-family: var(--font-sans); }
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
 ```
 
 - [ ] **Step 3: Add `tsconfig.json` strict settings**
@@ -159,6 +167,7 @@ git commit -m "chore: configure Tailwind v4, Vitest, base path"
 ### Task 4: Add npm scripts and Prettier/ESLint config
 
 **Files:**
+
 - Modify: `package.json`
 - Create: `.prettierrc.json`, `eslint.config.js`
 
@@ -241,6 +250,7 @@ git commit -m "chore: add lint, format, test scripts"
 ### Task 5: Define core types
 
 **Files:**
+
 - Create: `src/types.ts`
 
 - [ ] **Step 1: Write `src/types.ts`**
@@ -352,6 +362,7 @@ git commit -m "feat: define Session, Person, Expense types"
 ### Task 6: Write validation schemas with hard limits
 
 **Files:**
+
 - Create: `src/lib/validation.ts`, `src/lib/validation.test.ts`
 
 - [ ] **Step 1: Write `src/lib/validation.test.ts`**
@@ -568,7 +579,9 @@ export const SessionSchema = z.object({
 
 export type ValidatedSession = z.infer<typeof SessionSchema>
 
-export function validateSession(input: unknown): { success: true; data: ValidatedSession } | { success: false; error: string } {
+export function validateSession(
+  input: unknown
+): { success: true; data: ValidatedSession } | { success: false; error: string } {
   const result = SessionSchema.safeParse(input)
   if (result.success) return { success: true, data: result.data }
   return { success: false, error: result.error.issues[0]?.message ?? 'Invalid session' }
@@ -593,6 +606,7 @@ git commit -m "feat: validation schemas and sanitizers with hard limits"
 ### Task 7: Currency list and format helpers
 
 **Files:**
+
 - Create: `src/lib/currencies.ts`, `src/lib/format.ts`, `src/lib/format.test.ts`
 
 - [ ] **Step 1: Write `src/lib/currencies.ts`**
@@ -722,6 +736,7 @@ git commit -m "feat: currency list and money/date formatters"
 ### Task 8: Port largest-remainder rounding helper
 
 **Files:**
+
 - Create: `src/lib/splits.ts`, `src/lib/splits.test.ts`
 
 - [ ] **Step 1: Write `src/lib/splits.test.ts` — distributeByWeight cases**
@@ -841,12 +856,19 @@ git commit -m "feat: largest-remainder weight distribution"
 ### Task 9: Add equal, shares, exact split functions
 
 **Files:**
+
 - Modify: `src/lib/splits.ts`, `src/lib/splits.test.ts`
 
 - [ ] **Step 1: Append tests to `splits.test.ts`**
 
 ```ts
-import { computeEqualSplit, computeSharesSplit, computeExactSplit, EmptySplitError, ExactSplitMismatchError } from './splits'
+import {
+  computeEqualSplit,
+  computeSharesSplit,
+  computeExactSplit,
+  EmptySplitError,
+  ExactSplitMismatchError,
+} from './splits'
 
 describe('computeEqualSplit', () => {
   it('splits 100 among 3', () => {
@@ -875,7 +897,9 @@ describe('computeExactSplit', () => {
     expect(r).toEqual({ a: 60, b: 40 })
   })
   it('throws on mismatch', () => {
-    expect(() => computeExactSplit({ total: 100, amounts: { a: 60, b: 41 } })).toThrow(ExactSplitMismatchError)
+    expect(() => computeExactSplit({ total: 100, amounts: { a: 60, b: 41 } })).toThrow(
+      ExactSplitMismatchError
+    )
   })
 })
 ```
@@ -949,6 +973,7 @@ git commit -m "feat: equal, shares, exact split functions"
 ### Task 10: Add itemized (restaurant) split
 
 **Files:**
+
 - Modify: `src/lib/splits.ts`, `src/lib/splits.test.ts`
 
 - [ ] **Step 1: Append tests**
@@ -1049,6 +1074,7 @@ git commit -m "feat: itemized restaurant split with tax/tip proration"
 ### Task 11: Lodging split (simple + tiered)
 
 **Files:**
+
 - Create: `src/lib/lodging.ts`, `src/lib/lodging.test.ts`
 
 - [ ] **Step 1: Write `src/lib/lodging.test.ts`**
@@ -1194,6 +1220,7 @@ git commit -m "feat: lodging split simple + tiered"
 ### Task 12: Compute balances and simplify debts
 
 **Files:**
+
 - Create: `src/lib/compute-balances.ts`, `src/lib/simplify-debts.ts`, plus tests
 
 - [ ] **Step 1: Write `src/lib/compute-balances.test.ts`**
@@ -1234,7 +1261,13 @@ describe('computeBalances', () => {
 
 ```ts
 import type { Expense, Person } from '../types'
-import { computeEqualSplit, computeSharesSplit, computeExactSplit, computeItemizedSplit, type SplitResult } from './splits'
+import {
+  computeEqualSplit,
+  computeSharesSplit,
+  computeExactSplit,
+  computeItemizedSplit,
+  type SplitResult,
+} from './splits'
 import { computeLodgingSplit } from './lodging'
 
 export interface MemberBalance {
@@ -1398,6 +1431,7 @@ git commit -m "feat: balance computation and debt simplification"
 ### Task 13: Zustand session store with localStorage
 
 **Files:**
+
 - Create: `src/store/session.ts`, `src/store/session.test.ts`
 
 - [ ] **Step 1: Write `src/store/session.test.ts`**
@@ -1457,7 +1491,14 @@ describe('session store', () => {
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { SCHEMA_VERSION, type Expense, type Person, type Session } from '../types'
-import { sanitizeName, sanitizeTitle, sanitizeItemName, sanitizeUnitLabel, sanitizeSessionTitle, LIMITS } from '../lib/validation'
+import {
+  sanitizeName,
+  sanitizeTitle,
+  sanitizeItemName,
+  sanitizeUnitLabel,
+  sanitizeSessionTitle,
+  LIMITS,
+} from '../lib/validation'
 import { DEFAULT_CURRENCY } from '../lib/currencies'
 
 function newId(prefix: string): string {
@@ -1508,7 +1549,10 @@ function cleanupExpenseAfterPersonRemoval(expense: Expense, removedId: string): 
     case 'restaurant':
       return {
         ...expense,
-        items: expense.items.map((i) => ({ ...i, assignedIds: i.assignedIds.filter((id) => id !== removedId) })),
+        items: expense.items.map((i) => ({
+          ...i,
+          assignedIds: i.assignedIds.filter((id) => id !== removedId),
+        })),
       }
     case 'lodging': {
       const { [removedId]: _, ...restNights } = expense.nights
@@ -1609,6 +1653,7 @@ git commit -m "feat: zustand session store with localStorage persistence"
 ### Task 14: URL share encode/decode
 
 **Files:**
+
 - Create: `src/lib/url-share.ts`, `src/lib/url-share.test.ts`
 
 - [ ] **Step 1: Write `src/lib/url-share.test.ts`**
@@ -1746,6 +1791,7 @@ git commit -m "feat: URL share encode/decode with pako gzip"
 ### Task 15: UI primitives — Button, Input, Sheet, Dialog
 
 **Files:**
+
 - Create: `src/components/ui/Button.tsx`, `src/components/ui/Input.tsx`, `src/components/ui/Sheet.tsx`, `src/components/ui/Dialog.tsx`, `src/components/ui/index.ts`
 
 - [ ] **Step 1: Write `Button.tsx`**
@@ -1795,17 +1841,19 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   invalid?: boolean
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(({ invalid, className = '', ...props }, ref) => {
-  return (
-    <input
-      ref={ref}
-      className={`h-10 w-full rounded-lg border bg-[--color-surface] px-3 text-sm text-[--color-ink] outline-none transition-colors ${
-        invalid ? 'border-red-500' : 'border-[--color-border] focus:border-[--color-accent]'
-      } ${className}`}
-      {...props}
-    />
-  )
-})
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ invalid, className = '', ...props }, ref) => {
+    return (
+      <input
+        ref={ref}
+        className={`h-10 w-full rounded-lg border bg-[--color-surface] px-3 text-sm text-[--color-ink] outline-none transition-colors ${
+          invalid ? 'border-red-500' : 'border-[--color-border] focus:border-[--color-accent]'
+        } ${className}`}
+        {...props}
+      />
+    )
+  }
+)
 Input.displayName = 'Input'
 ```
 
@@ -1934,6 +1982,7 @@ git commit -m "feat: UI primitives — Button, Input, Sheet, Dialog"
 ### Task 16: App shell + header + bento grid
 
 **Files:**
+
 - Modify: `src/App.tsx`, `src/main.tsx`
 - Create: `src/components/Header.tsx`
 
@@ -1944,7 +1993,13 @@ import { useSession } from '../store/session'
 import { CURRENCIES } from '../lib/currencies'
 import { Button } from './ui'
 
-export function Header({ onOpenSummary, onOpenShare }: { onOpenSummary: () => void; onOpenShare: () => void }) {
+export function Header({
+  onOpenSummary,
+  onOpenShare,
+}: {
+  onOpenSummary: () => void
+  onOpenShare: () => void
+}) {
   const currency = useSession((s) => s.currency)
   const setCurrency = useSession((s) => s.setCurrency)
   return (
@@ -1957,11 +2012,17 @@ export function Header({ onOpenSummary, onOpenShare }: { onOpenSummary: () => vo
           className="h-9 rounded-md border border-[--color-border] bg-[--color-surface] px-2 text-sm"
         >
           {CURRENCIES.map((c) => (
-            <option key={c.code} value={c.code}>{c.code}</option>
+            <option key={c.code} value={c.code}>
+              {c.code}
+            </option>
           ))}
         </select>
-        <Button variant="ghost" size="sm" onClick={onOpenSummary}>Summary</Button>
-        <Button size="sm" onClick={onOpenShare}>Share</Button>
+        <Button variant="ghost" size="sm" onClick={onOpenSummary}>
+          Summary
+        </Button>
+        <Button size="sm" onClick={onOpenShare}>
+          Share
+        </Button>
       </div>
     </header>
   )
@@ -1982,10 +2043,18 @@ export default function App() {
       <Header onOpenSummary={() => setSummaryOpen(true)} onOpenShare={() => setShareOpen(true)} />
       <main className="mx-auto max-w-6xl px-4 py-6 md:px-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <section className="rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">People (placeholder)</section>
-          <section className="rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">Balances (placeholder)</section>
-          <section className="rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">Settle Up (placeholder)</section>
-          <section className="md:col-span-3 rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">Expenses (placeholder)</section>
+          <section className="rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
+            People (placeholder)
+          </section>
+          <section className="rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
+            Balances (placeholder)
+          </section>
+          <section className="rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
+            Settle Up (placeholder)
+          </section>
+          <section className="md:col-span-3 rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
+            Expenses (placeholder)
+          </section>
         </div>
       </main>
       {summaryOpen && <div onClick={() => setSummaryOpen(false)}>Summary placeholder</div>}
@@ -2028,6 +2097,7 @@ git commit -m "feat: app shell with header and bento grid placeholders"
 ### Task 17: People panel
 
 **Files:**
+
 - Create: `src/components/PeoplePanel.tsx`, `src/components/PeoplePanel.test.tsx`
 - Modify: `src/App.tsx`
 
@@ -2099,7 +2169,9 @@ export function PeoplePanel() {
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold">People <span className="text-[--color-muted]">({people.length})</span></h2>
+        <h2 className="font-semibold">
+          People <span className="text-[--color-muted]">({people.length})</span>
+        </h2>
       </div>
       <ul className="flex flex-col gap-1">
         <AnimatePresence initial={false}>
@@ -2172,6 +2244,7 @@ git commit -m "feat: People panel — add, remove, animated list"
 ### Task 18: Expense list + add-expense sheet shell + mode picker
 
 **Files:**
+
 - Create: `src/components/ExpensesPanel.tsx`, `src/components/expense-forms/ModePicker.tsx`, `src/components/expense-forms/ExpenseSheet.tsx`
 - Modify: `src/App.tsx`
 
@@ -2181,7 +2254,12 @@ git commit -m "feat: People panel — add, remove, animated list"
 import { Equal, Hash, Receipt, Bed, Car, X } from 'lucide-react'
 import type { ExpenseType } from '../../types'
 
-const MODES: Array<{ type: ExpenseType; label: string; description: string; icon: React.ComponentType<{ className?: string }> }> = [
+const MODES: Array<{
+  type: ExpenseType
+  label: string
+  description: string
+  icon: React.ComponentType<{ className?: string }>
+}> = [
   { type: 'equal', label: 'Equal', description: 'Even split among selected people', icon: Equal },
   { type: 'shares', label: 'Shares', description: 'Proportional weights (e.g. 2:1:1)', icon: X },
   { type: 'exact', label: 'Exact', description: "Manually enter each person's amount", icon: Hash },
@@ -2265,7 +2343,11 @@ For each of `EqualForm.tsx`, `SharesForm.tsx`, `ExactForm.tsx`, `MileageForm.tsx
 ```tsx
 import type { Expense } from '../../types'
 export function EqualForm({ editing: _e, onDone }: { editing: Expense | null; onDone: () => void }) {
-  return <div><button onClick={onDone}>cancel</button></div>
+  return (
+    <div>
+      <button onClick={onDone}>cancel</button>
+    </div>
+  )
 }
 ```
 
@@ -2315,7 +2397,9 @@ export function ExpensesPanel() {
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-[--color-border] bg-[--color-surface] p-4 md:col-span-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold">Expenses <span className="text-[--color-muted]">({expenses.length})</span></h2>
+        <h2 className="font-semibold">
+          Expenses <span className="text-[--color-muted]">({expenses.length})</span>
+        </h2>
         <Button size="sm" onClick={openNew} disabled={atMax}>
           <Plus className="size-4" /> Add expense
         </Button>
@@ -2335,12 +2419,22 @@ export function ExpensesPanel() {
                 <div className="truncate font-medium">{e.title}</div>
                 <div className="text-xs text-[--color-muted]">{TYPE_LABELS[e.type]}</div>
               </div>
-              <div className="ml-3 font-mono tabular-nums">{formatMoney(expenseTotal(e), currency as 'USD')}</div>
+              <div className="ml-3 font-mono tabular-nums">
+                {formatMoney(expenseTotal(e), currency as 'USD')}
+              </div>
               <div className="ml-3 flex gap-1">
-                <button onClick={() => openEdit(e)} className="text-[--color-muted] hover:text-[--color-ink]" aria-label={`edit ${e.title}`}>
+                <button
+                  onClick={() => openEdit(e)}
+                  className="text-[--color-muted] hover:text-[--color-ink]"
+                  aria-label={`edit ${e.title}`}
+                >
                   <Pencil className="size-4" />
                 </button>
-                <button onClick={() => removeExpense(e.id)} className="text-[--color-muted] hover:text-red-600" aria-label={`delete ${e.title}`}>
+                <button
+                  onClick={() => removeExpense(e.id)}
+                  className="text-[--color-muted] hover:text-red-600"
+                  aria-label={`delete ${e.title}`}
+                >
                   <Trash2 className="size-4" />
                 </button>
               </div>
@@ -2380,6 +2474,7 @@ git commit -m "feat: expenses list panel + mode-picker sheet shell"
 ### Task 19: EqualForm
 
 **Files:**
+
 - Replace stub: `src/components/expense-forms/EqualForm.tsx`
 - Create: `src/components/expense-forms/EqualForm.test.tsx`
 - Create: `src/components/expense-forms/form-utils.ts`
@@ -2469,7 +2564,9 @@ export function EqualForm({ editing, onDone }: { editing: Expense | null; onDone
   const [title, setTitle] = useState(initial?.title ?? '')
   const [total, setTotal] = useState<string>(initial?.total != null ? String(initial.total) : '')
   const [paidById, setPaidById] = useState(initial?.paidById ?? people[0]?.id ?? '')
-  const [participantIds, setParticipantIds] = useState<string[]>(initial?.participantIds ?? people.map((p) => p.id))
+  const [participantIds, setParticipantIds] = useState<string[]>(
+    initial?.participantIds ?? people.map((p) => p.id)
+  )
 
   function toggle(id: string) {
     setParticipantIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]))
@@ -2512,7 +2609,9 @@ export function EqualForm({ editing, onDone }: { editing: Expense | null; onDone
           className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm"
         >
           {people.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
           ))}
         </select>
       </label>
@@ -2526,7 +2625,9 @@ export function EqualForm({ editing, onDone }: { editing: Expense | null; onDone
         ))}
       </fieldset>
       <div className="flex justify-end gap-2 pt-2">
-        <Button variant="ghost" onClick={onDone}>Cancel</Button>
+        <Button variant="ghost" onClick={onDone}>
+          Cancel
+        </Button>
         <Button onClick={save}>Save</Button>
       </div>
     </div>
@@ -2550,6 +2651,7 @@ git commit -m "feat: EqualForm with validation"
 ### Task 20: SharesForm
 
 **Files:**
+
 - Replace stub: `src/components/expense-forms/SharesForm.tsx`
 - Create: `src/components/expense-forms/SharesForm.test.tsx`
 
@@ -2641,12 +2743,28 @@ export function SharesForm({ editing, onDone }: { editing: Expense | null; onDon
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Total
-        <Input type="number" inputMode="decimal" min={0} max={LIMITS.moneyMax} step={0.01} value={total} onChange={(e) => setTotal(e.target.value)} />
+        <Input
+          type="number"
+          inputMode="decimal"
+          min={0}
+          max={LIMITS.moneyMax}
+          step={0.01}
+          value={total}
+          onChange={(e) => setTotal(e.target.value)}
+        />
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Paid by
-        <select value={paidById} onChange={(e) => setPaidById(e.target.value)} className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm">
-          {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        <select
+          value={paidById}
+          onChange={(e) => setPaidById(e.target.value)}
+          className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm"
+        >
+          {people.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
         </select>
       </label>
       <div className="flex flex-col gap-2 text-sm">
@@ -2669,7 +2787,9 @@ export function SharesForm({ editing, onDone }: { editing: Expense | null; onDon
         ))}
       </div>
       <div className="flex justify-end gap-2 pt-2">
-        <Button variant="ghost" onClick={onDone}>Cancel</Button>
+        <Button variant="ghost" onClick={onDone}>
+          Cancel
+        </Button>
         <Button onClick={save}>Save</Button>
       </div>
     </div>
@@ -2688,6 +2808,7 @@ git commit -m "feat: SharesForm"
 ### Task 21: ExactForm with live delta
 
 **Files:**
+
 - Replace stub: `src/components/expense-forms/ExactForm.tsx`
 - Create: `src/components/expense-forms/ExactForm.test.tsx`
 
@@ -2768,10 +2889,7 @@ export function ExactForm({ editing, onDone }: { editing: Expense | null; onDone
   })
 
   const totalNum = clampMoney(parseMoney(total))
-  const sum = useMemo(
-    () => Object.values(amounts).reduce((s, v) => s + parseMoney(v), 0),
-    [amounts]
-  )
+  const sum = useMemo(() => Object.values(amounts).reduce((s, v) => s + parseMoney(v), 0), [amounts])
   const delta = +(totalNum - sum).toFixed(2)
   const valid = title.trim() !== '' && totalNum > 0 && Math.abs(delta) < 0.005
 
@@ -2798,12 +2916,27 @@ export function ExactForm({ editing, onDone }: { editing: Expense | null; onDone
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Total
-        <Input type="number" inputMode="decimal" min={0} step={0.01} value={total} onChange={(e) => setTotal(e.target.value)} />
+        <Input
+          type="number"
+          inputMode="decimal"
+          min={0}
+          step={0.01}
+          value={total}
+          onChange={(e) => setTotal(e.target.value)}
+        />
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Paid by
-        <select value={paidById} onChange={(e) => setPaidById(e.target.value)} className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm">
-          {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        <select
+          value={paidById}
+          onChange={(e) => setPaidById(e.target.value)}
+          className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm"
+        >
+          {people.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
         </select>
       </label>
       <div className="flex flex-col gap-2 text-sm">
@@ -2812,7 +2945,10 @@ export function ExactForm({ editing, onDone }: { editing: Expense | null; onDone
           <label key={p.id} className="flex items-center gap-2">
             <span className="flex-1">{p.name}</span>
             <Input
-              type="number" inputMode="decimal" min={0} step={0.01}
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step={0.01}
               aria-label={`amount for ${p.name}`}
               value={amounts[p.id] ?? '0'}
               onChange={(e) => setAmounts({ ...amounts, [p.id]: e.target.value })}
@@ -2825,8 +2961,12 @@ export function ExactForm({ editing, onDone }: { editing: Expense | null; onDone
         </p>
       </div>
       <div className="flex justify-end gap-2 pt-2">
-        <Button variant="ghost" onClick={onDone}>Cancel</Button>
-        <Button onClick={save} disabled={!valid}>Save</Button>
+        <Button variant="ghost" onClick={onDone}>
+          Cancel
+        </Button>
+        <Button onClick={save} disabled={!valid}>
+          Save
+        </Button>
       </div>
     </div>
   )
@@ -2844,6 +2984,7 @@ git commit -m "feat: ExactForm with live delta validation"
 ### Task 22: MileageForm
 
 **Files:**
+
 - Replace stub: `src/components/expense-forms/MileageForm.tsx`
 - Create: `src/components/expense-forms/MileageForm.test.tsx`
 
@@ -2943,13 +3084,25 @@ export function MileageForm({ editing, onDone }: { editing: Expense | null; onDo
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Paid by
-        <select value={paidById} onChange={(e) => setPaidById(e.target.value)} className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm">
-          {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        <select
+          value={paidById}
+          onChange={(e) => setPaidById(e.target.value)}
+          className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm"
+        >
+          {people.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
         </select>
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Unit label
-        <Input value={unitLabel} onChange={(e) => setUnitLabel(e.target.value)} maxLength={LIMITS.unitLabel} />
+        <Input
+          value={unitLabel}
+          onChange={(e) => setUnitLabel(e.target.value)}
+          maxLength={LIMITS.unitLabel}
+        />
       </label>
       <div className="flex flex-col gap-2 text-sm">
         <span className="text-[--color-muted]">{unitLabel || 'units'} per person</span>
@@ -2957,7 +3110,9 @@ export function MileageForm({ editing, onDone }: { editing: Expense | null; onDo
           <label key={p.id} className="flex items-center gap-2">
             <span className="flex-1">{p.name}</span>
             <Input
-              type="number" min={0} step={0.1}
+              type="number"
+              min={0}
+              step={0.1}
               aria-label={`units for ${p.name}`}
               value={units[p.id] ?? '0'}
               onChange={(e) => setUnits({ ...units, [p.id]: e.target.value })}
@@ -2967,7 +3122,9 @@ export function MileageForm({ editing, onDone }: { editing: Expense | null; onDo
         ))}
       </div>
       <div className="flex justify-end gap-2 pt-2">
-        <Button variant="ghost" onClick={onDone}>Cancel</Button>
+        <Button variant="ghost" onClick={onDone}>
+          Cancel
+        </Button>
         <Button onClick={save}>Save</Button>
       </div>
     </div>
@@ -2986,6 +3143,7 @@ git commit -m "feat: MileageForm"
 ### Task 23: RestaurantForm (itemized)
 
 **Files:**
+
 - Replace stub: `src/components/expense-forms/RestaurantForm.tsx`
 - Create: `src/components/expense-forms/RestaurantForm.test.tsx`
 
@@ -3060,7 +3218,9 @@ export function RestaurantForm({ editing, onDone }: { editing: Expense | null; o
   const [items, setItems] = useState<RestaurantItem[]>(initial?.items ?? [])
   const [tax, setTax] = useState<string>(initial?.tax != null ? String(initial.tax) : '0')
   const [tip, setTip] = useState<string>(initial?.tip != null ? String(initial.tip) : '0')
-  const [serviceFee, setServiceFee] = useState<string>(initial?.serviceFee != null ? String(initial.serviceFee) : '0')
+  const [serviceFee, setServiceFee] = useState<string>(
+    initial?.serviceFee != null ? String(initial.serviceFee) : '0'
+  )
 
   function updateItem(idx: number, patch: Partial<RestaurantItem>) {
     setItems((cur) => cur.map((it, i) => (i === idx ? { ...it, ...patch } : it)))
@@ -3112,8 +3272,16 @@ export function RestaurantForm({ editing, onDone }: { editing: Expense | null; o
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Paid by
-        <select value={paidById} onChange={(e) => setPaidById(e.target.value)} className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm">
-          {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        <select
+          value={paidById}
+          onChange={(e) => setPaidById(e.target.value)}
+          className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm"
+        >
+          {people.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
         </select>
       </label>
       <div className="flex flex-col gap-2 text-sm">
@@ -3130,34 +3298,57 @@ export function RestaurantForm({ editing, onDone }: { editing: Expense | null; o
               />
               <Input
                 aria-label="item price"
-                type="number" min={0} step={0.01}
+                type="number"
+                min={0}
+                step={0.01}
                 placeholder="Price"
                 value={String(it.price)}
                 onChange={(e) => updateItem(idx, { price: parseMoney(e.target.value) })}
                 className="w-24"
               />
-              <button onClick={() => removeItem(idx)} aria-label="remove item" className="text-[--color-muted] hover:text-red-600">
+              <button
+                onClick={() => removeItem(idx)}
+                aria-label="remove item"
+                className="text-[--color-muted] hover:text-red-600"
+              >
                 <Trash2 className="size-4" />
               </button>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               {people.map((p) => (
                 <label key={p.id} className="flex items-center gap-1 text-xs">
-                  <input type="checkbox" aria-label={`assign ${p.name}`} checked={it.assignedIds.includes(p.id)} onChange={() => toggleAssign(idx, p.id)} />
+                  <input
+                    type="checkbox"
+                    aria-label={`assign ${p.name}`}
+                    checked={it.assignedIds.includes(p.id)}
+                    onChange={() => toggleAssign(idx, p.id)}
+                  />
                   {p.name}
                 </label>
               ))}
             </div>
           </div>
         ))}
-        <Button variant="ghost" size="sm" onClick={addItem} disabled={items.length >= LIMITS.maxItemsPerExpense}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={addItem}
+          disabled={items.length >= LIMITS.maxItemsPerExpense}
+        >
           <Plus className="size-4" /> Add item
         </Button>
       </div>
       <div className="grid grid-cols-3 gap-2">
         <label className="flex flex-col gap-1 text-sm">
           Tax
-          <Input type="number" min={0} step={0.01} aria-label="tax" value={tax} onChange={(e) => setTax(e.target.value)} />
+          <Input
+            type="number"
+            min={0}
+            step={0.01}
+            aria-label="tax"
+            value={tax}
+            onChange={(e) => setTax(e.target.value)}
+          />
         </label>
         <label className="flex flex-col gap-1 text-sm">
           Tip
@@ -3165,11 +3356,19 @@ export function RestaurantForm({ editing, onDone }: { editing: Expense | null; o
         </label>
         <label className="flex flex-col gap-1 text-sm">
           Service
-          <Input type="number" min={0} step={0.01} value={serviceFee} onChange={(e) => setServiceFee(e.target.value)} />
+          <Input
+            type="number"
+            min={0}
+            step={0.01}
+            value={serviceFee}
+            onChange={(e) => setServiceFee(e.target.value)}
+          />
         </label>
       </div>
       <div className="flex justify-end gap-2 pt-2">
-        <Button variant="ghost" onClick={onDone}>Cancel</Button>
+        <Button variant="ghost" onClick={onDone}>
+          Cancel
+        </Button>
         <Button onClick={save}>Save</Button>
       </div>
     </div>
@@ -3188,6 +3387,7 @@ git commit -m "feat: RestaurantForm with items, tax, tip, service"
 ### Task 24: LodgingForm (simple + tiered toggle)
 
 **Files:**
+
 - Replace stub: `src/components/expense-forms/LodgingForm.tsx`
 - Create: `src/components/expense-forms/LodgingForm.test.tsx`
 
@@ -3297,12 +3497,24 @@ export function LodgingForm({ editing, onDone }: { editing: Expense | null; onDo
       </label>
       <label className="flex flex-col gap-1 text-sm">
         Paid by
-        <select value={paidById} onChange={(e) => setPaidById(e.target.value)} className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm">
-          {people.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        <select
+          value={paidById}
+          onChange={(e) => setPaidById(e.target.value)}
+          className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm"
+        >
+          {people.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
         </select>
       </label>
       <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={mode === 'tiered'} onChange={(e) => setMode(e.target.checked ? 'tiered' : 'simple')} />
+        <input
+          type="checkbox"
+          checked={mode === 'tiered'}
+          onChange={(e) => setMode(e.target.checked ? 'tiered' : 'simple')}
+        />
         Rooms have different prices
       </label>
       {mode === 'tiered' && (
@@ -3310,12 +3522,43 @@ export function LodgingForm({ editing, onDone }: { editing: Expense | null; onDo
           <span className="text-[--color-muted]">Rooms</span>
           {rooms.map((r, idx) => (
             <div key={r.id} className="flex gap-2">
-              <Input aria-label="room name" placeholder="Room name" value={r.name} onChange={(e) => setRooms((cur) => cur.map((x, i) => (i === idx ? { ...x, name: e.target.value } : x)))} maxLength={LIMITS.roomName} />
-              <Input aria-label="nightly rate" type="number" min={0} step={0.01} placeholder="Nightly rate" value={String(r.nightlyRate)} onChange={(e) => setRooms((cur) => cur.map((x, i) => (i === idx ? { ...x, nightlyRate: parseMoney(e.target.value) } : x)))} className="w-32" />
-              <button onClick={() => setRooms((cur) => cur.filter((_, i) => i !== idx))} aria-label="remove room"><Trash2 className="size-4" /></button>
+              <Input
+                aria-label="room name"
+                placeholder="Room name"
+                value={r.name}
+                onChange={(e) =>
+                  setRooms((cur) => cur.map((x, i) => (i === idx ? { ...x, name: e.target.value } : x)))
+                }
+                maxLength={LIMITS.roomName}
+              />
+              <Input
+                aria-label="nightly rate"
+                type="number"
+                min={0}
+                step={0.01}
+                placeholder="Nightly rate"
+                value={String(r.nightlyRate)}
+                onChange={(e) =>
+                  setRooms((cur) =>
+                    cur.map((x, i) => (i === idx ? { ...x, nightlyRate: parseMoney(e.target.value) } : x))
+                  )
+                }
+                className="w-32"
+              />
+              <button
+                onClick={() => setRooms((cur) => cur.filter((_, i) => i !== idx))}
+                aria-label="remove room"
+              >
+                <Trash2 className="size-4" />
+              </button>
             </div>
           ))}
-          <Button variant="ghost" size="sm" onClick={() => setRooms((cur) => [...cur, newRoom()])} disabled={rooms.length >= LIMITS.maxRoomsPerLodging}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setRooms((cur) => [...cur, newRoom()])}
+            disabled={rooms.length >= LIMITS.maxRoomsPerLodging}
+          >
             <Plus className="size-4" /> Add room
           </Button>
         </div>
@@ -3325,7 +3568,15 @@ export function LodgingForm({ editing, onDone }: { editing: Expense | null; onDo
         {people.map((p) => (
           <label key={p.id} className="flex items-center gap-2">
             <span className="flex-1">{p.name}</span>
-            <Input type="number" min={0} step={1} aria-label={`nights for ${p.name}`} value={nights[p.id] ?? '0'} onChange={(e) => setNights({ ...nights, [p.id]: e.target.value })} className="w-20" />
+            <Input
+              type="number"
+              min={0}
+              step={1}
+              aria-label={`nights for ${p.name}`}
+              value={nights[p.id] ?? '0'}
+              onChange={(e) => setNights({ ...nights, [p.id]: e.target.value })}
+              className="w-20"
+            />
             {mode === 'tiered' && rooms.length > 0 && (
               <select
                 aria-label={`room for ${p.name}`}
@@ -3334,14 +3585,20 @@ export function LodgingForm({ editing, onDone }: { editing: Expense | null; onDo
                 className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-2 text-sm"
               >
                 <option value="">— room —</option>
-                {rooms.map((r) => <option key={r.id} value={r.id}>{r.name || 'Unnamed'}</option>)}
+                {rooms.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name || 'Unnamed'}
+                  </option>
+                ))}
               </select>
             )}
           </label>
         ))}
       </div>
       <div className="flex justify-end gap-2 pt-2">
-        <Button variant="ghost" onClick={onDone}>Cancel</Button>
+        <Button variant="ghost" onClick={onDone}>
+          Cancel
+        </Button>
         <Button onClick={save}>Save</Button>
       </div>
     </div>
@@ -3364,6 +3621,7 @@ git commit -m "feat: LodgingForm with simple + tiered modes"
 ### Task 25: Balances and Settle Up panels
 
 **Files:**
+
 - Create: `src/components/BalancesPanel.tsx`, `src/components/SettleUpPanel.tsx`
 - Modify: `src/App.tsx`
 
@@ -3456,15 +3714,23 @@ export function SettleUpPanel() {
                 exit={{ opacity: 0 }}
                 className="flex items-center justify-between rounded-md px-2 py-1"
               >
-                <span className="flex items-center gap-2"><span>{d.fromName}</span><ArrowRight className="size-3 text-[--color-muted]" /><span>{d.toName}</span></span>
-                <span className="font-mono tabular-nums">{formatMoney(d.amount, currency as CurrencyCode)}</span>
+                <span className="flex items-center gap-2">
+                  <span>{d.fromName}</span>
+                  <ArrowRight className="size-3 text-[--color-muted]" />
+                  <span>{d.toName}</span>
+                </span>
+                <span className="font-mono tabular-nums">
+                  {formatMoney(d.amount, currency as CurrencyCode)}
+                </span>
               </motion.li>
             ))}
           </AnimatePresence>
         </ul>
       )}
       {debts.length > 0 && (
-        <p className="text-xs text-[--color-muted]">{debts.length} transaction{debts.length === 1 ? '' : 's'}</p>
+        <p className="text-xs text-[--color-muted]">
+          {debts.length} transaction{debts.length === 1 ? '' : 's'}
+        </p>
       )}
     </section>
   )
@@ -3494,6 +3760,7 @@ git commit -m "feat: Balances and Settle Up panels"
 ### Task 26: Summary view + exports
 
 **Files:**
+
 - Create: `src/components/summary/SummaryView.tsx`, `src/components/summary/exports.ts`, `src/components/summary/exports.test.ts`
 - Modify: `src/App.tsx`
 
@@ -3625,15 +3892,21 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
           <div className="text-center">
             <p className="text-xs uppercase tracking-wide text-slate-500">Total spent</p>
             <p className="font-mono text-3xl font-semibold">{formatMoney(totalSpent, c)}</p>
-            <p className="text-xs text-slate-500">{session.people.length} people · {session.expenses.length} expenses</p>
+            <p className="text-xs text-slate-500">
+              {session.people.length} people · {session.expenses.length} expenses
+            </p>
           </div>
           <div>
             <h4 className="mb-1 text-sm font-semibold">Settle Up</h4>
-            {debts.length === 0 ? <p className="text-sm text-slate-500">All even.</p> : (
+            {debts.length === 0 ? (
+              <p className="text-sm text-slate-500">All even.</p>
+            ) : (
               <ul className="flex flex-col gap-1 font-mono text-sm">
                 {debts.map((d) => (
                   <li key={`${d.fromMemberId}-${d.toMemberId}`} className="flex justify-between">
-                    <span>{d.fromName} → {d.toName}</span>
+                    <span>
+                      {d.fromName} → {d.toName}
+                    </span>
                     <span className="tabular-nums">{formatMoney(d.amount, c)}</span>
                   </li>
                 ))}
@@ -3651,7 +3924,9 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
                       <span className="font-sans">{e.title}</span>
                       <span className="tabular-nums">{formatMoney(expenseTotal(e), c)}</span>
                     </div>
-                    <span className="text-xs text-slate-500">{payer} paid · {TYPE_LABELS[e.type]}</span>
+                    <span className="text-xs text-slate-500">
+                      {payer} paid · {TYPE_LABELS[e.type]}
+                    </span>
                   </li>
                 )
               })}
@@ -3660,10 +3935,32 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
           <p className="pt-2 text-center text-xs text-slate-400">expensecalc</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="ghost" onClick={() => navigator.clipboard.writeText(buildSummaryText(session as never))}>Copy as Text</Button>
-          <Button size="sm" variant="ghost" onClick={() => cardRef.current && downloadImage(cardRef.current, `${(session.title ?? 'expense-summary').replace(/[^a-z0-9-]/gi, '-')}.png`)}>Download Image</Button>
-          <Button size="sm" variant="ghost" onClick={() => downloadJson(session as never)}>Download JSON</Button>
-          <Button size="sm" onClick={onClose}>Close</Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => navigator.clipboard.writeText(buildSummaryText(session as never))}
+          >
+            Copy as Text
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() =>
+              cardRef.current &&
+              downloadImage(
+                cardRef.current,
+                `${(session.title ?? 'expense-summary').replace(/[^a-z0-9-]/gi, '-')}.png`
+              )
+            }
+          >
+            Download Image
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => downloadJson(session as never)}>
+            Download JSON
+          </Button>
+          <Button size="sm" onClick={onClose}>
+            Close
+          </Button>
         </div>
       </div>
     </Dialog>
@@ -3692,6 +3989,7 @@ git commit -m "feat: Summary view with text, image, and JSON exports"
 ### Task 27: Share dialog + URL import handler
 
 **Files:**
+
 - Create: `src/components/share/ShareDialog.tsx`, `src/hooks/useUrlImport.ts`
 - Modify: `src/App.tsx`
 
@@ -3703,7 +4001,10 @@ import { decodeShareHash } from '../lib/url-share'
 import { useSession } from '../store/session'
 import type { Session } from '../types'
 
-export type PendingImport = { kind: 'overwrite'; session: Session } | { kind: 'fresh'; session: Session } | null
+export type PendingImport =
+  | { kind: 'overwrite'; session: Session }
+  | { kind: 'fresh'; session: Session }
+  | null
 
 export function useUrlImport(): { pending: PendingImport; accept: () => void; reject: () => void } {
   const [pending, setPending] = useState<PendingImport>(null)
@@ -3714,7 +4015,9 @@ export function useUrlImport(): { pending: PendingImport; accept: () => void; re
     if (!result.ok) return
     const existing = useSession.getState()
     const hasWork = existing.people.length > 0 || existing.expenses.length > 0
-    setPending(hasWork ? { kind: 'overwrite', session: result.session } : { kind: 'fresh', session: result.session })
+    setPending(
+      hasWork ? { kind: 'overwrite', session: result.session } : { kind: 'fresh', session: result.session }
+    )
   }, [])
 
   function accept() {
@@ -3754,7 +4057,12 @@ import { buildShareUrl, encodeSession, URL_WARN_LENGTH } from '../../lib/url-sha
 
 export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const session = useSession((s) => ({
-    v: s.v, currency: s.currency, title: s.title, people: s.people, expenses: s.expenses, createdAt: s.createdAt,
+    v: s.v,
+    currency: s.currency,
+    title: s.title,
+    people: s.people,
+    expenses: s.expenses,
+    createdAt: s.createdAt,
   }))
   const [copied, setCopied] = useState(false)
   const { url, length } = useMemo(() => {
@@ -3782,7 +4090,9 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
           </p>
         )}
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>Close</Button>
+          <Button variant="ghost" onClick={onClose}>
+            Close
+          </Button>
           <Button onClick={copy}>{copied ? 'Copied!' : 'Copy link'}</Button>
         </div>
       </div>
@@ -3831,7 +4141,9 @@ export default function App() {
               : 'Load the shared session?'}
           </p>
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={reject}>Keep current</Button>
+            <Button variant="ghost" onClick={reject}>
+              Keep current
+            </Button>
             <Button onClick={accept}>Import</Button>
           </div>
         </div>
@@ -3864,6 +4176,7 @@ git commit -m "feat: Share dialog and URL import with conflict resolution"
 ### Task 28: Add session title + reset button
 
 **Files:**
+
 - Modify: `src/components/Header.tsx`
 
 - [ ] **Step 1: Add a reset button + title field to header**
@@ -3878,7 +4191,13 @@ import { Button, Dialog } from './ui'
 import { LIMITS } from '../lib/validation'
 import { RotateCcw } from 'lucide-react'
 
-export function Header({ onOpenSummary, onOpenShare }: { onOpenSummary: () => void; onOpenShare: () => void }) {
+export function Header({
+  onOpenSummary,
+  onOpenShare,
+}: {
+  onOpenSummary: () => void
+  onOpenShare: () => void
+}) {
   const currency = useSession((s) => s.currency)
   const setCurrency = useSession((s) => s.setCurrency)
   const title = useSession((s) => s.title)
@@ -3904,11 +4223,23 @@ export function Header({ onOpenSummary, onOpenShare }: { onOpenSummary: () => vo
           onChange={(e) => setCurrency(e.target.value)}
           className="h-9 rounded-md border border-[--color-border] bg-[--color-surface] px-2 text-sm"
         >
-          {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.code}</option>)}
+          {CURRENCIES.map((c) => (
+            <option key={c.code} value={c.code}>
+              {c.code}
+            </option>
+          ))}
         </select>
-        <Button variant="ghost" size="sm" onClick={onOpenSummary}>Summary</Button>
-        <Button size="sm" onClick={onOpenShare}>Share</Button>
-        <button onClick={() => setConfirming(true)} aria-label="reset" className="text-[--color-muted] hover:text-[--color-ink]">
+        <Button variant="ghost" size="sm" onClick={onOpenSummary}>
+          Summary
+        </Button>
+        <Button size="sm" onClick={onOpenShare}>
+          Share
+        </Button>
+        <button
+          onClick={() => setConfirming(true)}
+          aria-label="reset"
+          className="text-[--color-muted] hover:text-[--color-ink]"
+        >
           <RotateCcw className="size-4" />
         </button>
       </div>
@@ -3916,8 +4247,18 @@ export function Header({ onOpenSummary, onOpenShare }: { onOpenSummary: () => vo
         <div className="flex flex-col gap-3">
           <p className="text-sm">This clears all people and expenses. This cannot be undone.</p>
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setConfirming(false)}>Cancel</Button>
-            <Button variant="danger" onClick={() => { reset(); setConfirming(false) }}>Reset</Button>
+            <Button variant="ghost" onClick={() => setConfirming(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                reset()
+                setConfirming(false)
+              }}
+            >
+              Reset
+            </Button>
           </div>
         </div>
       </Dialog>
@@ -3937,6 +4278,7 @@ git commit -m "feat: session title and reset button"
 ### Task 29: Playwright config + first E2E (equal split)
 
 **Files:**
+
 - Create: `playwright.config.ts`, `tests/e2e/equal-split.spec.ts`
 
 - [ ] **Step 1: Write `playwright.config.ts`**
@@ -4002,6 +4344,7 @@ git commit -m "test: e2e equal split happy path"
 ### Task 30: E2E — itemized restaurant + lodging
 
 **Files:**
+
 - Create: `tests/e2e/itemized.spec.ts`, `tests/e2e/lodging.spec.ts`
 
 - [ ] **Step 1: Write `itemized.spec.ts`**
@@ -4065,6 +4408,7 @@ git commit -m "test: e2e itemized and lodging flows"
 ### Task 31: E2E — URL share round-trip + persistence
 
 **Files:**
+
 - Create: `tests/e2e/share-and-persist.spec.ts`
 
 - [ ] **Step 1: Write the test**
@@ -4109,6 +4453,7 @@ git commit -m "test: e2e URL share and localStorage persistence"
 ### Task 32: CI workflow
 
 **Files:**
+
 - Create: `.github/workflows/ci.yml`
 
 - [ ] **Step 1: Write the workflow**
@@ -4147,6 +4492,7 @@ git commit -m "ci: lint, typecheck, unit + e2e tests, build"
 ### Task 33: GitHub Pages deploy workflow
 
 **Files:**
+
 - Create: `.github/workflows/deploy.yml`
 
 - [ ] **Step 1: Write workflow**
@@ -4202,11 +4548,12 @@ After pushing to GitHub, enable Pages in the repo settings: Source = "GitHub Act
 ### Task 34: README + final design audit
 
 **Files:**
+
 - Create: `README.md`
 
 - [ ] **Step 1: Write `README.md`**
 
-```markdown
+````markdown
 # Expense Calculator
 
 Standalone static expense calculator for splitting bills with friends. No accounts, no backend, no database.
@@ -4219,6 +4566,7 @@ Six split modes: equal, shares, exact, mileage/per-unit, restaurant itemized, lo
 npm install
 npm run dev
 ```
+````
 
 ## Test
 
@@ -4231,7 +4579,8 @@ npm run check         # full CI suite
 ## Deploy
 
 Auto-deployed to GitHub Pages on push to `main`.
-```
+
+````
 
 - [ ] **Step 2: Run a design audit pass**
 
@@ -4242,7 +4591,7 @@ Open the live dev server and run through the user flows. Note any visual issues.
 ```bash
 git add README.md
 git commit -m "docs: README"
-```
+````
 
 ---
 

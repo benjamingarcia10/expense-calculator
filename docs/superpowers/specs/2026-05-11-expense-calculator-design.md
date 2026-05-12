@@ -99,23 +99,23 @@ Single Zustand store (`useSession`) holding the whole session. localStorage midd
 
 ```ts
 type Session = {
-  v: 1                           // Schema version for future migrations
-  currency: string               // ISO-4217 code
-  title: string | null           // Optional session title (shown in Summary)
+  v: 1 // Schema version for future migrations
+  currency: string // ISO-4217 code
+  title: string | null // Optional session title (shown in Summary)
   people: Person[]
   expenses: Expense[]
-  createdAt: string              // ISO timestamp, used in Summary view
+  createdAt: string // ISO timestamp, used in Summary view
 }
 
 type Person = {
-  id: string                     // CUID, stable across renames
-  name: string                   // Max 30 chars, required
+  id: string // CUID, stable across renames
+  name: string // Max 30 chars, required
 }
 
 type ExpenseBase = {
   id: string
-  title: string                  // Max 60 chars, required
-  paidById: string               // Person.id
+  title: string // Max 60 chars, required
+  paidById: string // Person.id
 }
 
 type Expense =
@@ -123,19 +123,32 @@ type Expense =
   | (ExpenseBase & { type: 'shares'; total: number; shares: Record<string, number> })
   | (ExpenseBase & { type: 'exact'; total: number; amounts: Record<string, number> })
   | (ExpenseBase & { type: 'mileage'; total: number; unitLabel: string; units: Record<string, number> })
-  | (ExpenseBase & { type: 'restaurant'; items: RestaurantItem[]; tax: number; tip: number; serviceFee: number })
-  | (ExpenseBase & { type: 'lodging'; total: number; mode: 'simple' | 'tiered'; nights: Record<string, number>; rooms?: Room[]; assignments?: Record<string, string> })
+  | (ExpenseBase & {
+      type: 'restaurant'
+      items: RestaurantItem[]
+      tax: number
+      tip: number
+      serviceFee: number
+    })
+  | (ExpenseBase & {
+      type: 'lodging'
+      total: number
+      mode: 'simple' | 'tiered'
+      nights: Record<string, number>
+      rooms?: Room[]
+      assignments?: Record<string, string>
+    })
 
 type RestaurantItem = {
   id: string
-  name: string                   // Max 40 chars
+  name: string // Max 40 chars
   price: number
-  assignedIds: string[]          // Person.ids (no duplicates — no +1 support)
+  assignedIds: string[] // Person.ids (no duplicates — no +1 support)
 }
 
 type Room = {
   id: string
-  name: string                   // Max 30 chars
+  name: string // Max 30 chars
   nightlyRate: number
 }
 ```
@@ -204,13 +217,13 @@ On mount: if `location.hash.startsWith('#d=')`, decode and check for localStorag
 
 ### Failure modes & mitigations
 
-| Failure | Mitigation |
-|---|---|
-| URL too long for SMS/Slack | Show warning toast at 2 KB encoded, suggest "Download as JSON" fallback |
-| Decode error (truncated paste, bit-rot) | try/catch around decode, non-blocking toast, fall back to localStorage |
-| Schema mismatch | Version check on decode |
-| localStorage conflict | Confirm dialog, backup existing state on overwrite |
-| Hash dropped by link cleaners | "Copy as JSON" fallback exists for manual import |
+| Failure                                 | Mitigation                                                              |
+| --------------------------------------- | ----------------------------------------------------------------------- |
+| URL too long for SMS/Slack              | Show warning toast at 2 KB encoded, suggest "Download as JSON" fallback |
+| Decode error (truncated paste, bit-rot) | try/catch around decode, non-blocking toast, fall back to localStorage  |
+| Schema mismatch                         | Version check on decode                                                 |
+| localStorage conflict                   | Confirm dialog, backup existing state on overwrite                      |
+| Hash dropped by link cleaners           | "Copy as JSON" fallback exists for manual import                        |
 
 ### Privacy note
 
@@ -222,33 +235,33 @@ To keep encoded URLs under realistic chat-app thresholds (~2 KB ideal, ~4 KB har
 
 ### Length limits
 
-| Field | Max | Rationale |
-|---|---|---|
-| Person name | 30 chars | "Alice Garcia-Smith" fits comfortably; URL gain per char is real |
-| Expense title | 60 chars | "Dinner at Roberta's Pizza in Bushwick" fits; longer titles encourage notes elsewhere |
-| Restaurant item name | 40 chars | "Truffle pizza, half pepperoni" fits |
-| Mileage unit label | 12 chars | "kWh", "miles", "kilometers" all fit |
-| Session title | 50 chars | "Tahoe weekend with the gang" |
-| Room name | 30 chars | "Master suite", "Loft" |
+| Field                | Max      | Rationale                                                                             |
+| -------------------- | -------- | ------------------------------------------------------------------------------------- |
+| Person name          | 30 chars | "Alice Garcia-Smith" fits comfortably; URL gain per char is real                      |
+| Expense title        | 60 chars | "Dinner at Roberta's Pizza in Bushwick" fits; longer titles encourage notes elsewhere |
+| Restaurant item name | 40 chars | "Truffle pizza, half pepperoni" fits                                                  |
+| Mileage unit label   | 12 chars | "kWh", "miles", "kilometers" all fit                                                  |
+| Session title        | 50 chars | "Tahoe weekend with the gang"                                                         |
+| Room name            | 30 chars | "Master suite", "Loft"                                                                |
 
 ### Cardinality limits
 
-| Item | Max | Behavior past limit |
-|---|---|---|
-| People per session | 25 | "Add" button disabled with tooltip |
-| Expenses per session | 100 | "Add" button disabled with tooltip + suggestion to start fresh session |
-| Restaurant items per expense | 50 | Item add disabled with tooltip |
-| Rooms per lodging expense | 10 | Room add disabled with tooltip |
-| Currency code | ISO-4217 list of ~30 common codes | Dropdown, no free text |
+| Item                         | Max                               | Behavior past limit                                                    |
+| ---------------------------- | --------------------------------- | ---------------------------------------------------------------------- |
+| People per session           | 25                                | "Add" button disabled with tooltip                                     |
+| Expenses per session         | 100                               | "Add" button disabled with tooltip + suggestion to start fresh session |
+| Restaurant items per expense | 50                                | Item add disabled with tooltip                                         |
+| Rooms per lodging expense    | 10                                | Room add disabled with tooltip                                         |
+| Currency code                | ISO-4217 list of ~30 common codes | Dropdown, no free text                                                 |
 
 ### Numeric limits
 
-| Field | Range | Precision |
-|---|---|---|
+| Field                        | Range        | Precision                    |
+| ---------------------------- | ------------ | ---------------------------- |
 | Money (total, prices, rates) | 0–999,999.99 | 2 decimals (rounded on blur) |
-| Nights | 0–365 | Integer |
-| Mileage units | 0–99,999 | 2 decimals |
-| Share count | 0–99 | 2 decimals |
+| Nights                       | 0–365        | Integer                      |
+| Mileage units                | 0–99,999     | 2 decimals                   |
+| Share count                  | 0–99         | 2 decimals                   |
 
 ### Character set
 
@@ -355,6 +368,7 @@ Design rules:
 Three primary actions across the top of Summary:
 
 1. **Copy as Text** — plaintext for groupchats that strip images.
+
    ```
    Tahoe Weekend (Mar 8, 2026)
    Total: $1,247.30 across 4 people, 8 expenses
@@ -364,6 +378,7 @@ Three primary actions across the top of Summary:
    • Carol → Alice  $89.00
    • Dan → Bob  $34.25
    ```
+
 2. **Download as Image** — uses `html-to-image` to render the Summary view to 2×-DPI PNG. Filename derived from the session title (sanitized) or `expense-summary-<date>.png`.
 3. **Download as JSON** — full session backup. Universal fallback when URL sharing breaks.
 

@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --color-bg: oklch(98% 0.01 80);
@@ -7,8 +7,8 @@
   --color-muted: oklch(50% 0.02 270);
   --color-accent: oklch(65% 0.18 25);
   --color-border: oklch(92% 0.01 270);
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,4 +21,9 @@
   }
 }
 
-html, body { background: var(--color-bg); color: var(--color-ink); font-family: var(--font-sans); }
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
