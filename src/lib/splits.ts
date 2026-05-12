@@ -46,3 +46,42 @@ export function distributeByWeight(total: Money, weights: Record<string, number>
   }
   return result
 }
+
+export interface EqualInput {
+  total: Money
+  participantKeys: readonly string[]
+}
+export interface SharesInput {
+  total: Money
+  multipliers: Record<string, number>
+}
+export interface ExactInput {
+  total: Money
+  amounts: Record<string, Money>
+}
+
+export function computeEqualSplit(input: EqualInput): SplitResult {
+  if (input.participantKeys.length === 0) throw new EmptySplitError('equal')
+  const weights: Record<string, number> = {}
+  for (const k of input.participantKeys) weights[k] = (weights[k] ?? 0) + 1
+  return distributeByWeight(input.total, weights)
+}
+
+export function computeSharesSplit(input: SharesInput): SplitResult {
+  const positive = Object.entries(input.multipliers).filter(([, m]) => m > 0)
+  if (positive.length === 0) throw new EmptySplitError('shares')
+  return distributeByWeight(input.total, Object.fromEntries(positive))
+}
+
+export function computeExactSplit(input: ExactInput): SplitResult {
+  const rounded: SplitResult = {}
+  for (const [key, amount] of Object.entries(input.amounts)) {
+    rounded[key] = Math.round(amount * 100) / 100
+  }
+  const sum = Object.values(rounded).reduce((s, v) => s + v, 0)
+  const deltaPennies = Math.round((input.total - sum) * 100)
+  if (deltaPennies !== 0) {
+    throw new ExactSplitMismatchError(input.total, sum, deltaPennies / 100)
+  }
+  return rounded
+}

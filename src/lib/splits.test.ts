@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { distributeByWeight } from './splits'
+import {
+  distributeByWeight,
+  computeEqualSplit,
+  computeSharesSplit,
+  computeExactSplit,
+  EmptySplitError,
+  ExactSplitMismatchError,
+} from './splits'
 
 describe('distributeByWeight', () => {
   it('splits $10 evenly into 3 with no penny loss', () => {
@@ -29,5 +36,36 @@ describe('distributeByWeight', () => {
     const a = distributeByWeight(10, { z: 1, a: 1, m: 1 })
     const b = distributeByWeight(10, { a: 1, m: 1, z: 1 })
     expect(a).toEqual(b)
+  })
+})
+
+describe('computeEqualSplit', () => {
+  it('splits 100 among 3', () => {
+    const r = computeEqualSplit({ total: 100, participantKeys: ['a', 'b', 'c'] })
+    expect(r.a + r.b + r.c).toBeCloseTo(100, 10)
+  })
+  it('throws on empty', () => {
+    expect(() => computeEqualSplit({ total: 100, participantKeys: [] })).toThrow(EmptySplitError)
+  })
+})
+
+describe('computeSharesSplit', () => {
+  it('weights apply', () => {
+    const r = computeSharesSplit({ total: 90, multipliers: { a: 1, b: 2 } })
+    expect(r.a).toBe(30)
+    expect(r.b).toBe(60)
+  })
+  it('throws when all zero', () => {
+    expect(() => computeSharesSplit({ total: 100, multipliers: { a: 0, b: 0 } })).toThrow(EmptySplitError)
+  })
+})
+
+describe('computeExactSplit', () => {
+  it('accepts exact sum', () => {
+    const r = computeExactSplit({ total: 100, amounts: { a: 60, b: 40 } })
+    expect(r).toEqual({ a: 60, b: 40 })
+  })
+  it('throws on mismatch', () => {
+    expect(() => computeExactSplit({ total: 100, amounts: { a: 60, b: 41 } })).toThrow(ExactSplitMismatchError)
   })
 })
