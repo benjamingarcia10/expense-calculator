@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Header } from './components/Header'
+import { PeoplePanel } from './components/PeoplePanel'
 
 export default function App() {
   const [summaryOpen, setSummaryOpen] = useState(false)
@@ -9,9 +10,7 @@ export default function App() {
       <Header onOpenSummary={() => setSummaryOpen(true)} onOpenShare={() => setShareOpen(true)} />
       <main className="mx-auto max-w-6xl px-4 py-6 md:px-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <section className="rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
-            People (placeholder)
-          </section>
+          <PeoplePanel />
           <section className="rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
             Balances (placeholder)
           </section>
