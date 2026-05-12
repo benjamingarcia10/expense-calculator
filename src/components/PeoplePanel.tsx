@@ -41,7 +41,7 @@ export function PeoplePanel() {
               <button
                 aria-label={`remove ${p.name}`}
                 onClick={() => removePerson(p.id)}
-                className="text-[var(--color-muted)] hover:text-red-600"
+                className="grid size-11 place-items-center rounded-md text-[var(--color-muted)] hover:bg-red-600/15 hover:text-red-600"
               >
                 <Trash2 className="size-4" />
               </button>
@@ -67,7 +67,9 @@ export function PeoplePanel() {
           <UserPlus className="size-4" /> Add
         </Button>
       </form>
-      {atMax && <p className="text-xs text-[var(--color-muted)]">Limit of {LIMITS.maxPeople} people reached.</p>}
+      {atMax && (
+        <p className="text-xs text-[var(--color-muted)]">Limit of {LIMITS.maxPeople} people reached.</p>
+      )}
     </section>
   )
 }

@@ -13,7 +13,7 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
   const createdAt = useSession((s) => s.createdAt)
   const session: Session = { v, currency, title, people, expenses, createdAt }
 
-  const [copied, setCopied] = useState(false)
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
   const { url, length } = useMemo(() => {
     const url = buildShareUrl(window.location.href, session)
     return { url, length: encodeSession(session).length }
@@ -21,10 +21,16 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
   }, [v, currency, title, people, expenses, createdAt])
 
   function copy() {
-    void navigator.clipboard.writeText(url).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    })
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        setCopyState('copied')
+        setTimeout(() => setCopyState('idle'), 1500)
+      })
+      .catch(() => {
+        setCopyState('error')
+        setTimeout(() => setCopyState('idle'), 2500)
+      })
   }
 
   return (
@@ -39,11 +45,16 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
             Long URL — may not render in some chat apps. Use the JSON download from Summary as a fallback.
           </p>
         )}
+        {copyState === 'error' && (
+          <p className="text-xs text-red-500" role="status">
+            Couldn’t copy — select the link above and copy manually
+          </p>
+        )}
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
-          <Button onClick={copy}>{copied ? 'Copied!' : 'Copy link'}</Button>
+          <Button onClick={copy}>{copyState === 'copied' ? 'Copied!' : 'Copy link'}</Button>
         </div>
       </div>
     </Dialog>

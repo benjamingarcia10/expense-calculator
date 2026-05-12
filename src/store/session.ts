@@ -9,7 +9,7 @@ import {
   sanitizeSessionTitle,
   LIMITS,
 } from '../lib/validation'
-import { DEFAULT_CURRENCY } from '../lib/currencies'
+import { DEFAULT_CURRENCY, isCurrencyCode } from '../lib/currencies'
 
 function newId(prefix: string): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}`
@@ -107,7 +107,9 @@ export const useSession = create<SessionStore>()(
         set({ people: get().people.filter((p) => p.id !== id), expenses: next })
       },
 
-      setCurrency: (code) => set({ currency: code }),
+      setCurrency: (code) => {
+        if (isCurrencyCode(code)) set({ currency: code })
+      },
 
       setTitle: (title) => set({ title: sanitizeSessionTitle(title) || null }),
 
@@ -146,6 +148,14 @@ export const useSession = create<SessionStore>()(
       name: 'expense-calculator-session',
       storage: createJSONStorage(() => localStorage),
       version: SCHEMA_VERSION,
+      migrate: (persisted, version) => {
+        // No migrations needed yet — accept any prior version as-is.
+        // When a breaking change ships, add a migration here instead of letting Zustand wipe state.
+        if (version !== SCHEMA_VERSION) {
+          console.warn(`Loaded session with schema v${version}, current is v${SCHEMA_VERSION}`)
+        }
+        return persisted as never
+      },
     }
   )
 )

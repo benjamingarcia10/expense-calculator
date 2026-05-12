@@ -53,7 +53,7 @@ export function Header({
         <button
           onClick={() => setConfirming(true)}
           aria-label="reset"
-          className="text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+          className="grid size-11 place-items-center rounded-md text-[var(--color-muted)] hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)]"
         >
           <RotateCcw className="size-4" />
         </button>

@@ -9,15 +9,7 @@ import { expenseTotal } from '../types'
 import { formatMoney } from '../lib/format'
 import type { CurrencyCode } from '../lib/currencies'
 import { LIMITS } from '../lib/validation'
-
-const TYPE_LABELS: Record<Expense['type'], string> = {
-  equal: 'equal',
-  shares: 'shares',
-  exact: 'exact',
-  mileage: 'mileage',
-  restaurant: 'itemized',
-  lodging: 'lodging',
-}
+import { EXPENSE_TYPE_LABELS } from './summary/exports'
 
 export function ExpensesPanel() {
   const expenses = useSession((s) => s.expenses)
@@ -60,20 +52,20 @@ export function ExpensesPanel() {
             >
               <div className="min-w-0 flex-1">
                 <div className="truncate font-medium">{e.title}</div>
-                <div className="text-xs text-[var(--color-muted)]">{TYPE_LABELS[e.type]}</div>
+                <div className="text-xs text-[var(--color-muted)]">{EXPENSE_TYPE_LABELS[e.type]}</div>
               </div>
               <div className="ml-3 font-mono tabular-nums">{formatMoney(expenseTotal(e), currency)}</div>
-              <div className="ml-3 flex gap-1">
+              <div className="ml-2 flex gap-0.5">
                 <button
                   onClick={() => openEdit(e)}
-                  className="text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                  className="grid size-11 place-items-center rounded-md text-[var(--color-muted)] hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)]"
                   aria-label={`edit ${e.title}`}
                 >
                   <Pencil className="size-4" />
                 </button>
                 <button
                   onClick={() => removeExpense(e.id)}
-                  className="text-[var(--color-muted)] hover:text-red-600"
+                  className="grid size-11 place-items-center rounded-md text-[var(--color-muted)] hover:bg-red-600/15 hover:text-red-600"
                   aria-label={`delete ${e.title}`}
                 >
                   <Trash2 className="size-4" />

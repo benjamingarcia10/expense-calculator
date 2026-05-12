@@ -1,21 +1,12 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Dialog, Button } from '../ui'
 import { useSession } from '../../store/session'
 import { computeBalances } from '../../lib/compute-balances'
 import { simplifyDebts } from '../../lib/simplify-debts'
 import { formatMoney, formatDate } from '../../lib/format'
-import { buildSummaryText, downloadJson, downloadImage } from './exports'
+import { buildSummaryText, downloadJson, downloadImage, EXPENSE_TYPE_LABELS } from './exports'
 import { expenseTotal, type Session } from '../../types'
 import type { CurrencyCode } from '../../lib/currencies'
-
-const TYPE_LABELS: Record<string, string> = {
-  equal: 'split equally',
-  shares: 'by shares',
-  exact: 'exact amounts',
-  mileage: 'by mileage',
-  restaurant: 'itemized',
-  lodging: 'by nights',
-}
 
 export function SummaryView({ open, onClose }: { open: boolean; onClose: () => void }) {
   const v = useSession((s) => s.v)
@@ -27,6 +18,7 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
   const session: Session = { v, currency, title, people, expenses, createdAt }
 
   const cardRef = useRef<HTMLDivElement>(null)
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
   const debts = useMemo(() => simplifyDebts(computeBalances(people, expenses)), [people, expenses])
   const totalSpent = expenses.reduce((s, e) => s + expenseTotal(e), 0)
   const c = currency as CurrencyCode
@@ -77,7 +69,7 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
                         <span className="tabular-nums">{formatMoney(expenseTotal(e), c)}</span>
                       </div>
                       <span className="text-xs text-slate-500">
-                        {payer} paid · {TYPE_LABELS[e.type]}
+                        {payer} paid · {EXPENSE_TYPE_LABELS[e.type]}
                       </span>
                     </li>
                   )
@@ -85,13 +77,28 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
               </ul>
             </div>
           )}
-          <p className="pt-2 text-center text-xs text-slate-400">expensecalc</p>
         </div>
+        {copyState !== 'idle' && (
+          <p
+            className={`text-xs ${copyState === 'copied' ? 'text-emerald-600' : 'text-red-500'}`}
+            role="status"
+          >
+            {copyState === 'copied' ? 'Copied to clipboard' : 'Couldn’t copy — select and copy manually'}
+          </p>
+        )}
         <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => navigator.clipboard.writeText(buildSummaryText(session))}
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(buildSummaryText(session))
+                setCopyState('copied')
+              } catch {
+                setCopyState('error')
+              }
+              setTimeout(() => setCopyState('idle'), 2000)
+            }}
           >
             Copy as Text
           </Button>

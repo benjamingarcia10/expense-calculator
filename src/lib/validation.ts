@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { SCHEMA_VERSION } from '../types'
+import { isCurrencyCode } from './currencies'
 
 export const LIMITS = {
   personName: 30,
@@ -18,7 +19,6 @@ export const LIMITS = {
   sharesMax: 99,
 } as const
 
-// eslint-disable-next-line no-irregular-whitespace
 const ZW_RE = /[​-‍﻿⁠]/g
 
 function sanitize(input: string, max: number): string {
@@ -130,6 +130,35 @@ export function validateSession(
   input: unknown
 ): { success: true; data: ValidatedSession } | { success: false; error: string } {
   const result = SessionSchema.safeParse(input)
-  if (result.success) return { success: true, data: result.data }
-  return { success: false, error: result.error.issues[0]?.message ?? 'Invalid session' }
+  if (!result.success) {
+    return { success: false, error: result.error.issues[0]?.message ?? 'Invalid session' }
+  }
+  const session = result.data
+  if (!isCurrencyCode(session.currency)) {
+    return { success: false, error: `Unsupported currency: ${session.currency}` }
+  }
+  const personIds = new Set(session.people.map((p) => p.id))
+  for (const expense of session.expenses) {
+    if (!personIds.has(expense.paidById)) {
+      return { success: false, error: `Expense "${expense.title}" references unknown payer` }
+    }
+    const referencedIds: string[] = []
+    if (expense.type === 'equal') referencedIds.push(...expense.participantIds)
+    if (expense.type === 'shares') referencedIds.push(...Object.keys(expense.shares))
+    if (expense.type === 'exact') referencedIds.push(...Object.keys(expense.amounts))
+    if (expense.type === 'mileage') referencedIds.push(...Object.keys(expense.units))
+    if (expense.type === 'restaurant') {
+      for (const item of expense.items) referencedIds.push(...item.assignedIds)
+    }
+    if (expense.type === 'lodging') {
+      referencedIds.push(...Object.keys(expense.nights))
+      if (expense.assignments) referencedIds.push(...Object.keys(expense.assignments))
+    }
+    for (const id of referencedIds) {
+      if (!personIds.has(id)) {
+        return { success: false, error: `Expense "${expense.title}" references unknown person` }
+      }
+    }
+  }
+  return { success: true, data: session }
 }

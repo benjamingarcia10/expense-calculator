@@ -47,5 +47,16 @@ export async function downloadImage(node: HTMLElement, filename: string): Promis
   const a = document.createElement('a')
   a.href = dataUrl
   a.download = filename
+  document.body.appendChild(a)
   a.click()
+  document.body.removeChild(a)
 }
+
+export const EXPENSE_TYPE_LABELS = {
+  equal: 'split equally',
+  shares: 'by shares',
+  exact: 'exact amounts',
+  mileage: 'by mileage',
+  restaurant: 'itemized',
+  lodging: 'by nights',
+} as const
