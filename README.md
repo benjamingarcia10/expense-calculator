@@ -1,73 +1,48 @@
-# React + TypeScript + Vite
+# Expense Calculator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A standalone, static, single-page expense calculator for splitting bills with friends. No backend, no accounts, no database. All state lives in the browser; sessions are shared via URL hash.
 
-Currently, two official plugins are available:
+Six split modes:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Equal** — even split among selected people
+- **Shares** — proportional weights (e.g. 2:1:1)
+- **Exact** — manually enter each person's amount, with live delta validation
+- **Mileage** — split by miles, hours, or other units
+- **Restaurant** — itemized bill with tax, tip, service fee
+- **Lodging** — split by nights stayed; optional room tiers with different rates
 
-## React Compiler
+## Local development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm run dev          # vite dev server
+npm run build        # production build (writes dist/ + 404.html SPA shim)
+npm run preview      # preview the production build
+npm run test         # vitest unit + component tests
+npm run test:e2e     # playwright end-to-end
+npm run typecheck    # tsc --noEmit
+npm run lint         # eslint --max-warnings 0
+npm run format       # prettier --write .
 ```
+
+## Architecture
+
+- Vite + React 19 + TypeScript
+- Tailwind v4 (CSS-first `@theme` tokens, no `tailwind.config.js`)
+- Zustand store with localStorage persistence
+- framer-motion for transitions
+- pako gzip + base64url for URL hash sharing
+- html-to-image for the Summary screenshot export
+- Vitest for unit/component tests; Playwright for E2E
+
+## Deployment
+
+GitHub Pages, auto-deployed on push to `main` via `.github/workflows/deploy.yml`. The Vite `base` is `/expense-calculator/`; the build copies `index.html` to `404.html` so deep links resolve client-side.
+
+After the first push, enable Pages in the repo settings → "Build and deployment" → Source = "GitHub Actions".
