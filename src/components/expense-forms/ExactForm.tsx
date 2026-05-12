@@ -65,7 +65,7 @@ export function ExactForm({ editing, onDone }: { editing: Expense | null; onDone
         <select
           value={paidById}
           onChange={(e) => setPaidById(e.target.value)}
-          className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm"
+          className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
         >
           {people.map((p) => (
             <option key={p.id} value={p.id}>
@@ -75,7 +75,7 @@ export function ExactForm({ editing, onDone }: { editing: Expense | null; onDone
         </select>
       </label>
       <div className="flex flex-col gap-2 text-sm">
-        <span className="text-[--color-muted]">Amounts</span>
+        <span className="text-[var(--color-muted)]">Amounts</span>
         {people.map((p) => (
           <label key={p.id} className="flex items-center gap-2">
             <span className="flex-1">{p.name}</span>
@@ -91,7 +91,7 @@ export function ExactForm({ editing, onDone }: { editing: Expense | null; onDone
             />
           </label>
         ))}
-        <p className={`text-xs ${Math.abs(delta) < 0.005 ? 'text-[--color-muted]' : 'text-red-500'}`}>
+        <p className={`text-xs ${Math.abs(delta) < 0.005 ? 'text-[var(--color-muted)]' : 'text-red-500'}`}>
           Sum: {formatMoney(sum, currency)} · Delta: {formatMoney(delta, currency)}
         </p>
       </div>

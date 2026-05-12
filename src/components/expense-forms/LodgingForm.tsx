@@ -63,7 +63,7 @@ export function LodgingForm({ editing, onDone }: { editing: Expense | null; onDo
         <select
           value={paidById}
           onChange={(e) => setPaidById(e.target.value)}
-          className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm"
+          className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
         >
           {people.map((p) => (
             <option key={p.id} value={p.id}>
@@ -82,7 +82,7 @@ export function LodgingForm({ editing, onDone }: { editing: Expense | null; onDo
       </label>
       {mode === 'tiered' && (
         <div className="flex flex-col gap-2 text-sm">
-          <span className="text-[--color-muted]">Rooms</span>
+          <span className="text-[var(--color-muted)]">Rooms</span>
           {rooms.map((r, idx) => (
             <div key={r.id} className="flex gap-2">
               <Input
@@ -111,7 +111,7 @@ export function LodgingForm({ editing, onDone }: { editing: Expense | null; onDo
               <button
                 onClick={() => setRooms((cur) => cur.filter((_, i) => i !== idx))}
                 aria-label="remove room"
-                className="text-[--color-muted] hover:text-red-600"
+                className="text-[var(--color-muted)] hover:text-red-600"
               >
                 <Trash2 className="size-4" />
               </button>
@@ -128,7 +128,7 @@ export function LodgingForm({ editing, onDone }: { editing: Expense | null; onDo
         </div>
       )}
       <div className="flex flex-col gap-2 text-sm">
-        <span className="text-[--color-muted]">Nights per person</span>
+        <span className="text-[var(--color-muted)]">Nights per person</span>
         {people.map((p) => (
           <label key={p.id} className="flex items-center gap-2">
             <span className="flex-1">{p.name}</span>
@@ -146,7 +146,7 @@ export function LodgingForm({ editing, onDone }: { editing: Expense | null; onDo
                 aria-label={`room for ${p.name}`}
                 value={assignments[p.id] ?? ''}
                 onChange={(e) => setAssignments({ ...assignments, [p.id]: e.target.value })}
-                className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-2 text-sm"
+                className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-2 text-sm"
               >
                 <option value="">— room —</option>
                 {rooms.map((r) => (

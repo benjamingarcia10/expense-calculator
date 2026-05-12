@@ -56,7 +56,7 @@ export function EqualForm({ editing, onDone }: { editing: Expense | null; onDone
         <select
           value={paidById}
           onChange={(e) => setPaidById(e.target.value)}
-          className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm"
+          className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
         >
           {people.map((p) => (
             <option key={p.id} value={p.id}>
@@ -66,7 +66,7 @@ export function EqualForm({ editing, onDone }: { editing: Expense | null; onDone
         </select>
       </label>
       <fieldset className="flex flex-col gap-2 text-sm">
-        <legend className="text-[--color-muted]">Split between</legend>
+        <legend className="text-[var(--color-muted)]">Split between</legend>
         {people.map((p) => (
           <label key={p.id} className="flex items-center gap-2">
             <input type="checkbox" checked={participantIds.includes(p.id)} onChange={() => toggle(p.id)} />

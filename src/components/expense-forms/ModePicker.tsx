@@ -23,11 +23,11 @@ export function ModePicker({ onPick }: { onPick: (type: ExpenseType) => void }) 
         <button
           key={type}
           onClick={() => onPick(type)}
-          className="flex flex-col items-start gap-1 rounded-xl border border-[--color-border] bg-[--color-surface] p-3 text-left transition-colors hover:border-[--color-accent]"
+          className="flex flex-col items-start gap-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-left transition-colors hover:border-[var(--color-accent)]"
         >
-          <Icon className="size-5 text-[--color-accent]" />
+          <Icon className="size-5 text-[var(--color-accent)]" />
           <span className="text-sm font-medium">{label}</span>
-          <span className="text-xs text-[--color-muted]">{description}</span>
+          <span className="text-xs text-[var(--color-muted)]">{description}</span>
         </button>
       ))}
     </div>

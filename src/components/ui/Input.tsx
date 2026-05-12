@@ -9,8 +9,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <input
         ref={ref}
-        className={`h-10 w-full rounded-lg border bg-[--color-surface] px-3 text-sm text-[--color-ink] outline-none transition-colors ${
-          invalid ? 'border-red-500' : 'border-[--color-border] focus:border-[--color-accent]'
+        className={`h-10 w-full rounded-lg border bg-[var(--color-surface)] px-3 text-sm text-[var(--color-ink)] outline-none transition-colors ${
+          invalid ? 'border-red-500' : 'border-[var(--color-border)] focus:border-[var(--color-accent)]'
         } ${className}`}
         {...props}
       />

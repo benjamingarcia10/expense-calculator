@@ -20,10 +20,10 @@ export function PeoplePanel() {
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
+    <section className="flex flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold">
-          People <span className="text-[--color-muted]">({people.length})</span>
+          People <span className="text-[var(--color-muted)]">({people.length})</span>
         </h2>
       </div>
       <ul className="flex flex-col gap-1">
@@ -35,13 +35,13 @@ export function PeoplePanel() {
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: 8 }}
-              className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-[--color-border]/30"
+              className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-[var(--color-border)]/30"
             >
               <span className="truncate">{p.name}</span>
               <button
                 aria-label={`remove ${p.name}`}
                 onClick={() => removePerson(p.id)}
-                className="text-[--color-muted] hover:text-red-600"
+                className="text-[var(--color-muted)] hover:text-red-600"
               >
                 <Trash2 className="size-4" />
               </button>
@@ -67,7 +67,7 @@ export function PeoplePanel() {
           <UserPlus className="size-4" /> Add
         </Button>
       </form>
-      {atMax && <p className="text-xs text-[--color-muted]">Limit of {LIMITS.maxPeople} people reached.</p>}
+      {atMax && <p className="text-xs text-[var(--color-muted)]">Limit of {LIMITS.maxPeople} people reached.</p>}
     </section>
   )
 }

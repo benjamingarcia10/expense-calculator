@@ -15,7 +15,7 @@ export default function App() {
   const { pending, accept, reject } = useUrlImport()
 
   return (
-    <div className="min-h-dvh bg-[--color-bg] text-[--color-ink]">
+    <div className="min-h-dvh bg-[var(--color-bg)] text-[var(--color-ink)]">
       <Header onOpenSummary={() => setSummaryOpen(true)} onOpenShare={() => setShareOpen(true)} />
       <main className="mx-auto max-w-6xl px-4 py-6 md:px-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

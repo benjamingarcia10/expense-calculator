@@ -20,7 +20,7 @@ export function Header({
   const [confirming, setConfirming] = useState(false)
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[--color-border] px-4 py-3 md:px-6">
+    <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] px-4 py-3 md:px-6">
       <div className="flex flex-1 items-center gap-2">
         <input
           aria-label="session title"
@@ -28,14 +28,14 @@ export function Header({
           value={title ?? ''}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={LIMITS.sessionTitle}
-          className="bg-transparent text-lg font-semibold tracking-tight outline-none placeholder:text-[--color-muted] md:text-xl"
+          className="bg-transparent text-lg font-semibold tracking-tight outline-none placeholder:text-[var(--color-muted)] md:text-xl"
         />
       </div>
       <div className="flex items-center gap-2">
         <select
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
-          className="h-9 rounded-md border border-[--color-border] bg-[--color-surface] px-2 text-sm"
+          className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 text-sm"
           aria-label="currency"
         >
           {CURRENCIES.map((c) => (
@@ -53,7 +53,7 @@ export function Header({
         <button
           onClick={() => setConfirming(true)}
           aria-label="reset"
-          className="text-[--color-muted] hover:text-[--color-ink]"
+          className="text-[var(--color-muted)] hover:text-[var(--color-ink)]"
         >
           <RotateCcw className="size-4" />
         </button>

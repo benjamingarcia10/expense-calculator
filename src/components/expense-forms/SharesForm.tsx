@@ -59,7 +59,7 @@ export function SharesForm({ editing, onDone }: { editing: Expense | null; onDon
         <select
           value={paidById}
           onChange={(e) => setPaidById(e.target.value)}
-          className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm"
+          className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
         >
           {people.map((p) => (
             <option key={p.id} value={p.id}>
@@ -69,7 +69,7 @@ export function SharesForm({ editing, onDone }: { editing: Expense | null; onDon
         </select>
       </label>
       <div className="flex flex-col gap-2 text-sm">
-        <span className="text-[--color-muted]">Shares per person</span>
+        <span className="text-[var(--color-muted)]">Shares per person</span>
         {people.map((p) => (
           <label key={p.id} className="flex items-center gap-2">
             <span className="flex-1">{p.name}</span>

@@ -78,7 +78,7 @@ export function RestaurantForm({ editing, onDone }: { editing: Expense | null; o
         <select
           value={paidById}
           onChange={(e) => setPaidById(e.target.value)}
-          className="h-10 rounded-lg border border-[--color-border] bg-[--color-surface] px-3 text-sm"
+          className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
         >
           {people.map((p) => (
             <option key={p.id} value={p.id}>
@@ -88,9 +88,9 @@ export function RestaurantForm({ editing, onDone }: { editing: Expense | null; o
         </select>
       </label>
       <div className="flex flex-col gap-2 text-sm">
-        <span className="text-[--color-muted]">Items</span>
+        <span className="text-[var(--color-muted)]">Items</span>
         {items.map((it, idx) => (
-          <div key={it.id} className="rounded-lg border border-[--color-border] p-2">
+          <div key={it.id} className="rounded-lg border border-[var(--color-border)] p-2">
             <div className="flex gap-2">
               <Input
                 aria-label="item name"
@@ -112,7 +112,7 @@ export function RestaurantForm({ editing, onDone }: { editing: Expense | null; o
               <button
                 onClick={() => removeItem(idx)}
                 aria-label="remove item"
-                className="text-[--color-muted] hover:text-red-600"
+                className="text-[var(--color-muted)] hover:text-red-600"
               >
                 <Trash2 className="size-4" />
               </button>

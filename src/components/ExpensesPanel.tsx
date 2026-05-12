@@ -38,10 +38,10 @@ export function ExpensesPanel() {
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-[--color-border] bg-[--color-surface] p-4 md:col-span-3">
+    <section className="flex flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 md:col-span-3">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold">
-          Expenses <span className="text-[--color-muted]">({expenses.length})</span>
+          Expenses <span className="text-[var(--color-muted)]">({expenses.length})</span>
         </h2>
         <Button size="sm" onClick={openNew} disabled={atMax}>
           <Plus className="size-4" /> Add expense
@@ -56,24 +56,24 @@ export function ExpensesPanel() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center justify-between rounded-md px-2 py-2 hover:bg-[--color-border]/30"
+              className="flex items-center justify-between rounded-md px-2 py-2 hover:bg-[var(--color-border)]/30"
             >
               <div className="min-w-0 flex-1">
                 <div className="truncate font-medium">{e.title}</div>
-                <div className="text-xs text-[--color-muted]">{TYPE_LABELS[e.type]}</div>
+                <div className="text-xs text-[var(--color-muted)]">{TYPE_LABELS[e.type]}</div>
               </div>
               <div className="ml-3 font-mono tabular-nums">{formatMoney(expenseTotal(e), currency)}</div>
               <div className="ml-3 flex gap-1">
                 <button
                   onClick={() => openEdit(e)}
-                  className="text-[--color-muted] hover:text-[--color-ink]"
+                  className="text-[var(--color-muted)] hover:text-[var(--color-ink)]"
                   aria-label={`edit ${e.title}`}
                 >
                   <Pencil className="size-4" />
                 </button>
                 <button
                   onClick={() => removeExpense(e.id)}
-                  className="text-[--color-muted] hover:text-red-600"
+                  className="text-[var(--color-muted)] hover:text-red-600"
                   aria-label={`delete ${e.title}`}
                 >
                   <Trash2 className="size-4" />
@@ -84,7 +84,7 @@ export function ExpensesPanel() {
         </AnimatePresence>
       </ul>
       {expenses.length === 0 && (
-        <p className="text-sm text-[--color-muted]">No expenses yet. Add your first one.</p>
+        <p className="text-sm text-[var(--color-muted)]">No expenses yet. Add your first one.</p>
       )}
       <ExpenseSheet open={open} onClose={() => setOpen(false)} editing={editing} />
     </section>

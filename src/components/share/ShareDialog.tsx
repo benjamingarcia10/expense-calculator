@@ -30,7 +30,7 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
   return (
     <Dialog open={open} onClose={onClose} title="Share session">
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-[--color-muted]">
+        <p className="text-sm text-[var(--color-muted)]">
           Anyone with this link can see the session. Names are the only personal data stored.
         </p>
         <Input readOnly value={url} onFocus={(e) => e.currentTarget.select()} />

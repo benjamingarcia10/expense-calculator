@@ -14,10 +14,10 @@ export function BalancesPanel() {
   const max = Math.max(1, ...balances.map((b) => Math.abs(b.net)))
 
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
+    <section className="flex flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
       <h2 className="font-semibold">Balances</h2>
       {balances.length === 0 ? (
-        <p className="text-sm text-[--color-muted]">Add people and expenses to see balances.</p>
+        <p className="text-sm text-[var(--color-muted)]">Add people and expenses to see balances.</p>
       ) : (
         <ul className="flex flex-col gap-2 text-sm">
           {balances.map((b) => {
@@ -31,7 +31,7 @@ export function BalancesPanel() {
                     {formatSigned(b.net, currency)}
                   </span>
                 </div>
-                <div className="h-1.5 w-full rounded-full bg-[--color-border]/50">
+                <div className="h-1.5 w-full rounded-full bg-[var(--color-border)]/50">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${pct}%` }}

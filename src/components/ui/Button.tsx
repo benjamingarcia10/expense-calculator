@@ -9,8 +9,8 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-[--color-accent] text-white hover:opacity-90 disabled:opacity-50',
-  ghost: 'bg-transparent text-[--color-ink] hover:bg-[--color-border] disabled:opacity-50',
+  primary: 'bg-[var(--color-accent)] text-white hover:opacity-90 disabled:opacity-50',
+  ghost: 'bg-transparent text-[var(--color-ink)] hover:bg-[var(--color-border)] disabled:opacity-50',
   danger: 'bg-red-600 text-white hover:bg-red-700 disabled:opacity-50',
 }
 

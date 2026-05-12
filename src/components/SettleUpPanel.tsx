@@ -14,10 +14,10 @@ export function SettleUpPanel() {
   const debts = useMemo(() => simplifyDebts(computeBalances(people, expenses)), [people, expenses])
 
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-[--color-border] bg-[--color-surface] p-4">
+    <section className="flex flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
       <h2 className="font-semibold">Settle Up</h2>
       {debts.length === 0 ? (
-        <p className="text-sm text-[--color-muted]">All even. Add expenses to see who owes whom.</p>
+        <p className="text-sm text-[var(--color-muted)]">All even. Add expenses to see who owes whom.</p>
       ) : (
         <ul className="flex flex-col gap-1 text-sm">
           <AnimatePresence initial={false}>
@@ -32,7 +32,7 @@ export function SettleUpPanel() {
               >
                 <span className="flex items-center gap-2">
                   <span>{d.fromName}</span>
-                  <ArrowRight className="size-3 text-[--color-muted]" />
+                  <ArrowRight className="size-3 text-[var(--color-muted)]" />
                   <span>{d.toName}</span>
                 </span>
                 <span className="font-mono tabular-nums">{formatMoney(d.amount, currency)}</span>
@@ -42,7 +42,7 @@ export function SettleUpPanel() {
         </ul>
       )}
       {debts.length > 0 && (
-        <p className="text-xs text-[--color-muted]">
+        <p className="text-xs text-[var(--color-muted)]">
           {debts.length} transaction{debts.length === 1 ? '' : 's'}
         </p>
       )}
