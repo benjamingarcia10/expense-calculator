@@ -11,7 +11,7 @@ export function PeoplePanel() {
   const addPerson = useSession((s) => s.addPerson)
   const removePerson = useSession((s) => s.removePerson)
   const [name, setName] = useState('')
-  const [pendingRemove, setPendingRemove] = useState<string | null>(null)
+  const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null)
 
   const atMax = people.length >= LIMITS.maxPeople
 
@@ -21,9 +21,8 @@ export function PeoplePanel() {
     setName('')
   }
 
-  const removingPerson = people.find((p) => p.id === pendingRemove) ?? null
   const removingPayerExpenses = pendingRemove
-    ? expenses.filter((e) => e.paidById === pendingRemove).length
+    ? expenses.filter((e) => e.paidById === pendingRemove.id).length
     : 0
 
   function attemptRemove(personId: string) {
@@ -48,7 +47,8 @@ export function PeoplePanel() {
         }
       })
     if (isReferenced) {
-      setPendingRemove(personId)
+      const person = people.find((p) => p.id === personId)
+      if (person) setPendingRemove({ id: person.id, name: person.name })
     } else {
       removePerson(personId)
     }
@@ -110,7 +110,7 @@ export function PeoplePanel() {
       <Dialog
         open={pendingRemove !== null}
         onClose={() => setPendingRemove(null)}
-        title={`Remove ${removingPerson?.name ?? ''}?`}
+        title={`Remove ${pendingRemove?.name ?? ''}?`}
       >
         <div className="flex flex-col gap-3">
           <p className="text-sm">
@@ -125,7 +125,7 @@ export function PeoplePanel() {
             <Button
               variant="danger"
               onClick={() => {
-                if (pendingRemove) removePerson(pendingRemove)
+                if (pendingRemove) removePerson(pendingRemove.id)
                 setPendingRemove(null)
               }}
             >
