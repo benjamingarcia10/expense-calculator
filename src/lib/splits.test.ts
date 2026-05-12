@@ -4,6 +4,7 @@ import {
   computeEqualSplit,
   computeSharesSplit,
   computeExactSplit,
+  computeItemizedSplit,
   EmptySplitError,
   ExactSplitMismatchError,
 } from './splits'
@@ -67,5 +68,47 @@ describe('computeExactSplit', () => {
   })
   it('throws on mismatch', () => {
     expect(() => computeExactSplit({ total: 100, amounts: { a: 60, b: 41 } })).toThrow(ExactSplitMismatchError)
+  })
+})
+
+describe('computeItemizedSplit', () => {
+  it('splits items and prorates tax/tip', () => {
+    const r = computeItemizedSplit({
+      items: [
+        { price: 20, assignedKeys: ['a'] },
+        { price: 30, assignedKeys: ['b'] },
+      ],
+      tax: 5,
+      tip: 10,
+      serviceFee: 0,
+    })
+    // Total = 65. a's food: 20 (40% of 50). a gets 20 + 40% of 15 = 26.
+    // b's food: 30 (60%). b gets 30 + 60% of 15 = 39.
+    expect(r.a).toBeCloseTo(26, 1)
+    expect(r.b).toBeCloseTo(39, 1)
+    expect(r.a + r.b).toBeCloseTo(65, 10)
+  })
+
+  it('splits an item among multiple assignees per-head', () => {
+    const r = computeItemizedSplit({
+      items: [{ price: 30, assignedKeys: ['a', 'b', 'c'] }],
+      tax: 0,
+      tip: 0,
+      serviceFee: 0,
+    })
+    expect(r.a + r.b + r.c).toBeCloseTo(30, 10)
+  })
+
+  it('ignores items with no assignees', () => {
+    const r = computeItemizedSplit({
+      items: [
+        { price: 10, assignedKeys: ['a'] },
+        { price: 50, assignedKeys: [] },
+      ],
+      tax: 0,
+      tip: 0,
+      serviceFee: 0,
+    })
+    expect(r).toEqual({ a: 10 })
   })
 })

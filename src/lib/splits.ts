@@ -85,3 +85,35 @@ export function computeExactSplit(input: ExactInput): SplitResult {
   }
   return rounded
 }
+
+export interface ItemizedItem {
+  price: Money
+  assignedKeys: readonly string[]
+}
+export interface ItemizedInput {
+  items: readonly ItemizedItem[]
+  tax: Money
+  tip: Money
+  serviceFee: Money
+}
+
+export function computeItemizedSplit(input: ItemizedInput): SplitResult {
+  const foodSubtotals: Record<string, number> = {}
+  for (const item of input.items) {
+    const count = item.assignedKeys.length
+    if (count === 0) continue
+    const perHeadShare = item.price / count
+    for (const key of item.assignedKeys) {
+      foodSubtotals[key] = (foodSubtotals[key] ?? 0) + perHeadShare
+    }
+  }
+  const totalFood = Object.values(foodSubtotals).reduce((s, v) => s + v, 0)
+  const extras = input.tax + input.tip + input.serviceFee
+  const rawTotals: Record<string, number> = {}
+  for (const [key, food] of Object.entries(foodSubtotals)) {
+    const extrasShare = totalFood > 0 ? (food / totalFood) * extras : 0
+    rawTotals[key] = food + extrasShare
+  }
+  const grandTotal = totalFood + (totalFood > 0 ? extras : 0)
+  return distributeByWeight(grandTotal, rawTotals)
+}
