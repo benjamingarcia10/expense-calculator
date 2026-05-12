@@ -1,6 +1,9 @@
+import { useState } from 'react'
+import { RotateCcw } from 'lucide-react'
 import { useSession } from '../store/session'
 import { CURRENCIES } from '../lib/currencies'
-import { Button } from './ui'
+import { Button, Dialog } from './ui'
+import { LIMITS } from '../lib/validation'
 
 export function Header({
   onOpenSummary,
@@ -11,14 +14,29 @@ export function Header({
 }) {
   const currency = useSession((s) => s.currency)
   const setCurrency = useSession((s) => s.setCurrency)
+  const title = useSession((s) => s.title)
+  const setTitle = useSession((s) => s.setTitle)
+  const reset = useSession((s) => s.reset)
+  const [confirming, setConfirming] = useState(false)
+
   return (
-    <header className="flex items-center justify-between gap-3 border-b border-[--color-border] px-4 py-3 md:px-6">
-      <h1 className="text-lg font-semibold tracking-tight md:text-xl">Expense Calculator</h1>
+    <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[--color-border] px-4 py-3 md:px-6">
+      <div className="flex flex-1 items-center gap-2">
+        <input
+          aria-label="session title"
+          placeholder="Session title (optional)"
+          value={title ?? ''}
+          onChange={(e) => setTitle(e.target.value)}
+          maxLength={LIMITS.sessionTitle}
+          className="bg-transparent text-lg font-semibold tracking-tight outline-none placeholder:text-[--color-muted] md:text-xl"
+        />
+      </div>
       <div className="flex items-center gap-2">
         <select
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
           className="h-9 rounded-md border border-[--color-border] bg-[--color-surface] px-2 text-sm"
+          aria-label="currency"
         >
           {CURRENCIES.map((c) => (
             <option key={c.code} value={c.code}>
@@ -32,7 +50,33 @@ export function Header({
         <Button size="sm" onClick={onOpenShare}>
           Share
         </Button>
+        <button
+          onClick={() => setConfirming(true)}
+          aria-label="reset"
+          className="text-[--color-muted] hover:text-[--color-ink]"
+        >
+          <RotateCcw className="size-4" />
+        </button>
       </div>
+      <Dialog open={confirming} onClose={() => setConfirming(false)} title="Reset session?">
+        <div className="flex flex-col gap-3">
+          <p className="text-sm">This clears all people and expenses. This cannot be undone.</p>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setConfirming(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                reset()
+                setConfirming(false)
+              }}
+            >
+              Reset
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </header>
   )
 }
