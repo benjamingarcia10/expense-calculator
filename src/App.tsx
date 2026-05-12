@@ -4,6 +4,7 @@ import { PeoplePanel } from './components/PeoplePanel'
 import { ExpensesPanel } from './components/ExpensesPanel'
 import { BalancesPanel } from './components/BalancesPanel'
 import { SettleUpPanel } from './components/SettleUpPanel'
+import { SummaryView } from './components/summary/SummaryView'
 
 export default function App() {
   const [summaryOpen, setSummaryOpen] = useState(false)
@@ -19,7 +20,7 @@ export default function App() {
           <ExpensesPanel />
         </div>
       </main>
-      {summaryOpen && <div onClick={() => setSummaryOpen(false)}>Summary placeholder</div>}
+      <SummaryView open={summaryOpen} onClose={() => setSummaryOpen(false)} />
       {shareOpen && <div onClick={() => setShareOpen(false)}>Share placeholder</div>}
     </div>
   )
