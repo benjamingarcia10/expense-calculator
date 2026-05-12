@@ -76,6 +76,14 @@ export type Expense =
 
 export type ExpenseType = Expense['type']
 
+export type ExpenseInput =
+  | Omit<EqualExpense, 'id'>
+  | Omit<SharesExpense, 'id'>
+  | Omit<ExactExpense, 'id'>
+  | Omit<MileageExpense, 'id'>
+  | Omit<RestaurantExpense, 'id'>
+  | Omit<LodgingExpense, 'id'>
+
 export type Session = {
   v: typeof SCHEMA_VERSION
   currency: string

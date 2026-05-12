@@ -143,6 +143,8 @@ describe('encodeSession / decodeShareHash', () => {
     // This will fail at JSON.parse
     const result = decodeShareHash('#d=invalidbase64url')
     expect(result.ok).toBe(false)
-    expect(result.reason).toBe('malformed')
+    if (!result.ok) {
+      expect(result.reason).toBe('malformed')
+    }
   })
 })

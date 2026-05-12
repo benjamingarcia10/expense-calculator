@@ -67,7 +67,9 @@ describe('computeExactSplit', () => {
     expect(r).toEqual({ a: 60, b: 40 })
   })
   it('throws on mismatch', () => {
-    expect(() => computeExactSplit({ total: 100, amounts: { a: 60, b: 41 } })).toThrow(ExactSplitMismatchError)
+    expect(() => computeExactSplit({ total: 100, amounts: { a: 60, b: 41 } })).toThrow(
+      ExactSplitMismatchError
+    )
   })
 })
 

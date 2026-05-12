@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { SCHEMA_VERSION, type Expense, type Session } from '../types'
+import { SCHEMA_VERSION, type Expense, type ExpenseInput, type Session } from '../types'
 import {
   sanitizeName,
   sanitizeTitle,
@@ -32,7 +32,7 @@ type SessionStore = Session & {
   removePerson: (id: string) => void
   setCurrency: (code: string) => void
   setTitle: (title: string) => void
-  addExpense: (input: Omit<Expense, 'id'>) => string
+  addExpense: (input: ExpenseInput) => string
   updateExpense: (id: string, patch: Partial<Expense>) => void
   removeExpense: (id: string) => void
   replaceSession: (next: Session) => void
@@ -70,9 +70,12 @@ function cleanupExpenseAfterPersonRemoval(expense: Expense, removedId: string): 
     case 'lodging': {
       const nights = { ...expense.nights }
       delete nights[removedId]
-      const assignments = expense.assignments ? { ...expense.assignments } : undefined
-      if (assignments) delete assignments[removedId]
-      return { ...expense, nights, assignments }
+      if (expense.assignments) {
+        const assignments = { ...expense.assignments }
+        delete assignments[removedId]
+        return { ...expense, nights, assignments }
+      }
+      return { ...expense, nights }
     }
   }
 }

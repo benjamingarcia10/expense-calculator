@@ -234,7 +234,7 @@ describe('session store', () => {
   it('replaces entire session', () => {
     useSession.getState().addPerson('Alice')
     const newSession = {
-      v: 1,
+      v: 1 as const,
       currency: 'EUR',
       title: 'New Trip',
       people: [],
