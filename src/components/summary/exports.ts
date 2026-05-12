@@ -43,7 +43,18 @@ export function downloadJson(session: Session): void {
 
 export async function downloadImage(node: HTMLElement, filename: string): Promise<void> {
   const { toPng } = await import('html-to-image')
-  const dataUrl = await toPng(node, { pixelRatio: 2, backgroundColor: '#ffffff' })
+  // Wait for any custom fonts to load before rasterizing so the export uses the
+  // designed display + mono fonts rather than fallbacks (Georgia, ui-monospace).
+  try {
+    await document.fonts.ready
+  } catch {
+    /* ignore — old browsers without document.fonts will fall back to whatever loaded */
+  }
+  const dataUrl = await toPng(node, {
+    pixelRatio: 2,
+    // Match the receipt's paper color so any antialiased edges blend in.
+    backgroundColor: '#f5ecd9',
+  })
   const a = document.createElement('a')
   a.href = dataUrl
   a.download = filename

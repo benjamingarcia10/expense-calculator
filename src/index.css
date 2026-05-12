@@ -77,43 +77,27 @@ select {
 }
 
 /* Receipt-style card uses a warm paper palette regardless of system theme so
- * the screenshot exports cleanly to any chat app. */
+ * the screenshot exports cleanly to any chat app. Explicit hex colors so the
+ * html-to-image library captures them reliably (CSS vars scoped to this class
+ * weren't always being resolved by the snapshot renderer). */
 .receipt-card {
-  --paper: oklch(96% 0.025 80);
-  --ink: oklch(20% 0.04 40);
-  --rule: oklch(75% 0.04 50);
-  --muted: oklch(45% 0.04 50);
-  --accent: oklch(55% 0.18 25);
-  background: var(--paper);
-  color: var(--ink);
+  background-color: #f5ecd9;
+  color: #2a1f17;
   position: relative;
-  /* subtle paper noise via inline SVG */
-  background-image: var(--paper-noise), radial-gradient(ellipse at top, oklch(98% 0.02 80), var(--paper) 70%);
-  --paper-noise: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-.receipt-card::before,
-.receipt-card::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 12px;
-  background: radial-gradient(circle at 6px 6px, transparent 5px, var(--paper) 5.5px) 0 0 / 12px 12px;
+.receipt-card .receipt-ink {
+  color: #2a1f17;
 }
-.receipt-card::before {
-  top: -6px;
+.receipt-card .receipt-muted {
+  color: #7a6a5a;
 }
-.receipt-card::after {
-  bottom: -6px;
-  transform: scaleY(-1);
-}
-.receipt-rule {
+.receipt-card .receipt-rule {
   border: 0;
-  border-top: 1px dashed var(--rule);
+  border-top: 1px dashed #b8a890;
   margin: 0;
 }
-.receipt-leaders {
-  background-image: radial-gradient(circle at center, var(--rule) 0.6px, transparent 0.6px);
+.receipt-card .receipt-leaders {
+  background-image: radial-gradient(circle at center, #b8a890 0.7px, transparent 0.7px);
   background-size: 6px 6px;
   background-repeat: repeat-x;
   background-position: left center;

@@ -8,6 +8,10 @@ import { buildSummaryText, downloadJson, downloadImage, EXPENSE_TYPE_LABELS } fr
 import { expenseTotal, type Session } from '../../types'
 import type { CurrencyCode } from '../../lib/currencies'
 
+const SANS = "'Inter', system-ui, sans-serif"
+const MONO = "'JetBrains Mono', ui-monospace, monospace"
+const DISPLAY = "'Fraunces', 'Georgia', serif"
+
 function makeSerial(createdAt: string, total: number): string {
   // A short stable "receipt number" derived from the session — purely cosmetic.
   const date = new Date(createdAt)
@@ -42,26 +46,43 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
       <div className="flex flex-col gap-3">
         <div
           ref={cardRef}
-          className="receipt-card relative mx-auto w-full max-w-md px-7 py-9"
-          style={{ fontFamily: 'var(--font-sans)' }}
+          className="receipt-card mx-auto"
+          style={{
+            fontFamily: SANS,
+            // Fixed width + explicit font size so html-to-image rasterizes
+            // consistently regardless of the surrounding dialog's sizing.
+            width: '420px',
+            maxWidth: '100%',
+            padding: '32px 28px',
+            fontSize: '14px',
+            lineHeight: 1.5,
+          }}
         >
           {/* Header */}
           <header className="flex flex-col items-center gap-1 text-center">
             <p
-              style={{ fontFamily: 'var(--font-mono)' }}
-              className="text-[10px] tracking-[0.3em] text-[color:var(--muted)] uppercase"
+              className="receipt-muted text-[10px] tracking-[0.3em] uppercase"
+              style={{ fontFamily: MONO }}
             >
               The Split · {formatDate(createdAt)}
             </p>
             <h3
-              style={{ fontFamily: 'var(--font-display)', fontVariationSettings: '"opsz" 144' }}
-              className="text-3xl leading-tight font-medium italic"
+              style={{
+                fontFamily: DISPLAY,
+                fontSize: '24px',
+                lineHeight: 1.25,
+                fontStyle: 'italic',
+                fontWeight: 500,
+                color: '#2a1f17',
+                margin: '4px 0',
+                wordBreak: 'normal',
+              }}
             >
               {displayTitle}
             </h3>
             <p
-              style={{ fontFamily: 'var(--font-mono)' }}
-              className="text-[10px] tracking-[0.2em] text-[color:var(--muted)] uppercase"
+              className="receipt-muted text-[10px] tracking-[0.2em] uppercase"
+              style={{ fontFamily: MONO }}
             >
               {serial}
             </p>
@@ -72,18 +93,24 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
           {/* Total */}
           <div className="flex flex-col items-center gap-1 text-center">
             <p
-              style={{ fontFamily: 'var(--font-mono)' }}
-              className="text-[10px] tracking-[0.3em] text-[color:var(--muted)] uppercase"
+              className="receipt-muted text-[10px] tracking-[0.3em] uppercase"
+              style={{ fontFamily: MONO }}
             >
               Grand Total
             </p>
             <p
-              style={{ fontFamily: 'var(--font-display)', fontVariationSettings: '"opsz" 144' }}
-              className="text-5xl leading-none font-semibold tabular-nums"
+              style={{
+                fontFamily: DISPLAY,
+fontSize: '44px',
+                lineHeight: 1.05,
+                fontWeight: 600,
+                color: '#2a1f17',
+                fontVariantNumeric: 'tabular-nums',
+              }}
             >
               {formatMoney(totalSpent, c)}
             </p>
-            <p className="text-xs text-[color:var(--muted)]">
+            <p className="receipt-muted text-xs">
               across {people.length} {people.length === 1 ? 'person' : 'people'} · {expenses.length}{' '}
               {expenses.length === 1 ? 'expense' : 'expenses'}
             </p>
@@ -94,23 +121,29 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
           {/* Settle up */}
           <section>
             <h4
-              style={{ fontFamily: 'var(--font-mono)' }}
-              className="mb-3 text-center text-[10px] tracking-[0.3em] text-[color:var(--muted)] uppercase"
+              className="receipt-muted mb-3 text-center text-[10px] tracking-[0.3em] uppercase"
+              style={{ fontFamily: MONO }}
             >
               — Settle Up —
             </h4>
             {debts.length === 0 ? (
-              <p style={{ fontFamily: 'var(--font-display)' }} className="text-center text-lg italic">
+              <p
+                style={{ fontFamily: DISPLAY }}
+                className="receipt-ink text-center text-lg italic"
+              >
                 Everyone’s square.
               </p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {debts.map((d) => (
-                  <li key={`${d.fromMemberId}-${d.toMemberId}`} className="flex items-baseline gap-2 text-sm">
+                  <li
+                    key={`${d.fromMemberId}-${d.toMemberId}`}
+                    className="receipt-ink flex items-baseline gap-2 text-sm"
+                  >
                     <span className="font-medium">{d.fromName}</span>
                     <span
-                      className="text-[color:var(--muted)]"
-                      style={{ fontFamily: 'var(--font-mono)' }}
+                      className="receipt-muted"
+                      style={{ fontFamily: MONO }}
                       aria-hidden="true"
                     >
                       →
@@ -121,7 +154,7 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
                       aria-hidden="true"
                       style={{ height: '1em' }}
                     />
-                    <span style={{ fontFamily: 'var(--font-mono)' }} className="font-semibold tabular-nums">
+                    <span style={{ fontFamily: MONO }} className="font-semibold tabular-nums">
                       {formatMoney(d.amount, c)}
                     </span>
                   </li>
@@ -135,8 +168,8 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
               <hr className="receipt-rule my-5" />
               <section>
                 <h4
-                  style={{ fontFamily: 'var(--font-mono)' }}
-                  className="mb-3 text-center text-[10px] tracking-[0.3em] text-[color:var(--muted)] uppercase"
+                  className="receipt-muted mb-3 text-center text-[10px] tracking-[0.3em] uppercase"
+                  style={{ fontFamily: MONO }}
                 >
                   — Itemized —
                 </h4>
@@ -144,7 +177,7 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
                   {expenses.map((e) => {
                     const payer = people.find((p) => p.id === e.paidById)?.name ?? '?'
                     return (
-                      <li key={e.id} className="flex flex-col gap-0.5">
+                      <li key={e.id} className="receipt-ink flex flex-col gap-0.5">
                         <div className="flex items-baseline gap-2">
                           <span className="font-medium">{e.title}</span>
                           <span
@@ -152,13 +185,13 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
                             aria-hidden="true"
                             style={{ height: '1em' }}
                           />
-                          <span style={{ fontFamily: 'var(--font-mono)' }} className="tabular-nums">
+                          <span style={{ fontFamily: MONO }} className="tabular-nums">
                             {formatMoney(expenseTotal(e), c)}
                           </span>
                         </div>
                         <span
-                          style={{ fontFamily: 'var(--font-mono)' }}
-                          className="text-[10px] tracking-wide text-[color:var(--muted)] uppercase"
+                          className="receipt-muted text-[10px] tracking-wide uppercase"
+                          style={{ fontFamily: MONO }}
                         >
                           {payer} · {EXPENSE_TYPE_LABELS[e.type]}
                         </span>
@@ -172,13 +205,16 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
 
           <hr className="receipt-rule my-5" />
 
-          <footer className="flex flex-col items-center gap-0.5 text-center">
-            <p style={{ fontFamily: 'var(--font-display)' }} className="text-sm italic">
+          <footer className="flex flex-col items-center gap-1 text-center">
+            <p
+              style={{ fontFamily: DISPLAY, lineHeight: 1.2 }}
+              className="receipt-ink text-sm whitespace-nowrap italic"
+            >
               thanks, come again
             </p>
             <p
-              style={{ fontFamily: 'var(--font-mono)' }}
-              className="text-[9px] tracking-[0.2em] text-[color:var(--muted)] uppercase"
+              className="receipt-muted text-[9px] tracking-[0.2em] uppercase"
+              style={{ fontFamily: MONO }}
             >
               split with expensecalc
             </p>
@@ -190,7 +226,9 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
             className={`text-xs ${copyState === 'copied' ? 'text-emerald-600' : 'text-red-500'}`}
             role="status"
           >
-            {copyState === 'copied' ? 'Copied to clipboard' : 'Couldn’t copy — select and copy manually'}
+            {copyState === 'copied'
+              ? 'Copied to clipboard'
+              : 'Couldn’t copy — select and copy manually'}
           </p>
         )}
         <div className="flex flex-wrap gap-2">
