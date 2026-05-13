@@ -6,15 +6,15 @@ const fixture: Session = {
   v: SCHEMA_VERSION,
   currency: 'USD',
   title: 'Tahoe',
-  people: [{ id: 'p1', name: 'Alice' }],
+  people: [{ id: 'p0', name: 'Alice' }],
   expenses: [
     {
-      id: 'e1',
+      id: 'e0',
       type: 'equal',
       title: 'Gas',
       total: 50,
-      paidById: 'p1',
-      participantIds: ['p1'],
+      paidById: 'p0',
+      participantIds: ['p0'],
     },
   ],
   createdAt: '2026-03-08T00:00:00.000Z',
@@ -69,49 +69,108 @@ describe('encodeSession / decodeShareHash', () => {
     expect(url).not.toContain('old=hash')
   })
 
-  it('handles complex session with multiple people and expenses', () => {
+  it('round-trips a session with non-canonical input ids (cuid-style)', () => {
+    // The encoder strips IDs to indices; the decoder regenerates them as
+    // p0, p1, ... — so the input person ids don't need to match the output.
+    const cuidish: Session = {
+      ...fixture,
+      people: [{ id: 'clxyz123abc', name: 'Alice' }],
+      expenses: [
+        {
+          id: 'clxyz999xyz',
+          type: 'equal',
+          title: 'Gas',
+          total: 50,
+          paidById: 'clxyz123abc',
+          participantIds: ['clxyz123abc'],
+        },
+      ],
+    }
+    const result = decodeShareHash(`#d=${encodeSession(cuidish)}`)
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.session.people).toEqual([{ id: 'p0', name: 'Alice' }])
+      expect(result.session.expenses[0].paidById).toBe('p0')
+    }
+  })
+
+  it('round-trips every expense type together', () => {
     const complex: Session = {
       v: SCHEMA_VERSION,
       currency: 'EUR',
       title: 'Europe Roadtrip',
       people: [
-        { id: 'p1', name: 'Alice' },
-        { id: 'p2', name: 'Bob' },
-        { id: 'p3', name: 'Charlie' },
+        { id: 'p0', name: 'Alice' },
+        { id: 'p1', name: 'Bob' },
+        { id: 'p2', name: 'Charlie' },
       ],
       expenses: [
         {
-          id: 'e1',
+          id: 'e0',
           type: 'equal',
           title: 'Gas',
           total: 100,
+          paidById: 'p0',
+          participantIds: ['p0', 'p1', 'p2'],
+        },
+        {
+          id: 'e1',
+          type: 'shares',
+          title: 'Groceries',
+          total: 60,
           paidById: 'p1',
-          participantIds: ['p1', 'p2', 'p3'],
+          shares: { p0: 2, p1: 1, p2: 1 },
         },
         {
           id: 'e2',
+          type: 'exact',
+          title: 'Concert',
+          total: 90,
+          paidById: 'p0',
+          amounts: { p0: 30, p1: 30, p2: 30 },
+        },
+        {
+          id: 'e3',
+          type: 'mileage',
+          title: 'Road trip',
+          total: 120,
+          paidById: 'p2',
+          unitLabel: 'miles',
+          units: { p0: 100, p1: 50, p2: 200 },
+        },
+        {
+          id: 'e4',
           type: 'restaurant',
           title: 'Dinner',
-          paidById: 'p2',
+          paidById: 'p1',
           items: [
-            { id: 'i1', name: 'Pizza', price: 20, assignedIds: ['p1', 'p2'] },
-            { id: 'i2', name: 'Pasta', price: 18, assignedIds: ['p3'] },
+            { id: 'i4-0', name: 'Pizza', price: 20, assignedIds: ['p0', 'p1'] },
+            { id: 'i4-1', name: 'Pasta', price: 18, assignedIds: ['p2'] },
           ],
           tax: 8,
           tip: 5,
           serviceFee: 0,
         },
+        {
+          id: 'e5',
+          type: 'lodging',
+          title: 'Hotel',
+          total: 800,
+          paidById: 'p0',
+          mode: 'tiered',
+          nights: { p0: 3, p1: 3, p2: 2 },
+          rooms: [
+            { id: 'r5-0', name: 'King', nightlyRate: 200 },
+            { id: 'r5-1', name: 'Twin', nightlyRate: 150 },
+          ],
+          assignments: { p0: 'r5-0', p1: 'r5-1', p2: 'r5-1' },
+        },
       ],
       createdAt: '2026-05-12T00:00:00.000Z',
     }
-    const encoded = encodeSession(complex)
-    const result = decodeShareHash(`#d=${encoded}`)
+    const result = decodeShareHash(`#d=${encodeSession(complex)}`)
     expect(result.ok).toBe(true)
-    if (result.ok) {
-      expect(result.session).toEqual(complex)
-      expect(result.session.people).toHaveLength(3)
-      expect(result.session.expenses).toHaveLength(2)
-    }
+    if (result.ok) expect(result.session).toEqual(complex)
   })
 
   it('returns encoded length in result', () => {
@@ -139,12 +198,9 @@ describe('encodeSession / decodeShareHash', () => {
     if (result.ok) expect(result.session).toEqual(empty)
   })
 
-  it('rejects invalid JSON after decompression', () => {
-    // This will fail at JSON.parse
+  it('rejects invalid base64url payload', () => {
     const result = decodeShareHash('#d=invalidbase64url')
     expect(result.ok).toBe(false)
-    if (!result.ok) {
-      expect(result.reason).toBe('malformed')
-    }
+    if (!result.ok) expect(result.reason).toBe('malformed')
   })
 })
