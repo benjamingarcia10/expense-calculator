@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import { Dialog, Button } from '../ui'
 import { useSession } from '../../store/session'
 import { computeBalances } from '../../lib/compute-balances'
@@ -44,6 +45,12 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
   return (
     <Dialog open={open} onClose={onClose} title="Summary">
       <div className="flex flex-col gap-3">
+        <motion.div
+          initial={{ opacity: 0, y: 16, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.42, ease: [0.22, 0.61, 0.36, 1] }}
+          className="mx-auto"
+        >
         <div
           ref={cardRef}
           className="receipt-card mx-auto"
@@ -220,6 +227,7 @@ fontSize: '44px',
             </p>
           </footer>
         </div>
+        </motion.div>
 
         {copyState !== 'idle' && (
           <p

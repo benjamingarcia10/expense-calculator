@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { useSession } from '../store/session'
-import { CURRENCIES } from '../lib/currencies'
-import { Button, Dialog, Wordmark } from './ui'
+import type { CurrencyCode } from '../lib/currencies'
+import { Button, CurrencyPicker, Dialog, Wordmark } from './ui'
 import { LIMITS } from '../lib/validation'
 
 export function Header({
@@ -41,18 +41,11 @@ export function Header({
           />
         </div>
         <div className="flex items-center gap-1.5">
-          <select
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 font-mono text-xs tracking-wide"
-            aria-label="currency"
-          >
-            {CURRENCIES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.code}
-              </option>
-            ))}
-          </select>
+          <CurrencyPicker
+            value={currency as CurrencyCode}
+            onChange={(next) => setCurrency(next)}
+          />
+          <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-[var(--color-border)]" />
           <Button variant="ghost" size="sm" onClick={onOpenSummary}>
             Summary
           </Button>

@@ -33,3 +33,13 @@ export const DEFAULT_CURRENCY: CurrencyCode = 'USD'
 export function isCurrencyCode(value: string): value is CurrencyCode {
   return CURRENCIES.some((c) => c.code === value)
 }
+
+/** Natural decimal places for a currency (JPY/KRW/VND/IDR = 0, most = 2). */
+export function currencyDecimals(code: CurrencyCode): number {
+  try {
+    const opts = new Intl.NumberFormat('en-US', { style: 'currency', currency: code }).resolvedOptions()
+    return opts.maximumFractionDigits ?? 2
+  } catch {
+    return 2
+  }
+}

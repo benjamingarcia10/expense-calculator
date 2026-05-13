@@ -1,4 +1,5 @@
 export * from './Button'
+export * from './CurrencyPicker'
 export * from './Input'
 export * from './Sheet'
 export * from './Dialog'

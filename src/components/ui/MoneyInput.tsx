@@ -4,9 +4,10 @@ import {
   useState,
   type InputHTMLAttributes,
   type ChangeEvent,
+  type FocusEvent,
   type KeyboardEvent,
 } from 'react'
-import { CURRENCIES, type CurrencyCode } from '../../lib/currencies'
+import { CURRENCIES, currencyDecimals, type CurrencyCode } from '../../lib/currencies'
 
 export type MoneyInputProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -31,17 +32,29 @@ function symbolFor(currency: CurrencyCode): string {
   return CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$'
 }
 
-function sanitize(raw: string, max: number): string {
-  let cleaned = raw.replace(/[^0-9.]/g, '')
-  const firstDot = cleaned.indexOf('.')
-  if (firstDot !== -1) {
-    cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '')
-    const [whole, frac = ''] = cleaned.split('.')
-    cleaned = `${whole}.${frac.slice(0, 2)}`
+function sanitize(raw: string, max: number, decimals: number): string {
+  // Currencies with 0 decimals (JPY, KRW…) don't accept a decimal point at all
+  const allowed = decimals > 0 ? /[^0-9.]/g : /[^0-9]/g
+  let cleaned = raw.replace(allowed, '')
+  if (decimals > 0) {
+    const firstDot = cleaned.indexOf('.')
+    if (firstDot !== -1) {
+      cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '')
+      const [whole, frac = ''] = cleaned.split('.')
+      cleaned = `${whole}.${frac.slice(0, decimals)}`
+    }
   }
   const numeric = Number(cleaned)
   if (Number.isFinite(numeric) && numeric > max) return String(max)
   return cleaned
+}
+
+/** On blur, normalize "12" → "12.00" (USD) or "12" → "12" (JPY). Empty stays empty. */
+function formatOnBlur(text: string, decimals: number): string {
+  if (text === '' || text === '.') return ''
+  const n = Number(text)
+  if (!Number.isFinite(n)) return text
+  return n.toFixed(decimals)
 }
 
 /** Compare two money strings by their parsed numeric value. Used to detect
@@ -56,8 +69,9 @@ function sameNumber(a: string, b: string): boolean {
 }
 
 export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
-  ({ value, onChange, currency, max = 999_999.99, invalid, className = '', ...props }, ref) => {
+  ({ value, onChange, currency, max = 999_999.99, invalid, className = '', onBlur, ...props }, ref) => {
     const symbol = symbolFor(currency)
+    const decimals = currencyDecimals(currency)
     // Reserve space proportional to symbol length so long symbols ("MX$", "AED") fit
     const padding = symbol.length <= 1 ? 'pl-7' : symbol.length === 2 ? 'pl-9' : 'pl-11'
 
@@ -73,12 +87,21 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
     }, [value])
 
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
-      const next = sanitize(e.target.value, max)
+      const next = sanitize(e.target.value, max, decimals)
       setText(next)
       onChange(next)
     }
     function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
       if (BLOCKED_KEYS.has(e.key)) e.preventDefault()
+      if (decimals === 0 && e.key === '.') e.preventDefault()
+    }
+    function handleBlur(e: FocusEvent<HTMLInputElement>) {
+      const formatted = formatOnBlur(text, decimals)
+      if (formatted !== text) {
+        setText(formatted)
+        onChange(formatted)
+      }
+      onBlur?.(e)
     }
 
     return (
@@ -97,6 +120,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
           value={text}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
           className={`h-10 w-full rounded-lg border bg-[var(--color-surface)] ${padding} pr-3 text-right font-mono text-sm tabular-nums text-[var(--color-ink)] outline-none transition-colors placeholder:font-sans placeholder:text-[var(--color-muted)] ${
             invalid ? 'border-red-500' : 'border-[var(--color-border)] focus:border-[var(--color-accent)]'
           }`}
