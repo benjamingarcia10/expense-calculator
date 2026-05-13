@@ -1,9 +1,11 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
+import { Scale } from 'lucide-react'
 import { useSession } from '../store/session'
 import { computeBalances } from '../lib/compute-balances'
-import { formatSigned } from '../lib/format'
+import { formatMoney } from '../lib/format'
 import type { CurrencyCode } from '../lib/currencies'
+import { SectionHeading } from './ui'
 
 export function BalancesPanel() {
   const people = useSession((s) => s.people)
@@ -14,29 +16,41 @@ export function BalancesPanel() {
   const max = Math.max(1, ...balances.map((b) => Math.abs(b.net)))
 
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-      <h2 className="font-semibold">Balances</h2>
+    <section className="flex flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm">
+      <SectionHeading title="Balances" />
       {balances.length === 0 ? (
-        <p className="text-sm text-[var(--color-muted)]">Add people and expenses to see balances.</p>
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[var(--color-border)] py-6 text-center text-sm text-[var(--color-muted)]">
+          <Scale className="size-5 opacity-60" aria-hidden="true" />
+          <p>Balances appear once you add an expense.</p>
+        </div>
       ) : (
-        <ul className="flex flex-col gap-2 text-sm">
+        <ul className="flex flex-col gap-3">
           {balances.map((b) => {
             const pct = (Math.abs(b.net) / max) * 100
             const positive = b.net > 0
+            const sign = positive ? '+' : '−'
+            const abs = Math.abs(b.net)
             return (
-              <li key={b.memberId} className="flex flex-col gap-1">
-                <div className="flex justify-between font-mono">
-                  <span className="font-sans">{b.name}</span>
-                  <span className={positive ? 'text-emerald-600' : 'text-rose-600'}>
-                    {formatSigned(b.net, currency)}
+              <li key={b.memberId} className="flex flex-col gap-1.5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="truncate text-sm font-medium">{b.name}</span>
+                  <span
+                    className={`font-mono text-base tabular-nums ${
+                      positive ? 'text-emerald-600' : 'text-rose-600'
+                    }`}
+                  >
+                    {sign}
+                    {formatMoney(abs, currency)}
                   </span>
                 </div>
-                <div className="h-1.5 w-full rounded-full bg-[var(--color-border)]/50">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-border)]/50">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${pct}%` }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    className={`h-full rounded-full ${positive ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                    transition={{ type: 'spring', stiffness: 220, damping: 26 }}
+                    className={`h-full rounded-full ${
+                      positive ? 'bg-emerald-500' : 'bg-rose-500'
+                    }`}
                   />
                 </div>
               </li>

@@ -1,13 +1,17 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-bg: oklch(98% 0.01 80);
-  --color-surface: oklch(100% 0 0);
-  --color-ink: oklch(20% 0.02 270);
-  --color-muted: oklch(45% 0.02 270);
-  --color-accent: oklch(65% 0.18 25);
-  --color-border: oklch(92% 0.01 270);
-  --color-scrim: oklch(0% 0 0 / 0.55);
+  /* Warm cream paper light theme — ties to the receipt summary palette */
+  --color-bg: oklch(97% 0.012 85);
+  --color-surface: oklch(99% 0.008 85);
+  --color-ink: oklch(18% 0.03 40);
+  --color-muted: oklch(45% 0.02 40);
+  --color-accent: oklch(58% 0.18 28);
+  --color-accent-soft: oklch(58% 0.18 28 / 0.12);
+  --color-border: oklch(90% 0.02 60);
+  --color-rule: oklch(80% 0.03 60);
+  --color-scrim: oklch(0% 0 0 / 0.45);
+  --color-tint-warm: oklch(94% 0.025 60 / 0.6);
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --font-display: 'Fraunces', 'Georgia', serif;
@@ -15,12 +19,17 @@
 
 @media (prefers-color-scheme: dark) {
   @theme {
-    --color-bg: oklch(15% 0.02 270);
-    --color-surface: oklch(20% 0.02 270);
-    --color-ink: oklch(95% 0.01 80);
-    --color-muted: oklch(72% 0.02 270);
-    --color-border: oklch(28% 0.02 270);
+    /* Dark mode keeps a slight warm cast so it pairs with the receipt's cream */
+    --color-bg: oklch(14% 0.02 40);
+    --color-surface: oklch(19% 0.02 40);
+    --color-ink: oklch(96% 0.012 80);
+    --color-muted: oklch(70% 0.02 50);
+    --color-accent: oklch(70% 0.18 28);
+    --color-accent-soft: oklch(70% 0.18 28 / 0.16);
+    --color-border: oklch(27% 0.02 40);
+    --color-rule: oklch(35% 0.02 40);
     --color-scrim: oklch(0% 0 0 / 0.7);
+    --color-tint-warm: oklch(22% 0.03 40 / 0.5);
   }
 }
 
@@ -31,6 +40,19 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Atmospheric background gradient — subtle warmth at the top of the page so
+ * the surface isn't a flat color. Pairs the dark/light themes equally. */
+body {
+  background-image: radial-gradient(
+    ellipse at top,
+    var(--color-tint-warm),
+    transparent 60%
+  );
+  background-repeat: no-repeat;
+  background-size: 100% 60vh;
+  background-attachment: fixed;
+}
+
 /* Accessible focus ring for all interactive elements */
 :focus-visible {
   outline: 2px solid var(--color-accent);
@@ -38,8 +60,7 @@ body {
   border-radius: 4px;
 }
 
-/* Tailwind v4 Preflight dropped the implicit `cursor: pointer` on buttons.
- * Restore it here for any clickable control so users get the affordance back. */
+/* Tailwind v4 Preflight dropped the implicit `cursor: pointer` on buttons. */
 button:not(:disabled),
 [role='button']:not([aria-disabled='true']),
 summary {
@@ -87,10 +108,42 @@ select {
   cursor: pointer;
 }
 
-/* Receipt-style card uses a warm paper palette regardless of system theme so
- * the screenshot exports cleanly to any chat app. Explicit hex colors so the
- * html-to-image library captures them reliably (CSS vars scoped to this class
- * weren't always being resolved by the snapshot renderer). */
+/* ── Editorial typography helpers ─────────────────────────────────────────
+ * The app borrows the receipt's typographic personality: Fraunces italic for
+ * section headings + big numbers, JetBrains Mono small-caps for tags. */
+
+.h-display {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* Dotted leader line — used between an item's name and its amount so the eye
+ * tracks across the row like a printed bill. */
+.leaders {
+  background-image: radial-gradient(circle at center, var(--color-rule) 0.7px, transparent 0.7px);
+  background-size: 6px 6px;
+  background-repeat: repeat-x;
+  background-position: left center;
+}
+
+/* Dashed rule used to separate sections inside cards. */
+.dashed-rule {
+  border: 0;
+  border-top: 1px dashed var(--color-rule);
+  margin: 0;
+}
+
+/* ── Receipt summary card (export-friendly, fixed colors) ───────────────── */
 .receipt-card {
   background-color: #f5ecd9;
   color: #2a1f17;

@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Trash2, UserPlus } from 'lucide-react'
+import { Trash2, UserPlus, Users } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSession } from '../store/session'
 import { LIMITS } from '../lib/validation'
-import { Button, Dialog, Input } from './ui'
+import { Button, Dialog, Input, SectionHeading } from './ui'
 
 export function PeoplePanel() {
   const people = useSession((s) => s.people)
@@ -26,8 +26,6 @@ export function PeoplePanel() {
     : 0
 
   function attemptRemove(personId: string) {
-    // Frictionless when they're not referenced anywhere; confirm if removing
-    // the person would cascade-delete expenses they paid for.
     const isReferenced =
       expenses.some((e) => e.paidById === personId) ||
       expenses.some((e) => {
@@ -55,35 +53,38 @@ export function PeoplePanel() {
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold">
-          People <span className="text-[var(--color-muted)]">({people.length})</span>
-        </h2>
-      </div>
-      <ul className="flex flex-col gap-1">
-        <AnimatePresence initial={false}>
-          {people.map((p) => (
-            <motion.li
-              key={p.id}
-              layout
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, x: 8 }}
-              className="flex items-center justify-between rounded-md px-2 py-1 hover:bg-[var(--color-border)]/30"
-            >
-              <span className="truncate">{p.name}</span>
-              <button
-                aria-label={`remove ${p.name}`}
-                onClick={() => attemptRemove(p.id)}
-                className="grid size-11 place-items-center rounded-md text-[var(--color-muted)] hover:bg-red-600/15 hover:text-red-600"
+    <section className="flex flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm">
+      <SectionHeading title="People" count={people.length} />
+      {people.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[var(--color-border)] py-6 text-center text-sm text-[var(--color-muted)]">
+          <Users className="size-5 opacity-60" aria-hidden="true" />
+          <p>Add the people splitting this tab.</p>
+        </div>
+      ) : (
+        <ul className="flex flex-col">
+          <AnimatePresence initial={false}>
+            {people.map((p) => (
+              <motion.li
+                key={p.id}
+                layout
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: 8 }}
+                className="group flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-[var(--color-accent-soft)]"
               >
-                <Trash2 className="size-4" />
-              </button>
-            </motion.li>
-          ))}
-        </AnimatePresence>
-      </ul>
+                <span className="truncate">{p.name}</span>
+                <button
+                  aria-label={`remove ${p.name}`}
+                  onClick={() => attemptRemove(p.id)}
+                  className="grid size-9 place-items-center rounded-md text-[var(--color-muted)] opacity-0 transition group-hover:opacity-100 hover:bg-red-600/15 hover:text-red-600 focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </motion.li>
+            ))}
+          </AnimatePresence>
+        </ul>
+      )}
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -103,7 +104,9 @@ export function PeoplePanel() {
         </Button>
       </form>
       {atMax && (
-        <p className="text-xs text-[var(--color-muted)]">Limit of {LIMITS.maxPeople} people reached.</p>
+        <p className="text-xs text-[var(--color-muted)]">
+          Limit of {LIMITS.maxPeople} people reached.
+        </p>
       )}
       <Dialog
         open={pendingRemove !== null}
