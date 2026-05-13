@@ -38,6 +38,17 @@ body {
   border-radius: 4px;
 }
 
+/* Tailwind v4 Preflight dropped the implicit `cursor: pointer` on buttons.
+ * Restore it here for any clickable control so users get the affordance back. */
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']),
+summary {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
 /* Custom-styled checkboxes and selects to feel native to the app */
 input[type='checkbox'] {
   appearance: none;
