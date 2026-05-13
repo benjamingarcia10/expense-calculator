@@ -17,8 +17,11 @@
   --font-display: 'Fraunces', 'Georgia', serif;
 }
 
+/* Tailwind v4 `@theme` doesn't honor nested `@media` queries — it registers
+ * variables globally. So dark-mode is implemented as a plain CSS override on
+ * :root, which DOES respect prefers-color-scheme correctly. */
 @media (prefers-color-scheme: dark) {
-  @theme {
+  :root {
     /* Dark mode keeps a slight warm cast so it pairs with the receipt's cream */
     --color-bg: oklch(14% 0.02 40);
     --color-surface: oklch(19% 0.02 40);
