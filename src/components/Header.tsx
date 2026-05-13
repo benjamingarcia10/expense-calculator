@@ -36,7 +36,8 @@ export function Header({
             value={title ?? ''}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={LIMITS.sessionTitle}
-            className="min-w-0 flex-1 bg-transparent text-sm font-medium tracking-tight text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)] sm:text-base"
+            title="Click to name this split"
+            className="min-w-0 flex-1 border-b border-transparent bg-transparent text-sm font-medium tracking-tight text-[var(--color-ink)] outline-none transition-colors placeholder:text-[var(--color-muted)] hover:border-[var(--color-border)] focus:border-[var(--color-accent)] sm:text-base"
           />
         </div>
         <div className="flex items-center gap-1.5">
