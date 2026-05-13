@@ -43,7 +43,7 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
   const serial = makeSerial(createdAt, totalSpent)
 
   return (
-    <Dialog open={open} onClose={onClose} title="Summary">
+    <Dialog open={open} onClose={onClose} title="Summary" size="lg">
       <div className="flex flex-col gap-3">
         <motion.div
           initial={{ opacity: 0, y: 16, scale: 0.97 }}

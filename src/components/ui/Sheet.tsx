@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { type ReactNode, useEffect, useId } from 'react'
+import { createPortal } from 'react-dom'
 
 export function Sheet({
   open,
@@ -22,7 +23,12 @@ export function Sheet({
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  return (
+  if (typeof document === 'undefined') return null
+
+  // Portal to <body> so `fixed` positioning resolves against the viewport
+  // regardless of any ancestor's backdrop-filter / transform / filter, which
+  // would otherwise establish a new containing block and clip the sheet.
+  return createPortal(
     <AnimatePresence>
       {open && (
         <>
@@ -62,6 +68,7 @@ export function Sheet({
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }
