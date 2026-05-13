@@ -98,6 +98,8 @@ export interface ItemizedInput {
 }
 
 export function computeItemizedSplit(input: ItemizedInput): SplitResult {
+  // Per-key food subtotals. Duplicate assignees on the same item are preserved
+  // (each adds another head to the per-head share).
   const foodSubtotals: Record<string, number> = {}
   for (const item of input.items) {
     const count = item.assignedKeys.length
@@ -108,12 +110,31 @@ export function computeItemizedSplit(input: ItemizedInput): SplitResult {
     }
   }
   const totalFood = Object.values(foodSubtotals).reduce((s, v) => s + v, 0)
-  const extras = input.tax + input.tip + input.serviceFee
-  const rawTotals: Record<string, number> = {}
-  for (const [key, food] of Object.entries(foodSubtotals)) {
-    const extrasShare = totalFood > 0 ? (food / totalFood) * extras : 0
-    rawTotals[key] = food + extrasShare
+  if (totalFood <= 0) return {}
+
+  // Distribute food and each extra (tax / tip / service) SEPARATELY using the
+  // same food-weighted proportions. Summing component splits per person gives
+  // each person's row total, and each component sums to its input — so the
+  // breakdown table in the UI (which shows the four columns) always matches
+  // the canonical total used by balances + settle-up. A single-pass distribution
+  // on the grand total can disagree with a row-by-row sum by 1¢ when leftover
+  // pennies fall on different people.
+  const foodSplit = distributeByWeight(totalFood, foodSubtotals)
+  const taxSplit = input.tax > 0 ? distributeByWeight(input.tax, foodSubtotals) : {}
+  const tipSplit = input.tip > 0 ? distributeByWeight(input.tip, foodSubtotals) : {}
+  const serviceSplit =
+    input.serviceFee > 0 ? distributeByWeight(input.serviceFee, foodSubtotals) : {}
+
+  const result: SplitResult = {}
+  for (const key of Object.keys(foodSubtotals)) {
+    const total =
+      (foodSplit[key] ?? 0) +
+      (taxSplit[key] ?? 0) +
+      (tipSplit[key] ?? 0) +
+      (serviceSplit[key] ?? 0)
+    // Round to pennies; every component is already penny-exact so the sum
+    // stays penny-exact, but use toFixed to defuse any float artefacts.
+    result[key] = Math.round(total * 100) / 100
   }
-  const grandTotal = totalFood + (totalFood > 0 ? extras : 0)
-  return distributeByWeight(grandTotal, rawTotals)
+  return result
 }

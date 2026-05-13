@@ -87,6 +87,33 @@ describe('computeExpenseBreakdown — restaurant', () => {
   })
 })
 
+describe('computeExpenseBreakdown — consistency with balances', () => {
+  it('per-person totals exactly match computeExpenseSplits (no 1¢ drift)', async () => {
+    const { computeExpenseSplits } = await import('./compute-balances')
+    // The "Spartan" tax/tip case the user reported: 2 items, 3 people, awkward
+    // remainders. Previously the inline breakdown summed to a different total
+    // for Ben + Test2 than the canonical balances calculation.
+    const expense: Expense = {
+      id: 'r1',
+      type: 'restaurant',
+      title: 'Spartan',
+      paidById: alice.id,
+      items: [
+        { id: 'i1', name: 'Tacos', price: 30, assignedIds: ['a'] },
+        { id: 'i2', name: 'Tacos2', price: 15, assignedIds: ['b', 'c'] },
+      ],
+      tax: 10,
+      tip: 1,
+      serviceFee: 0,
+    }
+    const b = computeExpenseBreakdown(expense, people)
+    const splits = computeExpenseSplits(expense)
+    for (const line of b.lines) {
+      expect(line.total).toBe(splits[line.personId])
+    }
+  })
+})
+
 describe('computeExpenseBreakdown — lodging tiered', () => {
   it('exposes weight (rate × nights) for tiered lodging', () => {
     const expense: Expense = {
