@@ -51,7 +51,7 @@ export function ExpensesPanel() {
         count={expenses.length}
         action={
           <Button size="sm" onClick={openNew} disabled={atMax}>
-            <Plus className="size-4" /> Add
+            <Plus className="size-4" /> Add expense
           </Button>
         }
       />
