@@ -17,14 +17,8 @@ export function SectionHeading({
   return (
     <div className="flex items-end justify-between gap-3">
       <div className="flex items-baseline gap-2">
-        <h2 className="h-display text-xl text-[var(--color-ink)] sm:text-2xl">
-          {title}
-        </h2>
-        {count != null && (
-          <span className="tag">
-            {String(count).padStart(2, '0')}
-          </span>
-        )}
+        <h2 className="h-display text-xl text-[var(--color-ink)] sm:text-2xl">{title}</h2>
+        {count != null && <span className="tag">{String(count).padStart(2, '0')}</span>}
       </div>
       {action}
     </div>

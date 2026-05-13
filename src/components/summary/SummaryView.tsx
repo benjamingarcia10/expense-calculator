@@ -51,182 +51,172 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
           transition={{ duration: 0.42, ease: [0.22, 0.61, 0.36, 1] }}
           className="mx-auto"
         >
-        <div
-          ref={cardRef}
-          className="receipt-card mx-auto"
-          style={{
-            fontFamily: SANS,
-            // Fixed width + explicit font size so html-to-image rasterizes
-            // consistently regardless of the surrounding dialog's sizing.
-            width: '420px',
-            maxWidth: '100%',
-            padding: '32px 28px',
-            fontSize: '14px',
-            lineHeight: 1.5,
-          }}
-        >
-          {/* Header */}
-          <header className="flex flex-col items-center gap-1 text-center">
-            <p
-              className="receipt-muted text-[10px] tracking-[0.3em] uppercase"
-              style={{ fontFamily: MONO }}
-            >
-              The Split · {formatDate(createdAt)}
-            </p>
-            <h3
-              style={{
-                fontFamily: DISPLAY,
-                fontSize: '24px',
-                lineHeight: 1.25,
-                fontStyle: 'italic',
-                fontWeight: 500,
-                color: '#2a1f17',
-                margin: '4px 0',
-                wordBreak: 'normal',
-              }}
-            >
-              {displayTitle}
-            </h3>
-            <p
-              className="receipt-muted text-[10px] tracking-[0.2em] uppercase"
-              style={{ fontFamily: MONO }}
-            >
-              {serial}
-            </p>
-          </header>
-
-          <hr className="receipt-rule my-5" />
-
-          {/* Total */}
-          <div className="flex flex-col items-center gap-1 text-center">
-            <p
-              className="receipt-muted text-[10px] tracking-[0.3em] uppercase"
-              style={{ fontFamily: MONO }}
-            >
-              Grand Total
-            </p>
-            <p
-              style={{
-                fontFamily: DISPLAY,
-fontSize: '44px',
-                lineHeight: 1.05,
-                fontWeight: 600,
-                color: '#2a1f17',
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {formatMoney(totalSpent, c)}
-            </p>
-            <p className="receipt-muted text-xs">
-              across {people.length} {people.length === 1 ? 'person' : 'people'} · {expenses.length}{' '}
-              {expenses.length === 1 ? 'expense' : 'expenses'}
-            </p>
-          </div>
-
-          <hr className="receipt-rule my-5" />
-
-          {/* Settle up */}
-          <section>
-            <h4
-              className="receipt-muted mb-3 text-center text-[10px] tracking-[0.3em] uppercase"
-              style={{ fontFamily: MONO }}
-            >
-              — Settle Up —
-            </h4>
-            {debts.length === 0 ? (
+          <div
+            ref={cardRef}
+            className="receipt-card mx-auto"
+            style={{
+              fontFamily: SANS,
+              // Fixed width + explicit font size so html-to-image rasterizes
+              // consistently regardless of the surrounding dialog's sizing.
+              width: '420px',
+              maxWidth: '100%',
+              padding: '32px 28px',
+              fontSize: '14px',
+              lineHeight: 1.5,
+            }}
+          >
+            {/* Header */}
+            <header className="flex flex-col items-center gap-1 text-center">
               <p
-                style={{ fontFamily: DISPLAY }}
-                className="receipt-ink text-center text-lg italic"
+                className="receipt-muted text-[10px] tracking-[0.3em] uppercase"
+                style={{ fontFamily: MONO }}
               >
-                Everyone’s square.
+                The Split · {formatDate(createdAt)}
               </p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {debts.map((d) => (
-                  <li
-                    key={`${d.fromMemberId}-${d.toMemberId}`}
-                    className="receipt-ink flex items-baseline gap-2 text-sm"
-                  >
-                    <span className="font-medium">{d.fromName}</span>
-                    <span
-                      className="receipt-muted"
-                      style={{ fontFamily: MONO }}
-                      aria-hidden="true"
+              <h3
+                style={{
+                  fontFamily: DISPLAY,
+                  fontSize: '24px',
+                  lineHeight: 1.25,
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  color: '#2a1f17',
+                  margin: '4px 0',
+                  wordBreak: 'normal',
+                }}
+              >
+                {displayTitle}
+              </h3>
+              <p
+                className="receipt-muted text-[10px] tracking-[0.2em] uppercase"
+                style={{ fontFamily: MONO }}
+              >
+                {serial}
+              </p>
+            </header>
+
+            <hr className="receipt-rule my-5" />
+
+            {/* Total */}
+            <div className="flex flex-col items-center gap-1 text-center">
+              <p
+                className="receipt-muted text-[10px] tracking-[0.3em] uppercase"
+                style={{ fontFamily: MONO }}
+              >
+                Grand Total
+              </p>
+              <p
+                style={{
+                  fontFamily: DISPLAY,
+                  fontSize: '44px',
+                  lineHeight: 1.05,
+                  fontWeight: 600,
+                  color: '#2a1f17',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {formatMoney(totalSpent, c)}
+              </p>
+              <p className="receipt-muted text-xs">
+                across {people.length} {people.length === 1 ? 'person' : 'people'} · {expenses.length}{' '}
+                {expenses.length === 1 ? 'expense' : 'expenses'}
+              </p>
+            </div>
+
+            <hr className="receipt-rule my-5" />
+
+            {/* Settle up */}
+            <section>
+              <h4
+                className="receipt-muted mb-3 text-center text-[10px] tracking-[0.3em] uppercase"
+                style={{ fontFamily: MONO }}
+              >
+                — Settle Up —
+              </h4>
+              {debts.length === 0 ? (
+                <p style={{ fontFamily: DISPLAY }} className="receipt-ink text-center text-lg italic">
+                  Everyone’s square.
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {debts.map((d) => (
+                    <li
+                      key={`${d.fromMemberId}-${d.toMemberId}`}
+                      className="receipt-ink flex items-baseline gap-2 text-sm"
                     >
-                      →
-                    </span>
-                    <span className="font-medium">{d.toName}</span>
-                    <span
-                      className="receipt-leaders mx-1 flex-1"
-                      aria-hidden="true"
-                      style={{ height: '1em' }}
-                    />
-                    <span style={{ fontFamily: MONO }} className="font-semibold tabular-nums">
-                      {formatMoney(d.amount, c)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          {expenses.length > 0 && (
-            <>
-              <hr className="receipt-rule my-5" />
-              <section>
-                <h4
-                  className="receipt-muted mb-3 text-center text-[10px] tracking-[0.3em] uppercase"
-                  style={{ fontFamily: MONO }}
-                >
-                  — Itemized —
-                </h4>
-                <ul className="flex flex-col gap-2 text-sm">
-                  {expenses.map((e) => {
-                    const payer = people.find((p) => p.id === e.paidById)?.name ?? '?'
-                    return (
-                      <li key={e.id} className="receipt-ink flex flex-col gap-0.5">
-                        <div className="flex items-baseline gap-2">
-                          <span className="font-medium">{e.title}</span>
-                          <span
-                            className="receipt-leaders mx-1 flex-1"
-                            aria-hidden="true"
-                            style={{ height: '1em' }}
-                          />
-                          <span style={{ fontFamily: MONO }} className="tabular-nums">
-                            {formatMoney(expenseTotal(e), c)}
-                          </span>
-                        </div>
-                        <span
-                          className="receipt-muted text-[10px] tracking-wide uppercase"
-                          style={{ fontFamily: MONO }}
-                        >
-                          {payer} · {EXPENSE_TYPE_LABELS[e.type]}
-                        </span>
-                      </li>
-                    )
-                  })}
+                      <span className="font-medium">{d.fromName}</span>
+                      <span className="receipt-muted" style={{ fontFamily: MONO }} aria-hidden="true">
+                        →
+                      </span>
+                      <span className="font-medium">{d.toName}</span>
+                      <span
+                        className="receipt-leaders mx-1 flex-1"
+                        aria-hidden="true"
+                        style={{ height: '1em' }}
+                      />
+                      <span style={{ fontFamily: MONO }} className="font-semibold tabular-nums">
+                        {formatMoney(d.amount, c)}
+                      </span>
+                    </li>
+                  ))}
                 </ul>
-              </section>
-            </>
-          )}
+              )}
+            </section>
 
-          <hr className="receipt-rule my-5" />
+            {expenses.length > 0 && (
+              <>
+                <hr className="receipt-rule my-5" />
+                <section>
+                  <h4
+                    className="receipt-muted mb-3 text-center text-[10px] tracking-[0.3em] uppercase"
+                    style={{ fontFamily: MONO }}
+                  >
+                    — Itemized —
+                  </h4>
+                  <ul className="flex flex-col gap-2 text-sm">
+                    {expenses.map((e) => {
+                      const payer = people.find((p) => p.id === e.paidById)?.name ?? '?'
+                      return (
+                        <li key={e.id} className="receipt-ink flex flex-col gap-0.5">
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-medium">{e.title}</span>
+                            <span
+                              className="receipt-leaders mx-1 flex-1"
+                              aria-hidden="true"
+                              style={{ height: '1em' }}
+                            />
+                            <span style={{ fontFamily: MONO }} className="tabular-nums">
+                              {formatMoney(expenseTotal(e), c)}
+                            </span>
+                          </div>
+                          <span
+                            className="receipt-muted text-[10px] tracking-wide uppercase"
+                            style={{ fontFamily: MONO }}
+                          >
+                            {payer} · {EXPENSE_TYPE_LABELS[e.type]}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              </>
+            )}
 
-          <footer className="flex flex-col items-center gap-1 text-center">
-            <p
-              style={{ fontFamily: DISPLAY, lineHeight: 1.2 }}
-              className="receipt-ink text-sm whitespace-nowrap italic"
-            >
-              thanks, come again
-            </p>
-            <p
-              className="receipt-muted text-[9px] tracking-[0.2em] uppercase"
-              style={{ fontFamily: MONO }}
-            >
-              split with expensecalc
-            </p>
-          </footer>
-        </div>
+            <hr className="receipt-rule my-5" />
+
+            <footer className="flex flex-col items-center gap-1 text-center">
+              <p
+                style={{ fontFamily: DISPLAY, lineHeight: 1.2 }}
+                className="receipt-ink text-sm whitespace-nowrap italic"
+              >
+                thanks, come again
+              </p>
+              <p className="receipt-muted text-[9px] tracking-[0.2em] uppercase" style={{ fontFamily: MONO }}>
+                split with expensecalc
+              </p>
+            </footer>
+          </div>
         </motion.div>
 
         {copyState !== 'idle' && (
@@ -234,9 +224,7 @@ fontSize: '44px',
             className={`text-xs ${copyState === 'copied' ? 'text-emerald-600' : 'text-red-500'}`}
             role="status"
           >
-            {copyState === 'copied'
-              ? 'Copied to clipboard'
-              : 'Couldn’t copy — select and copy manually'}
+            {copyState === 'copied' ? 'Copied to clipboard' : 'Couldn’t copy — select and copy manually'}
           </p>
         )}
         <div className="flex flex-wrap gap-2">

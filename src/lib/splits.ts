@@ -122,16 +122,12 @@ export function computeItemizedSplit(input: ItemizedInput): SplitResult {
   const foodSplit = distributeByWeight(totalFood, foodSubtotals)
   const taxSplit = input.tax > 0 ? distributeByWeight(input.tax, foodSubtotals) : {}
   const tipSplit = input.tip > 0 ? distributeByWeight(input.tip, foodSubtotals) : {}
-  const serviceSplit =
-    input.serviceFee > 0 ? distributeByWeight(input.serviceFee, foodSubtotals) : {}
+  const serviceSplit = input.serviceFee > 0 ? distributeByWeight(input.serviceFee, foodSubtotals) : {}
 
   const result: SplitResult = {}
   for (const key of Object.keys(foodSubtotals)) {
     const total =
-      (foodSplit[key] ?? 0) +
-      (taxSplit[key] ?? 0) +
-      (tipSplit[key] ?? 0) +
-      (serviceSplit[key] ?? 0)
+      (foodSplit[key] ?? 0) + (taxSplit[key] ?? 0) + (tipSplit[key] ?? 0) + (serviceSplit[key] ?? 0)
     // Round to pennies; every component is already penny-exact so the sum
     // stays penny-exact, but use toFixed to defuse any float artefacts.
     result[key] = Math.round(total * 100) / 100

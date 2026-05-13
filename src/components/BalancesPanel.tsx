@@ -48,9 +48,7 @@ export function BalancesPanel() {
                     initial={{ width: 0 }}
                     animate={{ width: `${pct}%` }}
                     transition={{ type: 'spring', stiffness: 220, damping: 26 }}
-                    className={`h-full rounded-full ${
-                      positive ? 'bg-emerald-500' : 'bg-rose-500'
-                    }`}
+                    className={`h-full rounded-full ${positive ? 'bg-emerald-500' : 'bg-rose-500'}`}
                   />
                 </div>
               </li>

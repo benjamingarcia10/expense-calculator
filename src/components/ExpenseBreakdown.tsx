@@ -22,8 +22,7 @@ export function ExpenseBreakdown({ expense }: { expense: Expense }) {
   const isRestaurant = expense.type === 'restaurant'
   const isTieredLodging = expense.type === 'lodging' && expense.mode === 'tiered'
   const total = expenseTotal(expense)
-  const hasExtras =
-    isRestaurant && (expense.tax > 0 || expense.tip > 0 || expense.serviceFee > 0)
+  const hasExtras = isRestaurant && (expense.tax > 0 || expense.tip > 0 || expense.serviceFee > 0)
 
   return (
     <div className="flex flex-col gap-3 border-t border-[var(--color-border)] bg-[var(--color-border)]/15 px-4 py-3">
@@ -61,10 +60,7 @@ export function ExpenseBreakdown({ expense }: { expense: Expense }) {
             </thead>
             <tbody>
               {breakdown.lines.map((line) => (
-                <tr
-                  key={line.personId}
-                  className="border-t border-[var(--color-border)]"
-                >
+                <tr key={line.personId} className="border-t border-[var(--color-border)]">
                   <td className="px-2 py-1.5 font-medium">{line.name}</td>
                   <td className="px-2 py-1.5 text-right font-mono tabular-nums">
                     {formatMoney(line.food, currency)}
@@ -95,10 +91,7 @@ export function ExpenseBreakdown({ expense }: { expense: Expense }) {
       {!isRestaurant && (
         <ul className="flex flex-col divide-y divide-[var(--color-border)] overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm">
           {breakdown.lines.map((line) => (
-            <li
-              key={line.personId}
-              className="flex items-center justify-between gap-3 px-3 py-2"
-            >
+            <li key={line.personId} className="flex items-center justify-between gap-3 px-3 py-2">
               <span className="truncate">{line.name}</span>
               <div className="flex items-center gap-3">
                 {isTieredLodging && line.weight != null && (

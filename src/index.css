@@ -46,11 +46,7 @@ body {
 /* Atmospheric background gradient — subtle warmth at the top of the page so
  * the surface isn't a flat color. Pairs the dark/light themes equally. */
 body {
-  background-image: radial-gradient(
-    ellipse at top,
-    var(--color-tint-warm),
-    transparent 60%
-  );
+  background-image: radial-gradient(ellipse at top, var(--color-tint-warm), transparent 60%);
   background-repeat: no-repeat;
   background-size: 100% 60vh;
   background-attachment: fixed;

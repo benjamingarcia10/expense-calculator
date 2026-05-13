@@ -104,9 +104,7 @@ export function PeoplePanel() {
         </Button>
       </form>
       {atMax && (
-        <p className="text-xs text-[var(--color-muted)]">
-          Limit of {LIMITS.maxPeople} people reached.
-        </p>
+        <p className="text-xs text-[var(--color-muted)]">Limit of {LIMITS.maxPeople} people reached.</p>
       )}
       <Dialog
         open={pendingRemove !== null}

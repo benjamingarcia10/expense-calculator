@@ -24,10 +24,7 @@ export function Header({
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 md:px-6">
         <div className="flex flex-1 items-center gap-3">
           <Wordmark />
-          <span
-            aria-hidden="true"
-            className="hidden text-[var(--color-rule)] sm:inline"
-          >
+          <span aria-hidden="true" className="hidden text-[var(--color-rule)] sm:inline">
             ⁄
           </span>
           <input
@@ -41,10 +38,7 @@ export function Header({
           />
         </div>
         <div className="flex items-center gap-1.5">
-          <CurrencyPicker
-            value={currency as CurrencyCode}
-            onChange={(next) => setCurrency(next)}
-          />
+          <CurrencyPicker value={currency as CurrencyCode} onChange={(next) => setCurrency(next)} />
           <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-[var(--color-border)]" />
           <Button variant="ghost" size="sm" onClick={onOpenSummary}>
             Summary

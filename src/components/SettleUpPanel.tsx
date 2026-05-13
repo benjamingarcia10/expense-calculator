@@ -12,10 +12,7 @@ export function SettleUpPanel() {
   const people = useSession((s) => s.people)
   const expenses = useSession((s) => s.expenses)
   const currency = useSession((s) => s.currency) as CurrencyCode
-  const debts = useMemo(
-    () => simplifyDebts(computeBalances(people, expenses)),
-    [people, expenses]
-  )
+  const debts = useMemo(() => simplifyDebts(computeBalances(people, expenses)), [people, expenses])
 
   return (
     <section className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-[var(--color-accent)]/40 bg-[var(--color-surface)] p-5 shadow-lg">
@@ -61,16 +58,9 @@ export function SettleUpPanel() {
                   className="flex items-baseline gap-2"
                 >
                   <span className="text-sm font-medium">{d.fromName}</span>
-                  <ArrowRight
-                    className="size-3 shrink-0 text-[var(--color-muted)]"
-                    aria-hidden="true"
-                  />
+                  <ArrowRight className="size-3 shrink-0 text-[var(--color-muted)]" aria-hidden="true" />
                   <span className="text-sm font-medium">{d.toName}</span>
-                  <span
-                    className="leaders mx-1 flex-1"
-                    aria-hidden="true"
-                    style={{ height: '1em' }}
-                  />
+                  <span className="leaders mx-1 flex-1" aria-hidden="true" style={{ height: '1em' }} />
                   <span className="font-mono text-base font-semibold tabular-nums">
                     {formatMoney(d.amount, currency)}
                   </span>

@@ -57,7 +57,9 @@ export function CurrencyPicker({
         className="flex h-9 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] pr-2 pl-3 text-[var(--color-ink)] transition-colors hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/60"
       >
         <span className="font-mono text-xs tracking-wide">{current.code}</span>
-        <span aria-hidden="true" className="text-[var(--color-muted)]">·</span>
+        <span aria-hidden="true" className="text-[var(--color-muted)]">
+          ·
+        </span>
         <span aria-hidden="true" className="font-mono text-xs text-[var(--color-muted)]">
           {current.symbol}
         </span>
@@ -95,7 +97,9 @@ export function CurrencyPicker({
                     }
                   }}
                   className={`flex cursor-pointer items-center justify-between gap-3 px-3 py-2 text-sm outline-none transition-colors hover:bg-[var(--color-accent-soft)] focus:bg-[var(--color-accent-soft)] ${
-                    selected ? 'bg-[var(--color-accent-soft)] text-[var(--color-ink)]' : 'text-[var(--color-ink)]'
+                    selected
+                      ? 'bg-[var(--color-accent-soft)] text-[var(--color-ink)]'
+                      : 'text-[var(--color-ink)]'
                   }`}
                 >
                   <span className="flex items-center gap-2">

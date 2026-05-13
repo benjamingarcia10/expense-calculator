@@ -5,7 +5,13 @@ import { useState } from 'react'
 import { MoneyInput } from './MoneyInput'
 import type { CurrencyCode } from '../../lib/currencies'
 
-function Controlled({ currency = 'USD' as CurrencyCode, onChange }: { currency?: CurrencyCode; onChange?: (v: string) => void }) {
+function Controlled({
+  currency = 'USD' as CurrencyCode,
+  onChange,
+}: {
+  currency?: CurrencyCode
+  onChange?: (v: string) => void
+}) {
   const [value, setValue] = useState('')
   return (
     <MoneyInput
