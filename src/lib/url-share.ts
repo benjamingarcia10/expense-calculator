@@ -79,10 +79,7 @@ function base64UrlDecode(input: string): Uint8Array {
   return bytes
 }
 
-function recordToPairs(
-  rec: Record<string, number>,
-  idIdx: Map<string, number>
-): [number, number][] {
+function recordToPairs(rec: Record<string, number>, idIdx: Map<string, number>): [number, number][] {
   const pairs: [number, number][] = []
   for (const [id, val] of Object.entries(rec)) {
     const idx = idIdx.get(id)
@@ -113,11 +110,7 @@ function encodeExpense(e: Expense, idIdx: Map<string, number>): EncodedExpense {
     case 'mileage':
       return [code, e.title, paidBy, e.total, e.unitLabel, recordToPairs(e.units, idIdx)]
     case 'restaurant': {
-      const items = e.items.map((i) => [
-        i.name,
-        i.price,
-        i.assignedIds.map((id) => idIdx.get(id) ?? 0),
-      ])
+      const items = e.items.map((i) => [i.name, i.price, i.assignedIds.map((id) => idIdx.get(id) ?? 0)])
       return [code, e.title, paidBy, items, e.tax, e.tip, e.serviceFee]
     }
     case 'lodging': {
