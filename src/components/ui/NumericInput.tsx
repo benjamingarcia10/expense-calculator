@@ -1,4 +1,11 @@
-import { forwardRef, type InputHTMLAttributes, type ChangeEvent, type KeyboardEvent } from 'react'
+import {
+  forwardRef,
+  useEffect,
+  useState,
+  type InputHTMLAttributes,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from 'react'
 
 export type NumericInputProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -30,12 +37,35 @@ function sanitize(raw: string, integer: boolean, max: number): string {
   return cleaned
 }
 
+/** Compare two number strings by parsed value to detect external changes that
+ * aren't just the parent normalizing our typed text. */
+function sameNumber(a: string, b: string): boolean {
+  if (a === b) return true
+  const na = Number(a)
+  const nb = Number(b)
+  if (Number.isNaN(na) && Number.isNaN(nb)) return true
+  return na === nb
+}
+
 export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
   ({ value, onChange, integer = false, max, unit, invalid, className = '', ...props }, ref) => {
     const effectiveMax = max ?? (integer ? 365 : 99_999)
 
+    // Preserve typed text (e.g. "5." or "5.0") across parent-driven re-renders
+    // that normalize back to "5". Without this, the user can't type a decimal
+    // in fields whose parent state stores a number.
+    const [text, setText] = useState(value)
+    useEffect(() => {
+      if (!sameNumber(text, value)) {
+        setText(value)
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [value])
+
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
-      onChange(sanitize(e.target.value, integer, effectiveMax))
+      const next = sanitize(e.target.value, integer, effectiveMax)
+      setText(next)
+      onChange(next)
     }
 
     function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -55,7 +85,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
             type="text"
             inputMode={integer ? 'numeric' : 'decimal'}
             autoComplete="off"
-            value={value}
+            value={text}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             className="min-w-0 flex-1 bg-transparent px-3 text-right font-mono text-sm tabular-nums text-[var(--color-ink)] outline-none placeholder:font-sans placeholder:text-[var(--color-muted)]"
@@ -77,7 +107,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
         type="text"
         inputMode={integer ? 'numeric' : 'decimal'}
         autoComplete="off"
-        value={value}
+        value={text}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         className={`h-10 w-full rounded-lg border bg-[var(--color-surface)] px-3 text-right font-mono text-sm tabular-nums text-[var(--color-ink)] outline-none transition-colors ${
