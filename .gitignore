@@ -21,6 +21,9 @@ playwright-report
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# Claude Code per-user settings (commit-attribution prefs, etc.)
+.claude/settings.local.json
 *.suo
 *.ntvs*
 *.njsproj

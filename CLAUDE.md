@@ -145,9 +145,9 @@ Why fragments (`#d=`), not query params (`?d=`):
 
 `@theme` blocks inside `@media (prefers-color-scheme: dark) { … }` **do not work**. Tailwind v4 hoists `@theme` declarations to a single global block and ignores media-query nesting. Dark mode is implemented as a plain `:root` override inside the media query (see `src/index.css`). Don't add new dark-mode tokens via `@theme`; use `:root` directly.
 
-## Lockfile Gotcha (npm)
+## Lockfile (npm)
 
-`npm install` doesn't always write top-level lockfile entries for `bundleDependencies` of optional platform packages — e.g. `@tailwindcss/oxide-wasm32-wasi` ships `@emnapi/core` and `@emnapi/runtime` inside its tarball, and on macOS these never get standalone entries. Linux CI's `npm ci` then complains about a missing lockfile entry. Fix: add the entries by hand (with `resolved` + `integrity` from the npm registry); the existing top-level `@emnapi/*` entries serve as the reference shape. Don't drop back to `npm install` in CI — it loses the lockfile-correctness guarantee.
+CI uses `npm install` (not `npm ci`) because npm doesn't always write top-level lockfile entries for platform-conditional deps — `bundleDependencies` of optional platform packages (e.g. `@emnapi/*` inside `@tailwindcss/oxide-wasm32-wasi`) and `optionalDependencies` skipped on the install host (e.g. `yaml` under `lint-staged`). The lockfile generated on macOS dev omits them; Linux CI's `npm ci` then refuses to start. Using `npm install` lets CI fill in the gaps. Trade-off: CI may pick up patch-level drift on newly-resolved transitive deps between runs — acceptable for this project's scale. If reproducibility matters more later, switch to pnpm or bun, both of which handle this correctly.
 
 ## Currency Decimals
 
