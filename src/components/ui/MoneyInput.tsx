@@ -1,6 +1,7 @@
 import {
   forwardRef,
   useEffect,
+  useRef,
   useState,
   type InputHTMLAttributes,
   type ChangeEvent,
@@ -49,9 +50,11 @@ function sanitize(raw: string, max: number, decimals: number): string {
   return cleaned
 }
 
-/** On blur, normalize "12" → "12.00" (USD) or "12" → "12" (JPY). Empty stays empty. */
-function formatOnBlur(text: string, decimals: number): string {
-  if (text === '' || text === '.') return ''
+/** Format a value to the currency's natural precision: "12" → "12.00" (USD)
+ * or "12" → "12" (JPY). Empty and partial inputs ("", ".") stay as-is so the
+ * user can keep typing. */
+function formatForDisplay(text: string, decimals: number): string {
+  if (text === '' || text === '.') return text
   const n = Number(text)
   if (!Number.isFinite(n)) return text
   return n.toFixed(decimals)
@@ -69,7 +72,10 @@ function sameNumber(a: string, b: string): boolean {
 }
 
 export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
-  ({ value, onChange, currency, max = 999_999.99, invalid, className = '', onBlur, ...props }, ref) => {
+  (
+    { value, onChange, currency, max = 999_999.99, invalid, className = '', onFocus, onBlur, ...props },
+    ref
+  ) => {
     const symbol = symbolFor(currency)
     const decimals = currencyDecimals(currency)
     // Reserve space proportional to symbol length so long symbols ("MX$", "AED") fit
@@ -77,14 +83,18 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
 
     // Track the typed text separately so a trailing "." or "5.0" isn't clobbered
     // when the parent normalizes the value via parseMoney → number → String().
-    const [text, setText] = useState(value)
+    // Format on mount so an existing "90" expense displays as "90.00".
+    const [text, setText] = useState(() => formatForDisplay(value, decimals))
+    // Don't reformat while the user is mid-edit, otherwise typed text like
+    // "90." would be replaced with "90.00" before they finish.
+    const focusedRef = useRef(false)
     useEffect(() => {
-      if (!sameNumber(text, value)) {
-        setText(value)
-      }
-      // We deliberately only re-sync on external value changes.
+      if (focusedRef.current) return
+      if (sameNumber(text, value)) return
+      setText(formatForDisplay(value, decimals))
+      // We resync on external value (or currency-precision) changes only.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [value])
+    }, [value, decimals])
 
     function handleChange(e: ChangeEvent<HTMLInputElement>) {
       const next = sanitize(e.target.value, max, decimals)
@@ -95,8 +105,13 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
       if (BLOCKED_KEYS.has(e.key)) e.preventDefault()
       if (decimals === 0 && e.key === '.') e.preventDefault()
     }
+    function handleFocus(e: FocusEvent<HTMLInputElement>) {
+      focusedRef.current = true
+      onFocus?.(e)
+    }
     function handleBlur(e: FocusEvent<HTMLInputElement>) {
-      const formatted = formatOnBlur(text, decimals)
+      focusedRef.current = false
+      const formatted = formatForDisplay(text, decimals)
       if (formatted !== text) {
         setText(formatted)
         onChange(formatted)
@@ -120,6 +135,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
           value={text}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
           onBlur={handleBlur}
           className={`h-10 w-full rounded-lg border bg-[var(--color-surface)] ${padding} pr-3 text-right font-mono text-sm tabular-nums text-[var(--color-ink)] outline-none transition-colors placeholder:font-sans placeholder:text-[var(--color-muted)] ${
             invalid ? 'border-red-500' : 'border-[var(--color-border)] focus:border-[var(--color-accent)]'
