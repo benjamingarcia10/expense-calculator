@@ -7,7 +7,8 @@ test('equal split — three people, one expense', async ({ page }) => {
     await page.getByPlaceholder('Add a name').fill(name)
     await page.getByRole('button', { name: /^Add$/ }).click()
   }
-  await expect(page.getByText('People (3)')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'People', level: 2 })).toBeVisible()
+  await expect(page.getByText('Carol')).toBeVisible()
 
   await page.getByRole('button', { name: /Add expense/ }).click()
   await page.getByRole('button', { name: 'Equal' }).click()
