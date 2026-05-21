@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Plus, Pencil, Trash2, ChevronDown, Receipt } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { toast } from 'sonner'
 import { useSession } from '../store/session'
-import { Button, Dialog, SectionHeading } from './ui'
+import { Button, SectionHeading } from './ui'
 import { ExpenseSheet } from './expense-forms/ExpenseSheet'
 import { ExpenseBreakdown } from './ExpenseBreakdown'
 import type { Expense } from '../types'
@@ -25,10 +26,10 @@ export function ExpensesPanel() {
   const expenses = useSession((s) => s.expenses)
   const currency = useSession((s) => s.currency) as CurrencyCode
   const removeExpense = useSession((s) => s.removeExpense)
+  const restoreExpense = useSession((s) => s.restoreExpense)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Expense | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [pendingDelete, setPendingDelete] = useState<Expense | null>(null)
 
   const atMax = expenses.length >= LIMITS.maxExpenses
 
@@ -42,6 +43,19 @@ export function ExpensesPanel() {
   }
   function toggleExpanded(id: string) {
     setExpandedId((cur) => (cur === id ? null : id))
+  }
+  function handleDelete(e: Expense) {
+    const index = expenses.findIndex((x) => x.id === e.id)
+    if (index === -1) return
+    if (expandedId === e.id) setExpandedId(null)
+    removeExpense(e.id)
+    toast(`Deleted "${e.title}"`, {
+      duration: 6000,
+      action: {
+        label: 'Undo',
+        onClick: () => restoreExpense(e, index),
+      },
+    })
   }
 
   return (
@@ -119,7 +133,7 @@ export function ExpensesPanel() {
                         <Pencil className="size-4" />
                       </button>
                       <button
-                        onClick={() => setPendingDelete(e)}
+                        onClick={() => handleDelete(e)}
                         className="grid size-9 place-items-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-red-600/15 hover:text-red-600"
                         aria-label={`delete ${e.title}`}
                       >
@@ -148,29 +162,6 @@ export function ExpensesPanel() {
         </ul>
       )}
       <ExpenseSheet open={open} onClose={() => setOpen(false)} editing={editing} />
-      <Dialog
-        open={pendingDelete !== null}
-        onClose={() => setPendingDelete(null)}
-        title={`Delete ${pendingDelete?.title ?? ''}?`}
-      >
-        <div className="flex flex-col gap-3">
-          <p className="text-sm">This cannot be undone.</p>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setPendingDelete(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => {
-                if (pendingDelete) removeExpense(pendingDelete.id)
-                setPendingDelete(null)
-              }}
-            >
-              Delete
-            </Button>
-          </div>
-        </div>
-      </Dialog>
     </section>
   )
 }

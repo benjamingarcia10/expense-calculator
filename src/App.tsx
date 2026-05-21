@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { Toaster } from 'sonner'
 import { Header } from './components/Header'
 import { PeoplePanel } from './components/PeoplePanel'
 import { ExpensesPanel } from './components/ExpensesPanel'
@@ -49,6 +50,23 @@ export default function App() {
       </main>
       <SummaryView open={summaryOpen} onClose={() => setSummaryOpen(false)} />
       <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} />
+      <Toaster
+        position="bottom-center"
+        theme="system"
+        toastOptions={{
+          unstyled: false,
+          style: {
+            background: 'var(--color-surface)',
+            color: 'var(--color-ink)',
+            border: '1px solid var(--color-border)',
+            fontFamily: 'inherit',
+          },
+          classNames: {
+            actionButton:
+              '!bg-[var(--color-accent)] !text-white !rounded-md !px-2 !py-1 !text-xs !font-medium',
+          },
+        }}
+      />
       <Dialog open={pending !== null} onClose={reject} title="Import shared session?">
         <div className="flex flex-col gap-3">
           <p className="text-sm">

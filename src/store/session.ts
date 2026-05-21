@@ -35,6 +35,7 @@ type SessionStore = Session & {
   addExpense: (input: ExpenseInput) => string
   updateExpense: (id: string, patch: Partial<Expense>) => void
   removeExpense: (id: string) => void
+  restoreExpense: (expense: Expense, atIndex: number) => void
   replaceSession: (next: Session) => void
   reset: () => void
 }
@@ -139,6 +140,15 @@ export const useSession = create<SessionStore>()(
       },
 
       removeExpense: (id) => set({ expenses: get().expenses.filter((e) => e.id !== id) }),
+
+      restoreExpense: (expense, atIndex) => {
+        const current = get().expenses
+        if (current.some((e) => e.id === expense.id)) return
+        if (current.length >= LIMITS.maxExpenses) return
+        const idx = Math.max(0, Math.min(atIndex, current.length))
+        const next = [...current.slice(0, idx), expense, ...current.slice(idx)]
+        set({ expenses: next })
+      },
 
       replaceSession: (next) => set({ ...next }),
 

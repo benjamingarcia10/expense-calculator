@@ -10,6 +10,7 @@ A static, single-page expense-splitting web app. No backend, no accounts. Every 
 - framer-motion for entrance/exit + micro-interactions
 - pako for gzip; base64url for URL-safe encoding
 - html-to-image for the receipt PNG export
+- sonner for toasts (undo-after-delete); qrcode.react for the Share dialog QR
 - lucide-react for icons; Fraunces / Inter / JetBrains Mono fonts
 - Zod 4 for runtime validation of share-URL payloads
 - Vitest + happy-dom + @testing-library/react for unit/component tests
@@ -32,7 +33,7 @@ A static, single-page expense-splitting web app. No backend, no accounts. Every 
 ```
 expense-calculator/
 ├── src/
-│   ├── App.tsx                       # Top-level layout, panel staggered entrance
+│   ├── App.tsx                       # Top-level layout, panel staggered entrance, sonner Toaster
 │   ├── components/
 │   │   ├── Header.tsx                # Wordmark + session title + currency pill + Summary/Share/Reset
 │   │   ├── PeoplePanel.tsx           # Add/rename/remove people, count tag
@@ -41,7 +42,7 @@ expense-calculator/
 │   │   ├── ExpensesPanel.tsx         # Expense list, type tag, leader dots, edit/delete
 │   │   ├── ExpenseBreakdown.tsx      # Click-to-expand per-expense per-person table
 │   │   ├── expense-forms/            # One form per split mode + ModePicker tiles
-│   │   ├── share/ShareDialog.tsx     # Build + copy share URL; length warning
+│   │   ├── share/ShareDialog.tsx     # Build + copy share URL; QR code; length warning
 │   │   ├── summary/SummaryView.tsx   # Receipt-style print/PNG export
 │   │   └── ui/
 │   │       ├── Button.tsx            # Variants: primary/ghost/danger; size sm/md
@@ -88,7 +89,9 @@ expense-calculator/
 - **Optimistic UI** — All mutations are local (no server). No loading states. Toast feedback via `sonner` (and only sparingly).
 - **Money inputs** — Single `MoneyInput` component everywhere. Local text state preserves trailing decimals while the parent stores numbers. `onBlur` formats to the currency's natural precision via `Intl`.
 - **Forms** — One per split mode in `components/expense-forms/`. Each receives `initial?` for edit mode and emits an `ExpenseInput` (no `id`). The Sheet host adds the `id` on save.
-- **Confirmations** — Use `Dialog` for destructive confirms (reset session, delete expense). Never `window.confirm()`.
+- **Confirmations** — Two patterns, depending on reversibility:
+  - **Undo toast (`sonner`)** for routine, reversible deletes — currently expense delete. The action is taken immediately and a toast with an "Undo" button restores it. Use this when the cost of an accidental click is low and undoing is cheap. Restoring an expense uses `restoreExpense(expense, atIndex)` on the store to preserve the original `id` and list position.
+  - **`Dialog` confirm** for destructive or cascading actions — reset session, and person-remove when the person is referenced by expenses (the remove cascades through expenses and isn't a simple undo). Never `window.confirm()`.
 - **Theming** — Tokens live in `@theme` (light) + `@media (prefers-color-scheme: dark) :root { … }` override. Cards/buttons/inputs read `var(--color-bg|surface|ink|muted|accent|border|rule|scrim|tint-warm|accent-soft)`. Receipt card is fixed cream regardless of mode (it's the "physical" output).
 - **Typography helpers** — `.h-display` (Fraunces italic 500), `.tag` (mono 10px / 0.18em tracking / uppercase), `.leaders` (dotted leader line), `.dashed-rule`. Defined in `src/index.css`.
 - **Penny invariant** — `expense-breakdown` and `compute-balances` agree to the cent. Restaurant breakdown distributes food, tax, tip, and service fee each as their own largest-remainder distribution so the per-person sum equals each component exactly.
