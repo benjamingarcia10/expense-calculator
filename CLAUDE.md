@@ -35,13 +35,14 @@ expense-calculator/
 ├── src/
 │   ├── App.tsx                       # Top-level layout, panel staggered entrance, sonner Toaster
 │   ├── components/
-│   │   ├── Header.tsx                # Wordmark + session title + currency pill + Summary/Share/Reset
+│   │   ├── Header.tsx                # Wordmark + session title + currency pill + Summary/Share/Tour/Reset
 │   │   ├── PeoplePanel.tsx           # Add/rename/remove people, count tag
 │   │   ├── BalancesPanel.tsx         # Per-person running balance + horizontal proportion bars
 │   │   ├── SettleUpPanel.tsx         # Simplified A→B settle-up list (hero/featured card)
 │   │   ├── ExpensesPanel.tsx         # Expense list, type tag, leader dots, edit/delete
 │   │   ├── ExpenseBreakdown.tsx      # Click-to-expand per-expense per-person table
 │   │   ├── expense-forms/            # One form per split mode + ModePicker tiles
+│   │   ├── onboarding/OnboardingOverlay.tsx  # First-run animated tour + welcome-back card
 │   │   ├── share/ShareDialog.tsx     # Build + copy share URL; QR code; length warning
 │   │   ├── summary/SummaryView.tsx   # Receipt-style print/PNG export
 │   │   └── ui/
@@ -55,7 +56,9 @@ expense-calculator/
 │   │       ├── SectionHeading.tsx    # Fraunces italic title + zero-padded mono count tag
 │   │       ├── Wordmark.tsx          # "Receipt" + barcode glyph
 │   │       └── index.ts              # Barrel
-│   ├── hooks/useUrlImport.ts         # On mount, decode #d= → load session if valid
+│   ├── hooks/
+│   │   ├── useUrlImport.ts           # On mount, decode #d= → load session if valid
+│   │   └── useOnboarding.ts          # Decide first-run tour vs welcome-back vs nothing
 │   ├── lib/
 │   │   ├── compute-balances.ts       # Person → signed net total
 │   │   ├── simplify-debts.ts         # Greedy A→B settle-up flow
@@ -65,7 +68,8 @@ expense-calculator/
 │   │   ├── currencies.ts             # CURRENCIES list + currencyDecimals()
 │   │   ├── format.ts                 # formatMoney, formatSigned, formatDate
 │   │   ├── validation.ts             # Zod SessionSchema + ref-integrity check
-│   │   └── url-share.ts              # Encode/decode session for #d= hash
+│   │   ├── url-share.ts              # Encode/decode session for #d= hash
+│   │   └── onboarding.ts             # Read/write the first-run onboarding flag
 │   ├── store/session.ts              # Zustand store; reset, people CRUD, expense CRUD
 │   ├── types.ts                      # Session, Person, Expense union, expenseTotal()
 │   ├── index.css                     # Tailwind import, @theme tokens, base styles
@@ -89,6 +93,7 @@ expense-calculator/
 - **Optimistic UI** — All mutations are local (no server). No loading states. Toast feedback via `sonner` (and only sparingly).
 - **Money inputs** — Single `MoneyInput` component everywhere. Local text state preserves trailing decimals while the parent stores numbers. `onBlur` formats to the currency's natural precision via `Intl`.
 - **Forms** — One per split mode in `components/expense-forms/`. Each receives `initial?` for edit mode and emits an `ExpenseInput` (no `id`). The Sheet host adds the `id` on save.
+- **Onboarding** — `useOnboarding` decides on mount what `OnboardingOverlay` shows: a 4-step animated **tour** for first-time visitors, a **welcome-back** card (saved-session summary + Continue / Start fresh) for users who have data but never completed onboarding, or **nothing**. A `#d=` share link in the URL suppresses it entirely so the import dialog owns first load. The seen-flag lives in its own localStorage key (`expense-calculator-onboarding`) so resetting a session never re-triggers the tour. The Header's help button (`onReplayTour`) reopens the tour any time.
 - **Confirmations** — Two patterns, depending on reversibility:
   - **Undo toast (`sonner`)** for routine, reversible deletes — currently expense delete. The action is taken immediately and a toast with an "Undo" button restores it. Use this when the cost of an accidental click is low and undoing is cheap. Restoring an expense uses `restoreExpense(expense, atIndex)` on the store to preserve the original `id` and list position.
   - **`Dialog` confirm** for destructive or cascading actions — reset session, and person-remove when the person is referenced by expenses (the remove cascades through expenses and isn't a simple undo). Never `window.confirm()`.
@@ -137,7 +142,7 @@ Why fragments (`#d=`), not query params (`?d=`):
 - **Three tiers (all under `npm run test` or `npm run test:e2e`):**
   - **Pure-function tests** (`*.test.ts`) — no DOM, no mocks. Default for `lib/`. Fast.
   - **Component-render tests** (`*.test.tsx`) — happy-dom + `@testing-library/react` + `userEvent`. Registered matchers in `vitest.setup.ts`; `cleanup()` after each test.
-  - **E2E** (`tests/e2e/*.spec.ts`) — Playwright drives a real browser against `npm run dev`. Verifies the full add-person → add-expense → settle-up flow.
+  - **E2E** (`tests/e2e/*.spec.ts`) — Playwright drives a real browser against `npm run dev`. Verifies the full add-person → add-expense → settle-up flow. Specs that aren't about onboarding import `test`/`expect` from `tests/e2e/fixtures.ts` (not `@playwright/test`) — that fixture pre-sets the onboarding flag so the first-run overlay doesn't block them. The dedicated `onboarding.spec.ts` imports from `@playwright/test` directly so the overlay does appear.
 - **All three must pass in CI on every PR.** `.github/workflows/ci.yml` runs them; deploy is gated on success.
 - **When to write what:**
   - New helper in `lib/` → unit test the helper directly.
@@ -168,6 +173,6 @@ CI uses `npm install` (not `npm ci`) because npm doesn't always write top-level 
 - Don't compare an expense's `paidById` against `person.name` — always against `person.id`. The encoder also depends on this.
 - Don't bypass `MoneyInput`/`NumericInput` with raw `<input type="number">` — you'll lose the trailing-decimal behavior and the format-on-blur.
 - Don't reach into the URL fragment directly from a component — use `useUrlImport` on mount or `buildShareUrl`/`encodeSession` from `src/lib/url-share.ts`.
-- Don't write to `localStorage` directly — go through the Zustand store. The persistence key is `expense-calc-session-v1`; bumping its version invalidates everyone's data.
+- Don't write to `localStorage` directly for session data — go through the Zustand store. The persistence key is `expense-calc-session-v1`; bumping its version invalidates everyone's data. (The onboarding seen-flag is the one deliberate exception — it has its own key, written via `src/lib/onboarding.ts`, kept separate so a session reset doesn't re-trigger the tour.)
 - Don't push to `main` for risky changes without first verifying CI is green. CI is the gate; Deploy depends on it.
 - Don't write benchmarks/scratch scripts to `src/` — `scripts/` is the home for one-off tooling that ships with the repo.

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { RotateCcw } from 'lucide-react'
+import { HelpCircle, RotateCcw } from 'lucide-react'
 import { useSession } from '../store/session'
 import type { CurrencyCode } from '../lib/currencies'
 import { Button, CurrencyPicker, Dialog, Wordmark } from './ui'
@@ -8,9 +8,11 @@ import { LIMITS } from '../lib/validation'
 export function Header({
   onOpenSummary,
   onOpenShare,
+  onReplayTour,
 }: {
   onOpenSummary: () => void
   onOpenShare: () => void
+  onReplayTour: () => void
 }) {
   const currency = useSession((s) => s.currency)
   const setCurrency = useSession((s) => s.setCurrency)
@@ -46,6 +48,14 @@ export function Header({
           <Button size="sm" onClick={onOpenShare}>
             Share
           </Button>
+          <button
+            onClick={onReplayTour}
+            aria-label="replay tour"
+            title="Replay the tour"
+            className="grid size-9 place-items-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)]"
+          >
+            <HelpCircle className="size-4" />
+          </button>
           <button
             onClick={() => setConfirming(true)}
             aria-label="reset session"

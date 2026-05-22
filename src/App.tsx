@@ -8,7 +8,9 @@ import { BalancesPanel } from './components/BalancesPanel'
 import { SettleUpPanel } from './components/SettleUpPanel'
 import { SummaryView } from './components/summary/SummaryView'
 import { ShareDialog } from './components/share/ShareDialog'
+import { OnboardingOverlay } from './components/onboarding/OnboardingOverlay'
 import { useUrlImport } from './hooks/useUrlImport'
+import { useOnboarding } from './hooks/useOnboarding'
 import { Dialog, Button } from './components/ui'
 
 const PANEL_ENTRANCE = {
@@ -20,10 +22,15 @@ export default function App() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const { pending, accept, reject } = useUrlImport()
+  const { view: onboardingView, dismiss: dismissOnboarding, startTour } = useOnboarding()
 
   return (
     <div className="min-h-dvh text-[var(--color-ink)]">
-      <Header onOpenSummary={() => setSummaryOpen(true)} onOpenShare={() => setShareOpen(true)} />
+      <Header
+        onOpenSummary={() => setSummaryOpen(true)}
+        onOpenShare={() => setShareOpen(true)}
+        onReplayTour={startTour}
+      />
       <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
           {[
@@ -50,6 +57,7 @@ export default function App() {
       </main>
       <SummaryView open={summaryOpen} onClose={() => setSummaryOpen(false)} />
       <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} />
+      <OnboardingOverlay view={onboardingView} onDismiss={dismissOnboarding} onStartTour={startTour} />
       <Toaster
         position="bottom-center"
         theme="system"

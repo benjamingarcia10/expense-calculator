@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 
 test('URL share round-trip and localStorage persistence', async ({ page, context }) => {
   await page.goto('/')
