@@ -9,9 +9,9 @@ import { SettleUpPanel } from './components/SettleUpPanel'
 import { SummaryView } from './components/summary/SummaryView'
 import { ShareDialog } from './components/share/ShareDialog'
 import { OnboardingOverlay } from './components/onboarding/OnboardingOverlay'
+import { ImportDialog } from './components/ImportDialog'
 import { useUrlImport } from './hooks/useUrlImport'
 import { useOnboarding } from './hooks/useOnboarding'
-import { Dialog, Button } from './components/ui'
 
 const PANEL_ENTRANCE = {
   initial: { opacity: 0, y: 16 },
@@ -75,21 +75,7 @@ export default function App() {
           },
         }}
       />
-      <Dialog open={pending !== null} onClose={reject} title="Import shared session?">
-        <div className="flex flex-col gap-3">
-          <p className="text-sm">
-            {pending?.kind === 'overwrite'
-              ? 'You have an existing session. Importing this link will replace it. Your current session will be saved as a backup.'
-              : 'Load the shared session?'}
-          </p>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={reject}>
-              Keep current
-            </Button>
-            <Button onClick={accept}>Import</Button>
-          </div>
-        </div>
-      </Dialog>
+      <ImportDialog pending={pending} onAccept={accept} onReject={reject} />
     </div>
   )
 }

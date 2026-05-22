@@ -41,6 +41,8 @@ expense-calculator/
 │   │   ├── SettleUpPanel.tsx         # Simplified A→B settle-up list (hero/featured card)
 │   │   ├── ExpensesPanel.tsx         # Expense list, type tag, leader dots, edit/delete
 │   │   ├── ExpenseBreakdown.tsx      # Click-to-expand per-expense per-person table
+│   │   ├── ImportDialog.tsx          # Share-link import prompt; summarizes incoming + current session
+│   │   ├── SessionSummaryCard.tsx    # Shared at-a-glance panel: title, total, people/expense counts
 │   │   ├── expense-forms/            # One form per split mode + ModePicker tiles
 │   │   ├── onboarding/OnboardingOverlay.tsx  # First-run animated tour + welcome-back card
 │   │   ├── share/ShareDialog.tsx     # Build + copy share URL; QR code; length warning

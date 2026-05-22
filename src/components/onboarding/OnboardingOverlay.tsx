@@ -3,10 +3,8 @@ import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, Check, Handshake, Receipt, Sparkles, Users } from 'lucide-react'
 import { useSession } from '../../store/session'
-import { expenseTotal } from '../../types'
-import { formatDate, formatMoney } from '../../lib/format'
-import type { CurrencyCode } from '../../lib/currencies'
 import { Button } from '../ui'
+import { SessionSummaryCard } from '../SessionSummaryCard'
 import type { OnboardingView } from '../../hooks/useOnboarding'
 
 const EASE = [0.22, 0.61, 0.36, 1] as const
@@ -274,9 +272,8 @@ function WelcomeBackCard({ onDismiss, onStartTour }: { onDismiss: () => void; on
   const title = useSession((s) => s.title)
   const people = useSession((s) => s.people)
   const expenses = useSession((s) => s.expenses)
-  const currency = useSession((s) => s.currency) as CurrencyCode
+  const currency = useSession((s) => s.currency)
   const createdAt = useSession((s) => s.createdAt)
-  const total = expenses.reduce((sum, e) => sum + expenseTotal(e), 0)
   const [confirming, setConfirming] = useState(false)
   const continueRef = useRef<HTMLButtonElement>(null)
   const titleId = useId()
@@ -302,16 +299,7 @@ function WelcomeBackCard({ onDismiss, onStartTour }: { onDismiss: () => void; on
         You have a split in progress. Pick up where you left off, or clear it and start something new.
       </p>
 
-      <div className="flex flex-col gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]/60 p-4">
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="truncate font-medium">{title?.trim() || 'Untitled split'}</span>
-          <span className="font-mono text-sm font-semibold tabular-nums">{formatMoney(total, currency)}</span>
-        </div>
-        <div className="tag">
-          {people.length} {people.length === 1 ? 'person' : 'people'} · {expenses.length}{' '}
-          {expenses.length === 1 ? 'expense' : 'expenses'} · started {formatDate(createdAt)}
-        </div>
-      </div>
+      <SessionSummaryCard session={{ currency, title, people, expenses, createdAt }} />
 
       {confirming ? (
         <div className="flex flex-col gap-2 rounded-xl border border-red-600/30 bg-red-600/5 p-3">
