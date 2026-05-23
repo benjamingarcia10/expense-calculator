@@ -77,3 +77,17 @@ describe('ExpensesPanel — delete & undo', () => {
     expect(useSession.getState().expenses.map((e) => e.title)).toEqual(['Dinner', 'Coffee'])
   })
 })
+
+describe('ExpensesPanel — guard against the no-people dead-end', () => {
+  it('disables "Add expense" and guides the user when there are no people', () => {
+    renderPanel()
+    expect(screen.getByRole('button', { name: /add expense/i })).toBeDisabled()
+    expect(screen.getByText(/add the people first/i)).toBeInTheDocument()
+  })
+
+  it('enables "Add expense" once at least one person exists', () => {
+    useSession.getState().addPerson('Alice')
+    renderPanel()
+    expect(screen.getByRole('button', { name: /add expense/i })).toBeEnabled()
+  })
+})

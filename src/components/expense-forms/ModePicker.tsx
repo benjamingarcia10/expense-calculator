@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { Equal, Hash, Receipt, Bed, Car, X } from 'lucide-react'
+import { Equal, Hash, Receipt, Bed, Car, PieChart } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { ExpenseType } from '../../types'
 
@@ -10,7 +10,7 @@ const MODES: Array<{
   icon: ComponentType<{ className?: string }>
 }> = [
   { type: 'equal', label: 'Equal', description: 'Even split among selected people', icon: Equal },
-  { type: 'shares', label: 'Shares', description: 'Proportional weights (e.g. 2:1:1)', icon: X },
+  { type: 'shares', label: 'Shares', description: 'Proportional weights (e.g. 2:1:1)', icon: PieChart },
   { type: 'exact', label: 'Exact', description: "Manually enter each person's amount", icon: Hash },
   { type: 'mileage', label: 'Mileage', description: 'Split by miles, hours, or other units', icon: Car },
   { type: 'restaurant', label: 'Restaurant', description: 'Itemized bill with tax & tip', icon: Receipt },

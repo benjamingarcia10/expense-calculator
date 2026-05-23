@@ -13,19 +13,32 @@ export function SettleUpPanel() {
   const expenses = useSession((s) => s.expenses)
   const currency = useSession((s) => s.currency) as CurrencyCode
   const debts = useMemo(() => simplifyDebts(computeBalances(people, expenses)), [people, expenses])
+  const hasDebts = debts.length > 0
 
   return (
-    <section className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-[var(--color-accent)]/40 bg-[var(--color-surface)] p-5 shadow-lg">
+    <section
+      className={`relative flex h-full flex-col gap-4 overflow-hidden rounded-2xl bg-[var(--color-surface)] p-5 ${
+        hasDebts
+          ? 'border border-[var(--color-accent)]/40 shadow-lg'
+          : 'border border-[var(--color-border)] shadow-sm'
+      }`}
+    >
       {/* Accent atmosphere — Settle Up is the destination, the answer the user
-       * came for, so it gets a slightly elevated treatment over the other cards. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-12 -right-12 size-40 rounded-full bg-[var(--color-accent)] opacity-10 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[var(--color-accent-soft)] to-transparent"
-      />
+       * came for, so it gets a slightly elevated treatment over the other cards.
+       * With nothing to settle it de-escalates to a plain surface so it doesn't
+       * pull focus from where a first-time user should actually start. */}
+      {hasDebts && (
+        <>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-12 -right-12 size-40 rounded-full bg-[var(--color-accent)] opacity-10 blur-3xl"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[var(--color-accent-soft)] to-transparent"
+          />
+        </>
+      )}
       <div className="relative">
         <SectionHeading
           title="Settle Up"

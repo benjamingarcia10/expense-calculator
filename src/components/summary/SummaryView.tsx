@@ -213,7 +213,7 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
                 thanks, come again
               </p>
               <p className="receipt-muted text-[9px] tracking-[0.2em] uppercase" style={{ fontFamily: MONO }}>
-                split with expensecalc
+                split with receipt
               </p>
             </footer>
           </div>

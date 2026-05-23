@@ -24,6 +24,7 @@ const TYPE_TAG: Record<Expense['type'], string> = {
 
 export function ExpensesPanel() {
   const expenses = useSession((s) => s.expenses)
+  const peopleCount = useSession((s) => s.people.length)
   const currency = useSession((s) => s.currency) as CurrencyCode
   const removeExpense = useSession((s) => s.removeExpense)
   const restoreExpense = useSession((s) => s.restoreExpense)
@@ -32,6 +33,9 @@ export function ExpensesPanel() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const atMax = expenses.length >= LIMITS.maxExpenses
+  // An expense needs at least one person to be the payer — without people the
+  // form is a dead-end (empty "Paid by", empty "Split between").
+  const noPeople = peopleCount === 0
 
   function openNew() {
     setEditing(null)
@@ -64,7 +68,12 @@ export function ExpensesPanel() {
         title="Expenses"
         count={expenses.length}
         action={
-          <Button size="sm" onClick={openNew} disabled={atMax}>
+          <Button
+            size="sm"
+            onClick={openNew}
+            disabled={atMax || noPeople}
+            title={noPeople ? 'Add someone in People first' : undefined}
+          >
             <Plus className="size-4" /> Add expense
           </Button>
         }
@@ -73,7 +82,9 @@ export function ExpensesPanel() {
         <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[var(--color-border)] py-8 text-center text-sm text-[var(--color-muted)]">
           <Receipt className="size-5 opacity-60" aria-hidden="true" />
           <p className="h-display text-base text-[var(--color-ink)]">No expenses yet.</p>
-          <p className="text-xs">Add your first split below.</p>
+          <p className="text-xs">
+            {noPeople ? 'Add the people first, then log an expense.' : 'Add your first split below.'}
+          </p>
         </div>
       ) : (
         <ul className="flex flex-col gap-1">
@@ -110,7 +121,9 @@ export function ExpensesPanel() {
                         <ChevronDown className="size-4" />
                       </motion.span>
                       <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
-                        <span className="truncate font-medium">{e.title}</span>
+                        <span className="line-clamp-2 font-medium break-words sm:line-clamp-none sm:truncate">
+                          {e.title}
+                        </span>
                         <span className="tag shrink-0" aria-label={EXPENSE_TYPE_LABELS[e.type]}>
                           {TYPE_TAG[e.type]}
                         </span>

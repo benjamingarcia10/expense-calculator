@@ -53,7 +53,7 @@ export function PeoplePanel() {
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm">
+    <section className="flex h-full flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm">
       <SectionHeading title="People" count={people.length} />
       {people.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[var(--color-border)] py-6 text-center text-sm text-[var(--color-muted)]">
