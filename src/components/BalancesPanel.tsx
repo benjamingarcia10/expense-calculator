@@ -16,7 +16,7 @@ export function BalancesPanel() {
   const max = Math.max(1, ...balances.map((b) => Math.abs(b.net)))
 
   return (
-    <section className="flex h-full flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm">
+    <section className="flex h-full flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm sm:p-5">
       <SectionHeading title="Balances" />
       {balances.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[var(--color-border)] py-6 text-center text-sm text-[var(--color-muted)]">

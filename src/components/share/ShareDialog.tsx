@@ -1,9 +1,14 @@
-import { useMemo, useState } from 'react'
-import { QRCodeSVG } from 'qrcode.react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { Dialog, Button, Input } from '../ui'
 import { useSession } from '../../store/session'
 import { buildShareUrl, encodeSession, URL_WARN_LENGTH } from '../../lib/url-share'
 import type { Session } from '../../types'
+
+// QR code rendering ships ~30kB of unused weight on the initial bundle for any
+// user who never opens the Share dialog. Lazy-load it the first time the
+// dialog mounts; the Suspense fallback is an unobtrusive placeholder sized to
+// match the rendered QR so the layout doesn't jump.
+const QRCodeSVG = lazy(() => import('qrcode.react').then((m) => ({ default: m.QRCodeSVG })))
 
 // QR codes top out around 2,953 bytes of data; beyond that they refuse to encode.
 // Our share URLs can exceed that for big sessions, so we gate the QR on a safer cap.
@@ -49,15 +54,24 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
         <Input readOnly value={url} onFocus={(e) => e.currentTarget.select()} />
         {qrEligible ? (
           <div className="flex flex-col items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white p-4">
-            <QRCodeSVG
-              value={url}
-              size={176}
-              level="M"
-              marginSize={0}
-              bgColor="#ffffff"
-              fgColor="#1a1411"
-              aria-label="QR code for this share link"
-            />
+            <Suspense
+              fallback={
+                <div
+                  className="size-44 animate-pulse rounded bg-[var(--color-border)]/40"
+                  aria-label="Loading QR code"
+                />
+              }
+            >
+              <QRCodeSVG
+                value={url}
+                size={176}
+                level="M"
+                marginSize={0}
+                bgColor="#ffffff"
+                fgColor="#1a1411"
+                aria-label="QR code for this share link"
+              />
+            </Suspense>
             <p className="text-[10px] tracking-[0.18em] text-[var(--color-muted)] uppercase">Scan to open</p>
           </div>
         ) : (

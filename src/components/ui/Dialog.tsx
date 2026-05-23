@@ -54,7 +54,12 @@ export function Dialog({
               aria-labelledby={titleId}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              // Exit ~60% of the enter duration so dismissal feels snappy.
+              exit={{
+                opacity: 0,
+                scale: 0.95,
+                transition: { duration: 0.14, ease: [0.4, 0, 1, 1] },
+              }}
               className={`pointer-events-auto ${widthClass} rounded-2xl bg-[var(--color-surface)] p-6 shadow-2xl`}
             >
               <h2 id={titleId} className="mb-3 text-lg font-semibold">

@@ -26,21 +26,40 @@ export default function App() {
 
   return (
     <div className="min-h-dvh text-[var(--color-ink)]">
+      {/* Keyboard skip-link — visually hidden until focused, then pinned top-left.
+        Lets keyboard users jump past the header chrome straight to the panels. */}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-[var(--color-accent)] focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-white focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
       <Header
         onOpenSummary={() => setSummaryOpen(true)}
         onOpenShare={() => setShareOpen(true)}
         onReplayTour={startTour}
       />
-      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
+      <main
+        id="main"
+        className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10 [padding-bottom:max(env(safe-area-inset-bottom),2rem)] [scroll-margin-top:5rem]"
+      >
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
+          {/* Mobile (stacked) reorders to match the natural workflow:
+            People → Expenses → Balances → Settle Up. Desktop stays as the
+            three-column grid + full-width Expenses row (md:order-none resets
+            the order so DOM order wins again). */}
           {[
-            <PeoplePanel key="people" />,
-            <BalancesPanel key="balances" />,
-            <SettleUpPanel key="settle" />,
-            <ExpensesPanel key="expenses" />,
-          ].map((node, i) => (
+            { key: 'people', node: <PeoplePanel />, className: 'order-1 md:order-none' },
+            { key: 'balances', node: <BalancesPanel />, className: 'order-3 md:order-none' },
+            { key: 'settle', node: <SettleUpPanel />, className: 'order-4 md:order-none' },
+            {
+              key: 'expenses',
+              node: <ExpensesPanel />,
+              className: 'order-2 md:order-none md:col-span-3',
+            },
+          ].map((panel, i) => (
             <motion.div
-              key={node.key}
+              key={panel.key}
               initial={PANEL_ENTRANCE.initial}
               animate={PANEL_ENTRANCE.animate}
               transition={{
@@ -48,9 +67,9 @@ export default function App() {
                 delay: i * 0.06,
                 ease: [0.22, 0.61, 0.36, 1],
               }}
-              className={i === 3 ? 'md:col-span-3' : ''}
+              className={panel.className}
             >
-              {node}
+              {panel.node}
             </motion.div>
           ))}
         </div>

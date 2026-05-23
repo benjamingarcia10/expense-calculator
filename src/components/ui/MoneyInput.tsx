@@ -123,7 +123,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
       <div className={`relative ${className}`}>
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-mono text-sm text-[var(--color-muted)]"
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-mono text-base text-[var(--color-muted)] sm:text-sm"
         >
           {symbol}
         </span>
@@ -137,7 +137,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          className={`h-10 w-full rounded-lg border bg-[var(--color-surface)] ${padding} pr-3 text-right font-mono text-sm tabular-nums text-[var(--color-ink)] outline-none transition-colors placeholder:font-sans placeholder:text-[var(--color-muted)] ${
+          className={`h-11 w-full rounded-lg border bg-[var(--color-surface)] ${padding} pr-3 text-right font-mono text-base tabular-nums text-[var(--color-ink)] outline-none transition-colors placeholder:font-sans placeholder:text-[var(--color-muted)] sm:h-10 sm:text-sm ${
             invalid ? 'border-red-500' : 'border-[var(--color-border)] focus:border-[var(--color-accent)]'
           }`}
           {...props}

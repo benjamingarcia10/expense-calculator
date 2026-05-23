@@ -9,7 +9,7 @@ beforeEach(() => {
 })
 
 describe('ShareDialog QR code', () => {
-  it('renders a QR for the share URL on small sessions', () => {
+  it('renders a QR for the share URL on small sessions', async () => {
     const { addPerson, addExpense } = useSession.getState()
     addPerson('Alice')
     const [alice] = useSession.getState().people
@@ -23,7 +23,9 @@ describe('ShareDialog QR code', () => {
 
     render(<ShareDialog open onClose={() => {}} />)
 
-    const qr = screen.getByLabelText(/QR code for this share link/i)
+    // `qrcode.react` is now code-split via React.lazy, so the QR mounts after
+    // the Suspense boundary resolves — `findByLabelText` waits for it.
+    const qr = await screen.findByLabelText(/QR code for this share link/i)
     expect(qr).toBeInTheDocument()
     expect(qr.tagName.toLowerCase()).toBe('svg')
   })

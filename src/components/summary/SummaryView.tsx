@@ -36,6 +36,10 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
 
   const cardRef = useRef<HTMLDivElement>(null)
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
+  // `html-to-image` lazy-loads (~50kB) and rasterizes the receipt — both steps
+  // typically take longer than the 300ms perceived-snappiness threshold, so the
+  // button shows a "Saving…" state and disables to prevent double-clicks.
+  const [exporting, setExporting] = useState(false)
   const debts = useMemo(() => simplifyDebts(computeBalances(people, expenses)), [people, expenses])
   const totalSpent = expenses.reduce((s, e) => s + expenseTotal(e), 0)
   const c = currency as CurrencyCode
@@ -76,7 +80,7 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
               <h3
                 style={{
                   fontFamily: DISPLAY,
-                  fontSize: '24px',
+                  fontSize: 'clamp(20px, 6.4vw, 24px)',
                   lineHeight: 1.25,
                   fontStyle: 'italic',
                   fontWeight: 500,
@@ -108,7 +112,10 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
               <p
                 style={{
                   fontFamily: DISPLAY,
-                  fontSize: '44px',
+                  // clamp() scales the headline number down on narrow viewports
+                  // so it doesn't overwhelm the receipt on mobile, while keeping
+                  // the desktop receipt at its designed 44px hero size.
+                  fontSize: 'clamp(32px, 11vw, 44px)',
                   lineHeight: 1.05,
                   fontWeight: 600,
                   color: '#2a1f17',
@@ -227,7 +234,7 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
             {copyState === 'copied' ? 'Copied to clipboard' : 'Couldn’t copy — select and copy manually'}
           </p>
         )}
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
           <Button
             size="sm"
             variant="ghost"
@@ -246,9 +253,11 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
           <Button
             size="sm"
             variant="ghost"
+            disabled={exporting}
             onClick={async () => {
               const node = cardRef.current
               if (!node) return
+              setExporting(true)
               try {
                 await downloadImage(
                   node,
@@ -257,10 +266,12 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
               } catch {
                 setCopyState('error')
                 setTimeout(() => setCopyState('idle'), 2500)
+              } finally {
+                setExporting(false)
               }
             }}
           >
-            Download Image
+            {exporting ? 'Saving…' : 'Download Image'}
           </Button>
           <Button size="sm" variant="ghost" onClick={() => downloadJson(session)}>
             Download JSON

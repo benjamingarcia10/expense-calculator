@@ -54,7 +54,7 @@ export function CurrencyPicker({
         aria-expanded={open}
         aria-controls={listboxId}
         aria-label={`Currency: ${current.name}`}
-        className="flex h-9 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] pr-2 pl-3 text-[var(--color-ink)] transition-colors hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/60"
+        className="flex h-11 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] pr-2 pl-3 text-[var(--color-ink)] transition-colors hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]/60 sm:h-9"
       >
         <span className="font-mono text-xs tracking-wide">{current.code}</span>
         <span aria-hidden="true" className="text-[var(--color-muted)]">
@@ -96,7 +96,7 @@ export function CurrencyPicker({
                       pick(c.code)
                     }
                   }}
-                  className={`flex cursor-pointer items-center justify-between gap-3 px-3 py-2 text-sm outline-none transition-colors hover:bg-[var(--color-accent-soft)] focus:bg-[var(--color-accent-soft)] ${
+                  className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 px-3 py-2.5 text-sm outline-none transition-colors hover:bg-[var(--color-accent-soft)] focus:bg-[var(--color-accent-soft)] sm:min-h-0 sm:py-2 ${
                     selected
                       ? 'bg-[var(--color-accent-soft)] text-[var(--color-ink)]'
                       : 'text-[var(--color-ink)]'

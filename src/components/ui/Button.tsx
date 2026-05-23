@@ -17,9 +17,12 @@ const VARIANTS: Record<Variant, string> = {
     'bg-red-600 text-white shadow-sm hover:bg-red-700 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100',
 }
 
+// Mobile bumps every Button up to a 44pt touch target. Visual sizes on desktop
+// are unchanged: sm collapses back to h-8, md to h-10. `touch-action: manipulation`
+// removes the 300ms double-tap delay on touch devices.
 const SIZES: Record<Size, string> = {
-  sm: 'h-8 px-3 text-sm rounded-md',
-  md: 'h-10 px-4 text-sm rounded-lg',
+  sm: 'h-11 px-3 text-sm rounded-md sm:h-8 [touch-action:manipulation]',
+  md: 'h-11 px-4 text-sm rounded-lg sm:h-10 [touch-action:manipulation]',
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

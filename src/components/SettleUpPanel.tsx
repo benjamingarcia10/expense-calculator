@@ -17,7 +17,7 @@ export function SettleUpPanel() {
 
   return (
     <section
-      className={`relative flex h-full flex-col gap-4 overflow-hidden rounded-2xl bg-[var(--color-surface)] p-5 ${
+      className={`relative flex h-full flex-col gap-4 overflow-hidden rounded-2xl bg-[var(--color-surface)] p-4 sm:p-5 ${
         hasDebts
           ? 'border border-[var(--color-accent)]/40 shadow-lg'
           : 'border border-[var(--color-border)] shadow-sm'

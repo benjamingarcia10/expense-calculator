@@ -76,7 +76,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
     if (unit) {
       return (
         <div
-          className={`flex h-10 w-full items-stretch overflow-hidden rounded-lg border bg-[var(--color-surface)] transition-colors focus-within:border-[var(--color-accent)] ${
+          className={`flex h-11 w-full items-stretch overflow-hidden rounded-lg border bg-[var(--color-surface)] transition-colors focus-within:border-[var(--color-accent)] sm:h-10 ${
             invalid ? 'border-red-500' : 'border-[var(--color-border)]'
           } ${className}`}
         >
@@ -88,7 +88,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
             value={text}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            className="min-w-0 flex-1 bg-transparent px-3 text-right font-mono text-sm tabular-nums text-[var(--color-ink)] outline-none placeholder:font-sans placeholder:text-[var(--color-muted)]"
+            className="min-w-0 flex-1 bg-transparent px-3 text-right font-mono text-base tabular-nums text-[var(--color-ink)] outline-none placeholder:font-sans placeholder:text-[var(--color-muted)] sm:text-sm"
             {...props}
           />
           <span
@@ -110,7 +110,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
         value={text}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        className={`h-10 w-full rounded-lg border bg-[var(--color-surface)] px-3 text-right font-mono text-sm tabular-nums text-[var(--color-ink)] outline-none transition-colors ${
+        className={`h-11 w-full rounded-lg border bg-[var(--color-surface)] px-3 text-right font-mono text-base tabular-nums text-[var(--color-ink)] outline-none transition-colors sm:h-10 sm:text-sm ${
           invalid ? 'border-red-500' : 'border-[var(--color-border)] focus:border-[var(--color-accent)]'
         } ${className}`}
         {...props}

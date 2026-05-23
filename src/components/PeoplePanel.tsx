@@ -53,7 +53,7 @@ export function PeoplePanel() {
   }
 
   return (
-    <section className="flex h-full flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm">
+    <section className="flex h-full flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm sm:p-5">
       <SectionHeading title="People" count={people.length} />
       {people.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[var(--color-border)] py-6 text-center text-sm text-[var(--color-muted)]">
@@ -76,7 +76,7 @@ export function PeoplePanel() {
                 <button
                   aria-label={`remove ${p.name}`}
                   onClick={() => attemptRemove(p.id)}
-                  className="grid size-9 place-items-center rounded-md text-[var(--color-muted)] opacity-0 transition group-hover:opacity-100 hover:bg-red-600/15 hover:text-red-600 focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100"
+                  className="grid size-11 place-items-center rounded-md text-[var(--color-muted)] opacity-0 transition group-hover:opacity-100 hover:bg-red-600/15 hover:text-red-600 focus-visible:opacity-100 sm:size-9 [@media(pointer:coarse)]:opacity-100"
                 >
                   <Trash2 className="size-4" />
                 </button>
@@ -99,7 +99,12 @@ export function PeoplePanel() {
           onChange={(e) => setName(e.target.value)}
           disabled={atMax}
         />
-        <Button type="submit" size="md" disabled={atMax || !name.trim()}>
+        <Button
+          type="submit"
+          size="md"
+          variant={name.trim() ? 'primary' : 'ghost'}
+          disabled={atMax || !name.trim()}
+        >
           <UserPlus className="size-4" /> Add
         </Button>
       </form>

@@ -200,7 +200,7 @@ function TourCard({ onDismiss }: { onDismiss: () => void }) {
         </span>
         <button
           onClick={onDismiss}
-          className="rounded-md px-2 py-1 text-xs font-medium text-[var(--color-muted)] transition-colors hover:bg-[var(--color-border)]/50 hover:text-[var(--color-ink)]"
+          className="-mx-2 -my-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md px-3 py-2 text-xs font-medium text-[var(--color-muted)] transition-colors hover:bg-[var(--color-border)]/50 hover:text-[var(--color-ink)] sm:min-h-0 sm:min-w-0"
         >
           Skip
         </button>
@@ -384,7 +384,12 @@ export function OnboardingOverlay({
             <motion.div
               initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+              // Exit ~65% of enter duration for a responsive dismiss.
+              exit={
+                reduce
+                  ? { opacity: 0, transition: { duration: 0.12 } }
+                  : { opacity: 0, scale: 0.96, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } }
+              }
               transition={{ duration: 0.28, ease: EASE }}
               className="pointer-events-auto max-h-[90vh] w-[min(30rem,94vw)] overflow-y-auto rounded-2xl bg-[var(--color-surface)] p-6 shadow-2xl"
             >

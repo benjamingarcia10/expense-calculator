@@ -63,7 +63,7 @@ export function ExpensesPanel() {
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm md:col-span-3">
+    <section className="flex flex-col gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm sm:p-5 md:col-span-3">
       <SectionHeading
         title="Expenses"
         count={expenses.length}
@@ -137,17 +137,17 @@ export function ExpensesPanel() {
                         {formatMoney(expenseTotal(e), currency)}
                       </span>
                     </button>
-                    <div className="flex shrink-0 gap-0.5 pr-1.5">
+                    <div className="flex shrink-0 gap-2 pr-1.5 sm:gap-1">
                       <button
                         onClick={() => openEdit(e)}
-                        className="grid size-9 place-items-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)]"
+                        className="grid size-11 place-items-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)] sm:size-9"
                         aria-label={`edit ${e.title}`}
                       >
                         <Pencil className="size-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(e)}
-                        className="grid size-9 place-items-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-red-600/15 hover:text-red-600"
+                        className="grid size-11 place-items-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-red-600/15 hover:text-red-600 sm:size-9"
                         aria-label={`delete ${e.title}`}
                       >
                         <Trash2 className="size-4" />
