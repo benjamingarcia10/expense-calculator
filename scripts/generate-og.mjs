@@ -21,8 +21,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO = join(__dirname, '..')
 
 const brandingSrc = readFileSync(join(REPO, 'src/lib/branding.ts'), 'utf-8')
-const pick = (key) =>
-  brandingSrc.match(new RegExp(`export const ${key} = '([^']+)'`))?.[1]
+const pick = (key) => brandingSrc.match(new RegExp(`export const ${key} = '([^']+)'`))?.[1]
 
 const APP_NAME = pick('APP_NAME')
 const APP_TAGLINE = pick('APP_TAGLINE')
@@ -325,7 +324,12 @@ async function main() {
   // Belt-and-braces: wait for Google Fonts to actually load
   await page.evaluate(() => document.fonts.ready)
   const out = join(REPO, 'public/og-image.png')
-  await page.screenshot({ path: out, type: 'png', omitBackground: false, clip: { x: 0, y: 0, width: 1200, height: 630 } })
+  await page.screenshot({
+    path: out,
+    type: 'png',
+    omitBackground: false,
+    clip: { x: 0, y: 0, width: 1200, height: 630 },
+  })
   await browser.close()
   console.log(`Wrote ${out}`)
 }

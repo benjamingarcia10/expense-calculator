@@ -1,1 +1,4 @@
 npx lint-staged
+# Mirror CI's whole-repo formatting check so a missed glob (e.g. `.mjs`)
+# can't slip through and break the deploy pipeline.
+npm run format:check
