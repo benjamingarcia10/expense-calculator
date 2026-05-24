@@ -60,8 +60,8 @@ describe('brand isolation', () => {
     if (offenders.length > 0) {
       const list = offenders.map((o) => `  ${o.file}:${o.line}  ${o.text}`).join('\n')
       throw new Error(
-        `Hardcoded brand name "${APP_NAME}" found. Use APP_NAME / APP_FULL_TITLE / ` +
-          `APP_NAME_LOWER from \`src${sep}lib${sep}branding.ts\` instead.\n${list}`
+        `Hardcoded brand name "${APP_NAME}" found. Use APP_NAME / APP_FULL_TITLE ` +
+          `from \`src${sep}lib${sep}branding.ts\` instead.\n${list}`
       )
     }
     expect(offenders).toHaveLength(0)

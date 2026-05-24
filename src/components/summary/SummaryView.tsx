@@ -6,7 +6,7 @@ import { computeBalances } from '../../lib/compute-balances'
 import { simplifyDebts } from '../../lib/simplify-debts'
 import { formatMoney, formatDate } from '../../lib/format'
 import { buildSummaryText, downloadJson, downloadImage, EXPENSE_TYPE_LABELS } from './exports'
-import { APP_NAME, APP_NAME_LOWER } from '../../lib/branding'
+import { APP_NAME } from '../../lib/branding'
 import { expenseTotal, type Session } from '../../types'
 import type { CurrencyCode } from '../../lib/currencies'
 
@@ -221,7 +221,7 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
                 thanks, come again
               </p>
               <p className="receipt-muted text-[9px] tracking-[0.2em] uppercase" style={{ fontFamily: MONO }}>
-                split with {APP_NAME_LOWER}
+                split with {APP_NAME}
               </p>
             </footer>
           </div>

@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { APP_FULL_TITLE, APP_NAME, APP_NAME_LOWER, APP_TAGLINE } from './src/lib/branding'
+import { APP_FULL_TITLE, APP_NAME, APP_TAGLINE } from './src/lib/branding'
 
 // Substitute brand placeholders in index.html at build/dev time from the
 // single source of truth in `src/lib/branding.ts`. Whitelabel changes there
@@ -10,7 +10,6 @@ const BRAND_TOKENS: Record<string, string> = {
   '{{APP_NAME}}': APP_NAME,
   '{{APP_TAGLINE}}': APP_TAGLINE,
   '{{APP_FULL_TITLE}}': APP_FULL_TITLE,
-  '{{APP_NAME_LOWER}}': APP_NAME_LOWER,
 }
 
 export default defineConfig({

@@ -23,6 +23,3 @@ export const APP_TAGLINE = 'split expenses with friends'
 
 /** Full title used in <title>, og:title, and the page-level h1 fallback. */
 export const APP_FULL_TITLE = `${APP_NAME} — ${APP_TAGLINE}`
-
-/** Lowercase form of the name for inline attributions ("made with X"). */
-export const APP_NAME_LOWER = APP_NAME.toLowerCase()
