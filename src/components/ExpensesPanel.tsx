@@ -72,6 +72,11 @@ export function ExpensesPanel() {
             size="sm"
             onClick={openNew}
             disabled={atMax || noPeople}
+            // Ghost variant when the prerequisite (≥1 person) isn't met —
+            // matches the People panel's Add behavior when the input is empty,
+            // so two parallel "primary action, not yet available" states read
+            // the same way instead of a faded red disabled button.
+            variant={noPeople ? 'ghost' : 'primary'}
             title={noPeople ? 'Add someone in People first' : undefined}
           >
             <Plus className="size-4" /> Add expense

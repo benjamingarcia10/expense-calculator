@@ -15,7 +15,12 @@ export function SectionHeading({
   action?: ReactNode
 }) {
   return (
-    <div className="flex items-end justify-between gap-3">
+    // items-center balances the row when the action is a 44pt touch-target
+    // button against a ~28px heading — the 16px overhang is split symmetrically
+    // top/bottom rather than dropping it all above the heading like items-end
+    // did. For small text-tag actions (e.g. Settle Up's "01 TX") centering
+    // reads the same as baseline-aligning at heading scale.
+    <div className="flex items-center justify-between gap-3">
       <div className="flex items-baseline gap-2">
         <h2 className="h-display text-xl text-[var(--color-ink)] sm:text-2xl">{title}</h2>
         {count != null && <span className="tag">{String(count).padStart(2, '0')}</span>}

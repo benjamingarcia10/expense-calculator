@@ -98,7 +98,7 @@ export function Header({
         </div>
 
         {/* Mobile chrome: Share remains primary; everything else collapses into ⋯ */}
-        <div ref={menuRef} className="relative flex items-center gap-1 md:hidden">
+        <div ref={menuRef} className="relative flex items-center gap-2 md:hidden">
           <Button size="sm" onClick={onOpenShare}>
             Share
           </Button>
