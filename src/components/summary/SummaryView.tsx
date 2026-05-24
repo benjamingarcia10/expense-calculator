@@ -54,17 +54,20 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
           initial={{ opacity: 0, y: 16, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.42, ease: [0.22, 0.61, 0.36, 1] }}
-          className="mx-auto"
         >
           <div
             ref={cardRef}
             className="receipt-card mx-auto"
             style={{
               fontFamily: SANS,
-              // Fixed width + explicit font size so html-to-image rasterizes
-              // consistently regardless of the surrounding dialog's sizing.
-              width: '420px',
-              maxWidth: '100%',
+              // Fill the dialog up to a 420px design cap so the card never
+              // overflows on mobile. (`width: 420px` + `maxWidth: 100%` looks
+              // equivalent but isn't — the card sits inside a flex column, and
+              // a flex item's `min-width: auto` would have made the wrapper
+              // refuse to shrink below the card's 420px content width, so the
+              // maxWidth never applied. Width-fills + max-caps avoids it.)
+              width: '100%',
+              maxWidth: '420px',
               padding: '32px 28px',
               fontSize: '14px',
               lineHeight: 1.5,
