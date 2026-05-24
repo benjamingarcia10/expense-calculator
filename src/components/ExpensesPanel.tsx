@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, ChevronDown, Receipt } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronDown, Receipt as ReceiptIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { useSession } from '../store/session'
@@ -80,7 +80,7 @@ export function ExpensesPanel() {
       />
       {expenses.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[var(--color-border)] py-8 text-center text-sm text-[var(--color-muted)]">
-          <Receipt className="size-5 opacity-60" aria-hidden="true" />
+          <ReceiptIcon className="size-5 opacity-60" aria-hidden="true" />
           <p className="h-display text-base text-[var(--color-ink)]">No expenses yet.</p>
           <p className="text-xs">
             {noPeople ? 'Add the people first, then log an expense.' : 'Add your first split below.'}

@@ -1,14 +1,17 @@
+import { APP_NAME } from '../../lib/branding'
+
 /**
- * App wordmark — Fraunces italic "Receipt" paired with a tiny barcode glyph,
- * which is more memorable than a bare period and ties to the receipt motif.
+ * App wordmark — the Fraunces italic brand name paired with a tiny barcode
+ * glyph, which is more memorable than a bare period and ties to the receipt
+ * motif. The brand name itself comes from `lib/branding.ts`.
  */
 export function Wordmark({ className = '' }: { className?: string }) {
   return (
     <span
       className={`h-display inline-flex shrink-0 items-baseline gap-1.5 select-none text-lg leading-none text-[var(--color-ink)] ${className}`}
-      aria-label="Receipt"
+      aria-label={APP_NAME}
     >
-      <span>Receipt</span>
+      <span>{APP_NAME}</span>
       <span
         aria-hidden="true"
         className="inline-flex translate-y-[-2px] items-end gap-[1.5px] text-[var(--color-accent)]"

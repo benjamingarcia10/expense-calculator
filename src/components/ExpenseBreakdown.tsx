@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Receipt } from 'lucide-react'
+import { Receipt as ReceiptIcon } from 'lucide-react'
 import { useSession } from '../store/session'
 import { computeExpenseBreakdown } from '../lib/expense-breakdown'
 import { formatMoney } from '../lib/format'
@@ -116,7 +116,7 @@ export function ExpenseBreakdown({ expense }: { expense: Expense }) {
       {isRestaurant && expense.items.length > 0 && (
         <details className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm">
           <summary className="flex cursor-pointer items-center gap-2 px-3 py-2 text-xs tracking-wide text-[var(--color-muted)] uppercase">
-            <Receipt className="size-4" /> Items ({expense.items.length})
+            <ReceiptIcon className="size-4" /> Items ({expense.items.length})
           </summary>
           <ul className="divide-y divide-[var(--color-border)]">
             {expense.items.map((it) => (

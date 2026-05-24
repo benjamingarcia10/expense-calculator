@@ -4,12 +4,15 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Receipt — split expenses with friends</title>
+    <!-- Brand placeholders are substituted at build/dev time by the
+      `inject-brand` Vite plugin in vite.config.ts, reading from
+      `src/lib/branding.ts`. -->
+    <title>{{APP_FULL_TITLE}}</title>
     <meta
       name="description"
       content="Split bills with friends. Six split modes, no account needed, share via URL."
     />
-    <meta property="og:title" content="Receipt — split expenses with friends" />
+    <meta property="og:title" content="{{APP_FULL_TITLE}}" />
     <meta
       property="og:description"
       content="Split bills with friends. Six split modes, no account needed, share via URL."

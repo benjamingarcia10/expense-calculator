@@ -1,8 +1,9 @@
 import { type ComponentType, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ArrowRight, Check, Handshake, Receipt, Sparkles, Users } from 'lucide-react'
+import { ArrowRight, Check, Handshake, Receipt as ReceiptIcon, Sparkles, Users } from 'lucide-react'
 import { useSession } from '../../store/session'
+import { APP_NAME } from '../../lib/branding'
 import { Button } from '../ui'
 import { SessionSummaryCard } from '../SessionSummaryCard'
 import type { OnboardingView } from '../../hooks/useOnboarding'
@@ -146,7 +147,7 @@ const TOUR_STEPS: TourStep[] = [
   {
     id: 'welcome',
     Icon: Sparkles,
-    title: 'Welcome to Receipt',
+    title: `Welcome to ${APP_NAME}`,
     body: 'Split a bill, a trip, or a shared house — and get the simplest way for everyone to settle up. No account, and nothing leaves your browser.',
     Art: WelcomeArt,
   },
@@ -159,7 +160,7 @@ const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'expenses',
-    Icon: Receipt,
+    Icon: ReceiptIcon,
     title: 'Log what was spent',
     body: 'Add each expense and choose how it splits — evenly, by shares or exact amounts, itemized for restaurants, by nights for lodging, or by distance.',
     Art: ExpenseArt,
@@ -168,7 +169,7 @@ const TOUR_STEPS: TourStep[] = [
     id: 'settle',
     Icon: Handshake,
     title: 'Settle up, then share',
-    body: 'Receipt nets it all down to the fewest payments. Share the result as a link or QR code, or save it as a receipt image.',
+    body: `${APP_NAME} nets it all down to the fewest payments. Share the result as a link or QR code, or save it as a receipt image.`,
     Art: SettleArt,
   },
 ]
@@ -329,7 +330,7 @@ function WelcomeBackCard({ onDismiss, onStartTour }: { onDismiss: () => void; on
             onClick={onStartTour}
             className="self-center text-xs text-[var(--color-muted)] underline underline-offset-2 transition-colors hover:text-[var(--color-ink)]"
           >
-            New to Receipt? Take the quick tour
+            New to {APP_NAME}? Take the quick tour
           </button>
         </div>
       )}

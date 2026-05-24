@@ -6,6 +6,7 @@ import { computeBalances } from '../../lib/compute-balances'
 import { simplifyDebts } from '../../lib/simplify-debts'
 import { formatMoney, formatDate } from '../../lib/format'
 import { buildSummaryText, downloadJson, downloadImage, EXPENSE_TYPE_LABELS } from './exports'
+import { APP_NAME, APP_NAME_LOWER } from '../../lib/branding'
 import { expenseTotal, type Session } from '../../types'
 import type { CurrencyCode } from '../../lib/currencies'
 
@@ -43,7 +44,7 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
   const debts = useMemo(() => simplifyDebts(computeBalances(people, expenses)), [people, expenses])
   const totalSpent = expenses.reduce((s, e) => s + expenseTotal(e), 0)
   const c = currency as CurrencyCode
-  const displayTitle = title?.trim() || 'Split Receipt'
+  const displayTitle = title?.trim() || `Split ${APP_NAME}`
   const serial = makeSerial(createdAt, totalSpent)
 
   return (
@@ -220,7 +221,7 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
                 thanks, come again
               </p>
               <p className="receipt-muted text-[9px] tracking-[0.2em] uppercase" style={{ fontFamily: MONO }}>
-                split with receipt
+                split with {APP_NAME_LOWER}
               </p>
             </footer>
           </div>

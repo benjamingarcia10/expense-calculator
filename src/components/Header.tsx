@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { HelpCircle, MoreVertical, RotateCcw } from 'lucide-react'
 import { useSession } from '../store/session'
 import { CURRENCIES, isCurrencyCode, type CurrencyCode } from '../lib/currencies'
+import { APP_FULL_TITLE, APP_NAME } from '../lib/branding'
 import { Button, CurrencyPicker, Dialog, Wordmark } from './ui'
 import { LIMITS } from '../lib/validation'
 
@@ -50,9 +51,7 @@ export function Header({
       {/* Visually-hidden h1 satisfies the page heading hierarchy (the section
         cards use h2). The visible title is the editable input below — h1
         announces the current session to assistive tech. */}
-      <h1 className="sr-only">
-        {title?.trim() ? `Receipt — ${title.trim()}` : 'Receipt — split expenses with friends'}
-      </h1>
+      <h1 className="sr-only">{title?.trim() ? `${APP_NAME} — ${title.trim()}` : APP_FULL_TITLE}</h1>
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3 md:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
           <Wordmark />

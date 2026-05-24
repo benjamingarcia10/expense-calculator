@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { OnboardingOverlay } from './OnboardingOverlay'
+import { APP_NAME } from '../../lib/branding'
 import { resetSession, useSession } from '../../store/session'
+
+const WELCOME = `Welcome to ${APP_NAME}`
 
 beforeEach(() => {
   localStorage.clear()
@@ -27,7 +30,7 @@ function seedSession() {
 describe('OnboardingOverlay — tour', () => {
   it('renders nothing when view is null', () => {
     render(<OnboardingOverlay view={null} onDismiss={() => {}} onStartTour={() => {}} />)
-    expect(screen.queryByText('Welcome to Receipt')).not.toBeInTheDocument()
+    expect(screen.queryByText(WELCOME)).not.toBeInTheDocument()
   })
 
   it('steps through every step and finishes with Get started', async () => {
@@ -35,7 +38,7 @@ describe('OnboardingOverlay — tour', () => {
     render(<OnboardingOverlay view="tour" onDismiss={onDismiss} onStartTour={() => {}} />)
     const user = userEvent.setup()
 
-    expect(screen.getByRole('heading', { name: 'Welcome to Receipt' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: WELCOME })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Next' }))
     expect(await screen.findByRole('heading', { name: 'Start with the people' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Next' }))
