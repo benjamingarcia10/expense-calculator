@@ -10,6 +10,7 @@ import { SummaryView } from './components/summary/SummaryView'
 import { ShareDialog } from './components/share/ShareDialog'
 import { OnboardingOverlay } from './components/onboarding/OnboardingOverlay'
 import { ImportDialog } from './components/ImportDialog'
+import { TitleStrip } from './components/TitleStrip'
 import { useUrlImport } from './hooks/useUrlImport'
 import { useOnboarding } from './hooks/useOnboarding'
 
@@ -43,6 +44,7 @@ export default function App() {
         id="main"
         className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10 [padding-bottom:max(env(safe-area-inset-bottom),2rem)] [scroll-margin-top:5rem]"
       >
+        <TitleStrip />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
           {/* Mobile (stacked) reorders to match the natural workflow:
             People → Expenses → Balances → Settle Up. Desktop stays as the

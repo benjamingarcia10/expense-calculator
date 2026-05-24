@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { HelpCircle, MoreVertical, RotateCcw } from 'lucide-react'
+import { HelpCircle, MoreVertical, Pencil, RotateCcw } from 'lucide-react'
 import { useSession } from '../store/session'
 import { CURRENCIES, isCurrencyCode, type CurrencyCode } from '../lib/currencies'
 import { APP_FULL_TITLE, APP_NAME } from '../lib/branding'
@@ -55,18 +55,37 @@ export function Header({
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3 md:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
           <Wordmark />
-          <span aria-hidden="true" className="hidden text-[var(--color-rule)] sm:inline">
-            ⁄
-          </span>
-          <input
-            aria-label="session title"
-            placeholder="Untitled split"
-            value={title ?? ''}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={LIMITS.sessionTitle}
-            title="Click to name this split"
-            className="min-w-0 flex-1 border-b border-transparent bg-transparent text-base font-medium tracking-tight text-[var(--color-ink)] outline-none transition-colors placeholder:text-[var(--color-muted)] hover:border-[var(--color-border)] focus:border-[var(--color-accent)]"
-          />
+          {/* Title editor lives in the header on desktop where the row has
+            real estate. On mobile it's promoted to its own strip (TitleStrip)
+            below the header so it gets a proper 44pt touch target and a
+            visible affordance instead of disappearing as chromeless text
+            squeezed between the wordmark and the Share button. */}
+          <div className="hidden min-w-0 flex-1 items-center gap-2 md:flex">
+            <span aria-hidden="true" className="text-[var(--color-rule)]">
+              ⁄
+            </span>
+            {/* max-w-md caps the dashed underline at a designed length so it
+              doesn't stretch across hundreds of empty pixels on wide viewports.
+              The wrapper still flex-1 so a long title fills up to the cap. */}
+            <div className="group relative min-w-0 max-w-md flex-1">
+              <input
+                aria-label="session title"
+                placeholder="Untitled split"
+                value={title ?? ''}
+                onChange={(e) => setTitle(e.target.value)}
+                maxLength={LIMITS.sessionTitle}
+                // Dashed underline by default signals "this is editable" without
+                // shouting; solidifies + colors on hover/focus. The trailing
+                // pencil reinforces the affordance for users who haven't yet
+                // learned the dashed-underline convention.
+                className="w-full min-w-0 border-b border-dashed border-[var(--color-border)] bg-transparent pr-6 pb-0.5 text-base font-medium tracking-tight text-[var(--color-ink)] outline-none transition-colors placeholder:text-[var(--color-muted)] hover:border-solid hover:border-[var(--color-muted)] focus:border-solid focus:border-[var(--color-accent)]"
+              />
+              <Pencil
+                aria-hidden="true"
+                className="pointer-events-none absolute top-1/2 right-1 size-3.5 -translate-y-1/2 text-[var(--color-muted)] opacity-60 transition-opacity group-focus-within:opacity-0"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Desktop chrome: full controls inline */}
