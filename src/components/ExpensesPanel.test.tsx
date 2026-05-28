@@ -78,6 +78,58 @@ describe('ExpensesPanel — delete & undo', () => {
   })
 })
 
+describe('ExpensesPanel — unassigned items warning', () => {
+  it('shows the row tag and breakdown banner when a restaurant has unassigned items', async () => {
+    const { addPerson, addExpense } = useSession.getState()
+    addPerson('Alice')
+    addPerson('Bob')
+    const [alice, bob] = useSession.getState().people
+    addExpense({
+      type: 'restaurant',
+      title: 'Dinner',
+      paidById: alice.id,
+      items: [
+        { id: 'i1', name: 'Pizza', price: 24, assignedIds: [alice.id, bob.id] },
+        // Wine has no assignees — orphan
+        { id: 'i2', name: 'Wine', price: 18, assignedIds: [] },
+      ],
+      tax: 0,
+      tip: 0,
+      serviceFee: 0,
+    })
+    renderPanel()
+    const user = userEvent.setup()
+
+    // Row tag is visible without expanding
+    expect(screen.getByLabelText(/1 unassigned item/i)).toBeInTheDocument()
+
+    // Expand the breakdown — the alert banner should appear
+    await user.click(screen.getByRole('button', { name: /expand dinner/i }))
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent(/1 item/i)
+    expect(alert).toHaveTextContent(/\$18\.00/)
+    expect(alert).toHaveTextContent(/alice ends up covering it/i)
+  })
+
+  it('does not show the warning when all items are assigned', () => {
+    const { addPerson, addExpense } = useSession.getState()
+    addPerson('Alice')
+    addPerson('Bob')
+    const [alice, bob] = useSession.getState().people
+    addExpense({
+      type: 'restaurant',
+      title: 'Dinner',
+      paidById: alice.id,
+      items: [{ id: 'i1', name: 'Pizza', price: 24, assignedIds: [alice.id, bob.id] }],
+      tax: 0,
+      tip: 0,
+      serviceFee: 0,
+    })
+    renderPanel()
+    expect(screen.queryByLabelText(/unassigned item/i)).not.toBeInTheDocument()
+  })
+})
+
 describe('ExpensesPanel — guard against the no-people dead-end', () => {
   it('disables "Add expense" and guides the user when there are no people', () => {
     renderPanel()

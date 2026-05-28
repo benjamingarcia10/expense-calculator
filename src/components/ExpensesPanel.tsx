@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, ChevronDown, Receipt as ReceiptIcon } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronDown, Receipt as ReceiptIcon, TriangleAlert } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { useSession } from '../store/session'
@@ -96,6 +96,8 @@ export function ExpensesPanel() {
           <AnimatePresence initial={false}>
             {expenses.map((e) => {
               const isOpen = expandedId === e.id
+              const unassignedCount =
+                e.type === 'restaurant' ? e.items.filter((i) => i.assignedIds.length === 0).length : 0
               return (
                 <motion.li
                   key={e.id}
@@ -132,6 +134,16 @@ export function ExpensesPanel() {
                         <span className="tag shrink-0" aria-label={EXPENSE_TYPE_LABELS[e.type]}>
                           {TYPE_TAG[e.type]}
                         </span>
+                        {unassignedCount > 0 && (
+                          <span
+                            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-amber-700 uppercase dark:text-amber-300"
+                            title={`${unassignedCount} item${unassignedCount === 1 ? '' : 's'} not assigned to anyone — not included in totals`}
+                            aria-label={`${unassignedCount} unassigned item${unassignedCount === 1 ? '' : 's'}`}
+                          >
+                            <TriangleAlert className="size-3" aria-hidden="true" />
+                            {unassignedCount} unassigned
+                          </span>
+                        )}
                         <span
                           className="leaders mx-1 hidden flex-1 self-baseline sm:block"
                           aria-hidden="true"
