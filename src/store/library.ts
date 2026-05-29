@@ -124,6 +124,9 @@ type LibraryStore = Library & {
   duplicateEntry: (entryId: string) => string
   replaceActiveSession: (next: Session) => void
   createEntryFromImport: (session: Session) => string
+
+  // compat helper used by the useSession wrapper (Task 10)
+  resetActiveSession: () => void
 }
 
 type GetFn = () => LibraryStore
@@ -388,6 +391,10 @@ export const useLibrary = create<LibraryStore>()(
           }
           set({ entries: [...get().entries, entry], activeId: entry.entryId })
           return entry.entryId
+        },
+
+        resetActiveSession: () => {
+          get().deleteEntry(get().activeId)
         },
       }
     },
