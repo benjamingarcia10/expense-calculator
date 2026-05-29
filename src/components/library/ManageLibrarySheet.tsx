@@ -1,16 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ComponentType } from 'react'
-import { Copy, Files, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { Check, Copy, Files, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button, Dialog, Sheet } from '../ui'
 import { formatBytes } from '../../lib/format-bytes'
+import { entryDisplayTitle, entryHasGivenTitle, relativeTime } from '../../lib/entry-display'
 import { useLibrary } from '../../store/library'
 import { buildShareUrl } from '../../lib/url-share'
 import type { LibraryEntry } from '../../types'
 
-const UNTITLED = 'Untitled split'
 const ENTRY_WARN_BYTES = 200_000
 const STORAGE_BUDGET_BYTES = 5 * 1024 * 1024
+
+function pluralize(n: number, singular: string, plural: string): string {
+  return `${n} ${n === 1 ? singular : plural}`
+}
 
 function libraryUsage(): number {
   const { entries, activeId } = useLibrary.getState()
@@ -29,6 +33,7 @@ export function ManageLibrarySheet({ open, onClose }: { open: boolean; onClose: 
   const duplicateEntry = useLibrary((s) => s.duplicateEntry)
   const deleteEntry = useLibrary((s) => s.deleteEntry)
   const ensureSessionId = useLibrary((s) => s.ensureSessionId)
+  const createEntry = useLibrary((s) => s.createEntry)
   const [confirming, setConfirming] = useState<string | null>(null)
 
   const sorted = [...entries].sort((a, b) => b.meta.lastEditedAt.localeCompare(a.meta.lastEditedAt))
@@ -53,9 +58,22 @@ export function ManageLibrarySheet({ open, onClose }: { open: boolean; onClose: 
     <>
       <Sheet open={open} onClose={onClose} title="Library">
         <div className="flex flex-col gap-3">
-          <p className="text-xs text-[var(--color-muted)]">
-            {formatBytes(usage)} used of ~{formatBytes(STORAGE_BUDGET_BYTES)}
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-[var(--color-muted)]">
+              {formatBytes(usage)} used of ~{formatBytes(STORAGE_BUDGET_BYTES)}
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                createEntry()
+                onClose()
+              }}
+            >
+              <Plus className="size-3.5" aria-hidden="true" />
+              New session
+            </Button>
+          </div>
           <ul className="flex flex-col divide-y divide-[var(--color-border)]">
             {sorted.map((entry) => (
               <ManageRow
@@ -118,9 +136,13 @@ function ManageRow({
   const [editing, setEditing] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const title = entry.session.title?.trim() || UNTITLED
+  const title = entryDisplayTitle(entry)
+  const isPlaceholderTitle = !entryHasGivenTitle(entry)
   const isLarge = entrySize(entry) > ENTRY_WARN_BYTES
   const isShared = entry.session.sessionId !== null
+  const peopleCount = entry.session.people.length
+  const expenseCount = entry.session.expenses.length
+  const edited = relativeTime(entry.meta.lastEditedAt)
 
   // Close the overflow menu on outside click or Escape, matching the
   // SessionSwitcher dropdown pattern.
@@ -146,24 +168,36 @@ function ManageRow({
       <button
         type="button"
         onClick={onSelect}
-        className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2 text-left"
+        className="flex min-w-0 flex-1 items-start gap-2 px-2 text-left"
       >
-        <span className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium text-[var(--color-ink)]">{title}</span>
-          {isShared && (
-            <span className="rounded-full bg-[var(--color-accent-soft)] px-1.5 py-0.5 text-[10px] tracking-[0.18em] text-[var(--color-accent)] uppercase">
-              Shared
-            </span>
-          )}
-          {isLarge && (
-            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] tracking-[0.18em] text-amber-700 uppercase">
-              Large
-            </span>
-          )}
+        <span aria-hidden="true" className="mt-0.5 inline-flex size-4 shrink-0 items-center justify-center">
+          {active && <Check className="size-3.5 text-[var(--color-accent)]" />}
         </span>
-        <span className="font-mono text-[10px] tracking-[0.18em] text-[var(--color-muted)] uppercase">
-          {entry.session.people.length} people · {entry.session.expenses.length} expenses ·{' '}
-          {entry.session.currency}
+        <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+          <span className="flex min-w-0 max-w-full items-center gap-2">
+            <span
+              className={`truncate text-sm font-medium ${
+                isPlaceholderTitle ? 'text-[var(--color-muted)] italic' : 'text-[var(--color-ink)]'
+              }`}
+            >
+              {title}
+            </span>
+            {isShared && (
+              <span className="shrink-0 rounded-full bg-[var(--color-accent-soft)] px-1.5 py-0.5 text-[10px] tracking-[0.18em] text-[var(--color-accent)] uppercase">
+                Shared
+              </span>
+            )}
+            {isLarge && (
+              <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] tracking-[0.18em] text-amber-700 uppercase">
+                Large
+              </span>
+            )}
+          </span>
+          <span className="font-mono text-[10px] tracking-[0.18em] text-[var(--color-muted)] uppercase">
+            {pluralize(peopleCount, 'person', 'people')} · {pluralize(expenseCount, 'expense', 'expenses')} ·{' '}
+            {entry.session.currency}
+            {edited && ` · edited ${edited}`}
+          </span>
         </span>
       </button>
       <button
@@ -218,7 +252,7 @@ function ManageRow({
       </div>
       {editing && (
         <InlineRename
-          initial={title === UNTITLED ? '' : title}
+          initial={isPlaceholderTitle ? '' : entry.session.title?.trim() || ''}
           onSubmit={(t) => {
             onRename(t)
             setEditing(false)

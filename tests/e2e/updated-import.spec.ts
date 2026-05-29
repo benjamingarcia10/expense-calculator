@@ -1,5 +1,11 @@
 import { test, expect } from './fixtures'
 
+// Each person renders a "remove <name>" button in the People panel — that
+// label is unique even though the switcher trigger now also surfaces the
+// person's name when the title is a placeholder ("Alice's split").
+const inPeopleList = (page: import('@playwright/test').Page, name: string) =>
+  page.getByRole('button', { name: new RegExp(`^remove ${name}$`, 'i') })
+
 test.describe('Updated-import dialog', () => {
   test('Replace updates the matched entry in place', async ({ page }) => {
     await page.goto('/')
@@ -11,10 +17,7 @@ test.describe('Updated-import dialog', () => {
     const originalUrl = await page.locator('input[readonly]').inputValue()
     await page.getByRole('button', { name: 'Close' }).click()
 
-    // Mutate locally (add Bob), grab the updated URL. The sessionId is
-    // already minted on the first share, so the second URL carries the
-    // same sessionId with different content — this is what triggers the
-    // "Updated version of" dialog when re-imported.
+    // Mutate locally (add Bob), grab the updated URL.
     await page.getByPlaceholder('Add a name').fill('Bob')
     await page.getByRole('button', { name: /^Add$/ }).click()
     await page.getByRole('button', { name: 'Share' }).click()
@@ -23,22 +26,18 @@ test.describe('Updated-import dialog', () => {
 
     expect(originalUrl).not.toBe(updatedUrl)
 
-    // Simulate a different device: wipe localStorage, navigate to a blank
-    // page to ensure the SPA's in-memory state is dropped, then visit the
-    // original share URL. After that, visit the updated URL — sessionId
-    // matches but content differs, so the "Updated version of" dialog appears.
     await page.evaluate(() => localStorage.clear())
     await page.goto('about:blank')
     await page.goto(originalUrl)
-    await expect(page.getByText('Alice')).toBeVisible()
-    await expect(page.getByText('Bob')).toHaveCount(0)
+    await expect(inPeopleList(page, 'Alice')).toBeVisible()
+    await expect(inPeopleList(page, 'Bob')).toHaveCount(0)
 
     await page.goto(updatedUrl)
     await expect(page.getByText(/Updated version of/)).toBeVisible()
 
     await page.getByRole('button', { name: /^Replace$/ }).click()
-    await expect(page.getByText('Alice')).toBeVisible()
-    await expect(page.getByText('Bob')).toBeVisible()
+    await expect(inPeopleList(page, 'Alice')).toBeVisible()
+    await expect(inPeopleList(page, 'Bob')).toBeVisible()
   })
 
   test('Keep both creates a second entry', async ({ page }) => {
@@ -59,24 +58,16 @@ test.describe('Updated-import dialog', () => {
     await page.evaluate(() => localStorage.clear())
     await page.goto('about:blank')
     await page.goto(originalUrl)
-    // Wait for the originalUrl import to settle before navigating again —
-    // otherwise the updated import sees a fresh library and creates a new
-    // entry without a sessionId match (no dialog).
-    await expect(page.getByText('Alice')).toBeVisible()
+    await expect(inPeopleList(page, 'Alice')).toBeVisible()
     await page.goto(updatedUrl)
     await expect(page.getByText(/Updated version of/)).toBeVisible()
 
     await page.getByRole('button', { name: /Keep both/ }).click()
 
-    // After Keep-both, the new entry (with the imported suffix) is active.
-    // Open the switcher and confirm two non-action rows.
-    const switcher = page.getByRole('button', { name: /imported|Untitled split/i }).first()
+    const switcher = page.locator('header button[aria-haspopup="listbox"]:not([aria-label*="Currency"])')
     await switcher.click()
     const dropdown = page.getByRole('listbox')
-    // The listbox holds the entry rows (buttons whose names contain titles)
-    // plus the New/Manage footer actions.
     const rows = await dropdown.getByRole('option').count()
-    // 3 entries (initial blank after wipe + Alice import + Keep-both copy).
     expect(rows).toBe(3)
   })
 })

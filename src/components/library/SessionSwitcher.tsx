@@ -1,9 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ChevronDown, Plus, Settings } from 'lucide-react'
 import { useLibrary } from '../../store/library'
+import { entryDisplayTitle, entryHasGivenTitle } from '../../lib/entry-display'
 import { LibraryEntryRow } from './LibraryEntryRow'
-
-const UNTITLED = 'Untitled split'
 
 export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) {
   const entries = useLibrary((s) => s.entries)
@@ -66,6 +65,9 @@ export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) 
     }
   }, [open, sorted.length])
 
+  const triggerLabel = active ? entryDisplayTitle(active) : 'Untitled split'
+  const triggerIsPlaceholder = !active || !entryHasGivenTitle(active)
+
   return (
     <div ref={rootRef} className="relative">
       <button
@@ -73,10 +75,12 @@ export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) 
         onClick={() => (open ? setOpen(false) : openDropdown())}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex items-center gap-1.5 border-b border-dashed border-[var(--color-border)] pb-0.5 text-base font-medium tracking-tight text-[var(--color-ink)] outline-none transition-colors hover:border-solid hover:border-[var(--color-muted)] focus:border-solid focus:border-[var(--color-accent)]"
+        className={`flex max-w-xs items-center gap-1.5 border-b border-dashed border-[var(--color-border)] pb-0.5 text-base font-medium tracking-tight outline-none transition-colors hover:border-solid hover:border-[var(--color-muted)] focus:border-solid focus:border-[var(--color-accent)] ${
+          triggerIsPlaceholder ? 'text-[var(--color-muted)] italic' : 'text-[var(--color-ink)]'
+        }`}
       >
-        <span className="truncate">{active?.session.title?.trim() || UNTITLED}</span>
-        <ChevronDown className="size-3.5 text-[var(--color-muted)]" aria-hidden="true" />
+        <span className="truncate">{triggerLabel}</span>
+        <ChevronDown className="size-3.5 shrink-0 text-[var(--color-muted)]" aria-hidden="true" />
       </button>
       {open && (
         <div

@@ -1,8 +1,7 @@
 import { forwardRef } from 'react'
 import { Check } from 'lucide-react'
+import { entryDisplayTitle, entryHasGivenTitle } from '../../lib/entry-display'
 import type { LibraryEntry } from '../../types'
-
-const UNTITLED = 'Untitled split'
 
 function pluralize(n: number, singular: string, plural: string): string {
   return `${n} ${n === 1 ? singular : plural}`
@@ -29,7 +28,8 @@ export const LibraryEntryRow = forwardRef<HTMLButtonElement, Props>(function Lib
   { entry, active, onSelect, tabIndex, role },
   ref
 ) {
-  const title = entry.session.title?.trim() || UNTITLED
+  const title = entryDisplayTitle(entry)
+  const isPlaceholderTitle = !entryHasGivenTitle(entry)
   const peopleCount = entry.session.people.length
   const expenseCount = entry.session.expenses.length
 
@@ -52,7 +52,13 @@ export const LibraryEntryRow = forwardRef<HTMLButtonElement, Props>(function Lib
         ) : (
           <span aria-hidden="true" className="inline-block size-3.5 shrink-0" />
         )}
-        <span className="truncate font-medium text-[var(--color-ink)]">{title}</span>
+        <span
+          className={`truncate font-medium ${
+            isPlaceholderTitle ? 'text-[var(--color-muted)] italic' : 'text-[var(--color-ink)]'
+          }`}
+        >
+          {title}
+        </span>
       </span>
       <span className="shrink-0 font-mono text-[10px] tracking-[0.18em] text-[var(--color-muted)] uppercase">
         {pluralize(peopleCount, 'person', 'people')} · {pluralize(expenseCount, 'expense', 'expenses')}

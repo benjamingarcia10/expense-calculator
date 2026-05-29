@@ -41,8 +41,16 @@ describe('LibraryEntryRow', () => {
     expect(screen.getByText(/1 expense/)).toBeInTheDocument()
   })
 
-  it('shows "Untitled split" when title is null', () => {
+  it('falls back to people names when title is null', () => {
     render(<LibraryEntryRow entry={buildEntry({ title: null })} active={false} onSelect={() => {}} />)
+    // Fixture has A and B as people; helper renders them as "A & B".
+    expect(screen.getByText('A & B')).toBeInTheDocument()
+  })
+
+  it('falls back to "Untitled split" when title and people are both empty', () => {
+    render(
+      <LibraryEntryRow entry={buildEntry({ title: null, people: [] })} active={false} onSelect={() => {}} />
+    )
     expect(screen.getByText('Untitled split')).toBeInTheDocument()
   })
 

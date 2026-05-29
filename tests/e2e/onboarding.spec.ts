@@ -20,10 +20,12 @@ test('first-run tour can be stepped through and completed', async ({ page }) => 
 
   await expect(page.getByRole('heading', { name: WELCOME })).toBeHidden()
 
-  // App is usable once the tour closes.
+  // App is usable once the tour closes. Scope to the People panel's
+  // remove-button label so we don't collide with the switcher trigger
+  // ("Alice's split" appears in the header when title is unset).
   await page.getByPlaceholder('Add a name').fill('Alice')
   await page.getByRole('button', { name: /^Add$/ }).click()
-  await expect(page.getByText('Alice')).toBeVisible()
+  await expect(page.getByRole('button', { name: /^remove Alice$/i })).toBeVisible()
 
   // Tour does not reappear after a reload.
   await page.reload()

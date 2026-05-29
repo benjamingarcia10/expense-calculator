@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Pencil } from 'lucide-react'
+import { ChevronDown, Pencil } from 'lucide-react'
 import { useSession } from '../store/session'
+import { useLibrary } from '../store/library'
+import { entryDisplayTitle, entryHasGivenTitle } from '../lib/entry-display'
 import { LIMITS } from '../lib/validation'
 
 const UNTITLED = 'Untitled split'
@@ -15,9 +17,14 @@ const UNTITLED = 'Untitled split'
 export function TitleStrip({ onOpenManage }: { onOpenManage: () => void }) {
   const title = useSession((s) => s.title)
   const setTitle = useSession((s) => s.setTitle)
+  // Read the active entry separately so we can use the shared display helper —
+  // when the title is null we fall back to the first person's name (e.g.
+  // "Alice's split") instead of "Untitled split" so the strip stays informative
+  // before the user gets around to naming their split.
+  const activeEntry = useLibrary((s) => s.entries.find((e) => e.entryId === s.activeId))
   const [editing, setEditing] = useState(false)
-  const displayTitle = title?.trim() || UNTITLED
-  const isPlaceholder = !title?.trim()
+  const displayTitle = activeEntry ? entryDisplayTitle(activeEntry) : UNTITLED
+  const isPlaceholder = !activeEntry || !entryHasGivenTitle(activeEntry)
 
   if (editing) {
     return (
@@ -42,12 +49,15 @@ export function TitleStrip({ onOpenManage }: { onOpenManage: () => void }) {
       <button
         type="button"
         onClick={onOpenManage}
-        aria-label="open library"
-        className={`h-display h-11 flex-1 border-b border-dashed border-[var(--color-border)] bg-transparent pr-9 text-center text-xl outline-none transition-colors ${
+        aria-label="open session library"
+        className={`h-display h-11 flex-1 border-b border-dashed border-[var(--color-border)] bg-transparent pr-16 pl-3 text-center text-xl outline-none transition-colors ${
           isPlaceholder ? 'text-[var(--color-muted)]' : 'text-[var(--color-ink)]'
         }`}
       >
-        {displayTitle}
+        <span className="inline-flex items-center gap-1.5">
+          {displayTitle}
+          <ChevronDown className="size-3.5 text-[var(--color-muted)]" aria-hidden="true" />
+        </span>
       </button>
       <button
         type="button"

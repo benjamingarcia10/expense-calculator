@@ -1,62 +1,57 @@
 import { test, expect } from './fixtures'
 
+// Person-name assertions scoped to the People panel's remove-button labels —
+// otherwise the switcher trigger's "X's split" placeholder collides with the
+// person's name in the People list.
+const inPeopleList = (page: import('@playwright/test').Page, name: string) =>
+  page.getByRole('button', { name: new RegExp(`^remove ${name}$`, 'i') })
+
 test.describe('Sessions library', () => {
   test('create three sessions, switch between them, delete one', async ({ page }) => {
     await page.goto('/')
 
-    // The SessionSwitcher trigger lives in the desktop header. The
-    // accessible name of the trigger is the active session's title (or
-    // "Untitled split" when blank), followed by the chevron icon.
-    const switcher = page.getByRole('button', { name: /Untitled split/i }).first()
+    // Always re-acquire the switcher: its accessible name is the active
+    // session label which changes as we add people / switch entries.
+    const switcher = () =>
+      page.locator('header button[aria-haspopup="listbox"]:not([aria-label*="Currency"])')
 
-    // Seed entry 1 — add a person so it's distinguishable
+    // Seed entry 1
     await page.getByPlaceholder('Add a name').fill('Alice')
     await page.getByRole('button', { name: /^Add$/ }).click()
-    await expect(page.getByText('Alice')).toBeVisible()
+    await expect(inPeopleList(page, 'Alice')).toBeVisible()
 
-    // Create entry 2 via the switcher → New session
-    await switcher.click()
+    // Create entry 2
+    await switcher().click()
     await page.getByRole('button', { name: /New session/ }).click()
-    // Now active is a fresh blank entry — Alice should not be visible
-    await expect(page.getByText('Alice')).toHaveCount(0)
+    await expect(inPeopleList(page, 'Alice')).toHaveCount(0)
     await page.getByPlaceholder('Add a name').fill('Bob')
     await page.getByRole('button', { name: /^Add$/ }).click()
-    await expect(page.getByText('Bob')).toBeVisible()
+    await expect(inPeopleList(page, 'Bob')).toBeVisible()
 
     // Create entry 3
-    await switcher.click()
+    await switcher().click()
     await page.getByRole('button', { name: /New session/ }).click()
-    await expect(page.getByText('Alice')).toHaveCount(0)
-    await expect(page.getByText('Bob')).toHaveCount(0)
+    await expect(inPeopleList(page, 'Bob')).toHaveCount(0)
     await page.getByPlaceholder('Add a name').fill('Carol')
     await page.getByRole('button', { name: /^Add$/ }).click()
-    await expect(page.getByText('Carol')).toBeVisible()
+    await expect(inPeopleList(page, 'Carol')).toBeVisible()
 
-    // Switch back to entry 1 via dropdown — most-recent-first order means
-    // the current (Carol) is at the top, then Bob, then Alice. Entry rows
-    // have role="option" inside the listbox; footer actions remain buttons.
-    await switcher.click()
+    // Switch back to entry 1 via dropdown. Most-recent-first: Carol entry,
+    // Bob entry, Alice entry. Entry rows are role="option".
+    await switcher().click()
     const dropdown = page.getByRole('listbox')
     await dropdown.getByRole('option').nth(2).click()
-    await expect(page.getByText('Alice')).toBeVisible()
+    await expect(inPeopleList(page, 'Alice')).toBeVisible()
 
-    // Open manage library, delete the Bob entry
-    await switcher.click()
+    // Open manage library, delete the Bob entry. Default label is "Bob's split".
+    await switcher().click()
     await page.getByRole('button', { name: /Manage library/ }).click()
-    // Find the row whose title is the second entry (Bob never had a title,
-    // so it's "Untitled split"). The manage row's More-actions button is
-    // labelled "More actions for Untitled split".
-    await page
-      .getByLabel(/More actions for Untitled split/i)
-      .first()
-      .click()
+    await page.getByLabel(/More actions for Bob's split/i).click()
     await page.getByRole('menuitem', { name: /Delete/i }).click()
     await page.getByRole('button', { name: /^Delete$/ }).click()
 
-    // After delete the entry count in the switcher list drops by one.
-    // Close the manage sheet (via close button or Escape) before opening switcher.
     await page.keyboard.press('Escape')
-    await switcher.click()
+    await switcher().click()
     const remaining = await page.getByRole('listbox').getByRole('option').count()
     expect(remaining).toBe(2)
   })
