@@ -8,6 +8,7 @@ import { SCHEMA_VERSION, type Session } from '../types'
 function makeSession(over: Partial<Session> = {}): Session {
   return {
     v: SCHEMA_VERSION,
+    sessionId: null,
     currency: 'USD',
     title: 'Shared Trip',
     people: [

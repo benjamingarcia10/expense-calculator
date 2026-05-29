@@ -4,6 +4,7 @@ import { SCHEMA_VERSION, type Session } from '../types'
 
 const fixture: Session = {
   v: SCHEMA_VERSION,
+  sessionId: null,
   currency: 'USD',
   title: 'Tahoe',
   people: [{ id: 'p0', name: 'Alice' }],
@@ -97,6 +98,7 @@ describe('encodeSession / decodeShareHash', () => {
   it('round-trips every expense type together', () => {
     const complex: Session = {
       v: SCHEMA_VERSION,
+      sessionId: null,
       currency: 'EUR',
       title: 'Europe Roadtrip',
       people: [
@@ -186,6 +188,7 @@ describe('encodeSession / decodeShareHash', () => {
   it('handles empty people and expenses', () => {
     const empty: Session = {
       v: SCHEMA_VERSION,
+      sessionId: null,
       currency: 'USD',
       title: null,
       people: [],

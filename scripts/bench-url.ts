@@ -11,6 +11,7 @@ const cuid = (n: number) => `cl${n.toString(36).padStart(20, 'x')}`
 
 const session: Session = {
   v: SCHEMA_VERSION,
+  sessionId: null,
   currency: 'USD',
   title: 'Lake Tahoe long weekend',
   people: [

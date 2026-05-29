@@ -4,6 +4,7 @@ import { SCHEMA_VERSION, type Session } from '../../types'
 
 const session: Session = {
   v: SCHEMA_VERSION,
+  sessionId: null,
   currency: 'USD',
   title: 'Tahoe',
   people: [

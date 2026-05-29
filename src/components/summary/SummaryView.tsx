@@ -28,12 +28,13 @@ function makeSerial(createdAt: string, total: number): string {
 
 export function SummaryView({ open, onClose }: { open: boolean; onClose: () => void }) {
   const v = useSession((s) => s.v)
+  const sessionId = useSession((s) => s.sessionId)
   const currency = useSession((s) => s.currency)
   const title = useSession((s) => s.title)
   const people = useSession((s) => s.people)
   const expenses = useSession((s) => s.expenses)
   const createdAt = useSession((s) => s.createdAt)
-  const session: Session = { v, currency, title, people, expenses, createdAt }
+  const session: Session = { v, sessionId, currency, title, people, expenses, createdAt }
 
   const cardRef = useRef<HTMLDivElement>(null)
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')

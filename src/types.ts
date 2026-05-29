@@ -86,11 +86,27 @@ export type ExpenseInput =
 
 export type Session = {
   v: typeof SCHEMA_VERSION
+  sessionId: string | null
   currency: string
   title: string | null
   people: Person[]
   expenses: Expense[]
   createdAt: string
+}
+
+export type LibraryEntry = {
+  entryId: string
+  session: Session
+  meta: {
+    lastEditedAt: string
+    lastImportedAt?: string
+    lastSharedAt?: string
+  }
+}
+
+export type Library = {
+  entries: LibraryEntry[]
+  activeId: string
 }
 
 export function expenseTotal(e: Expense): number {

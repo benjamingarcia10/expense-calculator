@@ -18,6 +18,7 @@ function newId(prefix: string): string {
 function freshSession(): Session {
   return {
     v: SCHEMA_VERSION,
+    sessionId: null,
     currency: DEFAULT_CURRENCY,
     title: null,
     people: [],

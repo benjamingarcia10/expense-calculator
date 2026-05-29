@@ -16,19 +16,20 @@ const QR_MAX_LENGTH = 2000
 
 export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const v = useSession((s) => s.v)
+  const sessionId = useSession((s) => s.sessionId)
   const currency = useSession((s) => s.currency)
   const title = useSession((s) => s.title)
   const people = useSession((s) => s.people)
   const expenses = useSession((s) => s.expenses)
   const createdAt = useSession((s) => s.createdAt)
-  const session: Session = { v, currency, title, people, expenses, createdAt }
+  const session: Session = { v, sessionId, currency, title, people, expenses, createdAt }
 
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
   const { url, length } = useMemo(() => {
     const url = buildShareUrl(window.location.href, session)
     return { url, length: encodeSession(session).length }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [v, currency, title, people, expenses, createdAt])
+  }, [v, sessionId, currency, title, people, expenses, createdAt])
 
   function copy() {
     navigator.clipboard

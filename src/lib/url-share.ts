@@ -236,6 +236,7 @@ function tupleToSession(tuple: EncodedSession): Session {
   const expenses = encExpenses.map((arr, i) => decodeExpense(arr, i, idxToId))
   return {
     v: v as typeof SCHEMA_VERSION,
+    sessionId: null,
     currency,
     title,
     people,
