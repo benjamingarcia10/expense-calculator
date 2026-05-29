@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { toast } from 'sonner'
 import { useLibrary } from './library'
 import { LIMITS } from '../lib/validation'
 import type { Session } from '../types'
@@ -280,5 +281,30 @@ describe('useLibrary — sessionId + import mutations', () => {
     const newId = useLibrary.getState().createEntryFromImport(incoming)
     expect(useLibrary.getState().entries.find((e) => e.entryId === newId)!.session).toEqual(incoming)
     expect(useLibrary.getState().entries.find((e) => e.entryId === newId)!.meta.lastImportedAt).toBeDefined()
+  })
+})
+
+describe('useLibrary — quota rollback', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    useLibrary.getState().wipeAndSeed()
+  })
+
+  it('reverts state and shows toast when localStorage.setItem throws QuotaExceededError', () => {
+    const errorSpy = vi.spyOn(toast, 'error').mockImplementation(() => '')
+    const setItem = vi.spyOn(localStorage, 'setItem').mockImplementationOnce(() => {
+      const err = new DOMException('quota', 'QuotaExceededError')
+      throw err
+    })
+
+    const before = { entries: useLibrary.getState().entries, activeId: useLibrary.getState().activeId }
+    useLibrary.getState().createEntry() // triggers persist write → throws → rollback
+
+    expect(useLibrary.getState().entries).toEqual(before.entries)
+    expect(useLibrary.getState().activeId).toBe(before.activeId)
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringMatching(/Library is full/))
+
+    setItem.mockRestore()
+    errorSpy.mockRestore()
   })
 })

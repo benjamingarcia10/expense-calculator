@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
+import { toast } from 'sonner'
 import {
   SCHEMA_VERSION,
   type Expense,
@@ -138,226 +139,258 @@ function updateActive(get: GetFn, set: SetFn, fn: (s: Session) => Session): void
   set({ entries: next })
 }
 
+export class LibraryQuotaError extends Error {
+  constructor() {
+    super('Library storage quota exceeded')
+    this.name = 'LibraryQuotaError'
+  }
+}
+
 const quotaSafeStorage: StateStorage = {
   getItem: (k) => localStorage.getItem(k),
-  setItem: (k, v) => localStorage.setItem(k, v),
+  setItem: (k, v) => {
+    try {
+      localStorage.setItem(k, v)
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        throw new LibraryQuotaError()
+      }
+      throw e
+    }
+  },
   removeItem: (k) => localStorage.removeItem(k),
 }
 
 export const useLibrary = create<LibraryStore>()(
   persist(
-    (set, get) => ({
-      ...initialLibrary(),
+    (rawSet, get) => {
+      const set: typeof rawSet = ((partial, replace) => {
+        const snapshot = { entries: get().entries, activeId: get().activeId }
+        try {
+          ;(rawSet as (p: typeof partial, r?: typeof replace) => void)(partial, replace)
+        } catch (e) {
+          if (e instanceof LibraryQuotaError) {
+            ;(rawSet as (p: Partial<LibraryStore>) => void)(snapshot)
+            toast.error('Library is full — delete an entry to free space.')
+            return
+          }
+          throw e
+        }
+      }) as typeof rawSet
 
-      createEntry: () => {
-        const entry = freshEntry()
-        set({ entries: [...get().entries, entry], activeId: entry.entryId })
-        return entry.entryId
-      },
+      return {
+        ...initialLibrary(),
 
-      switchEntry: (entryId) => {
-        if (get().entries.some((e) => e.entryId === entryId)) set({ activeId: entryId })
-      },
+        createEntry: () => {
+          const entry = freshEntry()
+          set({ entries: [...get().entries, entry], activeId: entry.entryId })
+          return entry.entryId
+        },
 
-      deleteEntry: (entryId) => {
-        const { entries, activeId } = get()
-        const remaining = entries.filter((e) => e.entryId !== entryId)
-        if (remaining.length === 0) {
+        switchEntry: (entryId) => {
+          if (get().entries.some((e) => e.entryId === entryId)) set({ activeId: entryId })
+        },
+
+        deleteEntry: (entryId) => {
+          const { entries, activeId } = get()
+          const remaining = entries.filter((e) => e.entryId !== entryId)
+          if (remaining.length === 0) {
+            const seed = freshEntry()
+            set({ entries: [seed], activeId: seed.entryId })
+            return
+          }
+          let nextActive = activeId
+          if (activeId === entryId) {
+            const fallback = mostRecentNotMatching(entries, entryId)!
+            nextActive = fallback.entryId
+          }
+          set({ entries: remaining, activeId: nextActive })
+        },
+
+        wipeAndSeed: () => {
           const seed = freshEntry()
           set({ entries: [seed], activeId: seed.entryId })
-          return
-        }
-        let nextActive = activeId
-        if (activeId === entryId) {
-          const fallback = mostRecentNotMatching(entries, entryId)!
-          nextActive = fallback.entryId
-        }
-        set({ entries: remaining, activeId: nextActive })
-      },
+        },
 
-      wipeAndSeed: () => {
-        const seed = freshEntry()
-        set({ entries: [seed], activeId: seed.entryId })
-      },
+        addPerson: (name) => {
+          const sanitized = sanitizeName(name)
+          if (!sanitized) return
+          updateActive(get, set, (s) => {
+            if (s.people.length >= LIMITS.maxPeople) return s
+            const id = 'p_' + Math.random().toString(36).slice(2, 10).padEnd(8, '0')
+            return { ...s, people: [...s.people, { id, name: sanitized }] }
+          })
+        },
 
-      addPerson: (name) => {
-        const sanitized = sanitizeName(name)
-        if (!sanitized) return
-        updateActive(get, set, (s) => {
-          if (s.people.length >= LIMITS.maxPeople) return s
-          const id = 'p_' + Math.random().toString(36).slice(2, 10).padEnd(8, '0')
-          return { ...s, people: [...s.people, { id, name: sanitized }] }
-        })
-      },
+        renamePerson: (id, name) => {
+          const sanitized = sanitizeName(name)
+          if (!sanitized) return
+          updateActive(get, set, (s) => ({
+            ...s,
+            people: s.people.map((p) => (p.id === id ? { ...p, name: sanitized } : p)),
+          }))
+        },
 
-      renamePerson: (id, name) => {
-        const sanitized = sanitizeName(name)
-        if (!sanitized) return
-        updateActive(get, set, (s) => ({
-          ...s,
-          people: s.people.map((p) => (p.id === id ? { ...p, name: sanitized } : p)),
-        }))
-      },
+        removePerson: (id) => {
+          updateActive(get, set, (s) => {
+            const next: Expense[] = []
+            for (const e of s.expenses) {
+              const cleaned = cleanupExpenseAfterPersonRemoval(e, id)
+              if (cleaned) next.push(cleaned)
+            }
+            return { ...s, people: s.people.filter((p) => p.id !== id), expenses: next }
+          })
+        },
 
-      removePerson: (id) => {
-        updateActive(get, set, (s) => {
-          const next: Expense[] = []
-          for (const e of s.expenses) {
-            const cleaned = cleanupExpenseAfterPersonRemoval(e, id)
-            if (cleaned) next.push(cleaned)
+        setCurrency: (code) => {
+          if (!isCurrencyCode(code)) return
+          updateActive(get, set, (s) => ({ ...s, currency: code }))
+        },
+
+        setTitle: (title) => {
+          const sanitized = sanitizeSessionTitle(title) || null
+          updateActive(get, set, (s) => ({ ...s, title: sanitized }))
+        },
+
+        addExpense: (input) => {
+          let createdId = ''
+          updateActive(get, set, (s) => {
+            if (s.expenses.length >= LIMITS.maxExpenses) return s
+            const id = newExpenseId()
+            createdId = id
+            const sanitized: Expense = { ...input, id, title: sanitizeTitle(input.title) } as Expense
+            if (sanitized.type === 'restaurant') {
+              sanitized.items = sanitized.items.map((i) => ({ ...i, name: sanitizeItemName(i.name) }))
+            }
+            if (sanitized.type === 'mileage') {
+              sanitized.unitLabel = sanitizeUnitLabel(sanitized.unitLabel)
+            }
+            return { ...s, expenses: [...s.expenses, sanitized] }
+          })
+          return createdId
+        },
+
+        updateExpense: (id, patch) => {
+          updateActive(get, set, (s) => ({
+            ...s,
+            expenses: s.expenses.map((e) => {
+              if (e.id !== id) return e
+              const merged = { ...e, ...patch } as Expense
+              if (patch.title !== undefined) merged.title = sanitizeTitle(patch.title)
+              return merged
+            }),
+          }))
+        },
+
+        removeExpense: (id) => {
+          updateActive(get, set, (s) => ({ ...s, expenses: s.expenses.filter((e) => e.id !== id) }))
+        },
+
+        restoreExpense: (expense, atIndex) => {
+          updateActive(get, set, (s) => {
+            if (s.expenses.some((e) => e.id === expense.id)) return s
+            if (s.expenses.length >= LIMITS.maxExpenses) return s
+            const idx = Math.max(0, Math.min(atIndex, s.expenses.length))
+            return { ...s, expenses: [...s.expenses.slice(0, idx), expense, ...s.expenses.slice(idx)] }
+          })
+        },
+
+        ensureSessionId: (entryId) => {
+          const found = get().entries.find((e) => e.entryId === entryId)
+          if (!found) return ''
+          if (found.session.sessionId) {
+            set({
+              entries: get().entries.map((e) =>
+                e.entryId === entryId
+                  ? { ...e, meta: { ...e.meta, lastSharedAt: new Date().toISOString() } }
+                  : e
+              ),
+            })
+            return found.session.sessionId
           }
-          return { ...s, people: s.people.filter((p) => p.id !== id), expenses: next }
-        })
-      },
-
-      setCurrency: (code) => {
-        if (!isCurrencyCode(code)) return
-        updateActive(get, set, (s) => ({ ...s, currency: code }))
-      },
-
-      setTitle: (title) => {
-        const sanitized = sanitizeSessionTitle(title) || null
-        updateActive(get, set, (s) => ({ ...s, title: sanitized }))
-      },
-
-      addExpense: (input) => {
-        let createdId = ''
-        updateActive(get, set, (s) => {
-          if (s.expenses.length >= LIMITS.maxExpenses) return s
-          const id = newExpenseId()
-          createdId = id
-          const sanitized: Expense = { ...input, id, title: sanitizeTitle(input.title) } as Expense
-          if (sanitized.type === 'restaurant') {
-            sanitized.items = sanitized.items.map((i) => ({ ...i, name: sanitizeItemName(i.name) }))
-          }
-          if (sanitized.type === 'mileage') {
-            sanitized.unitLabel = sanitizeUnitLabel(sanitized.unitLabel)
-          }
-          return { ...s, expenses: [...s.expenses, sanitized] }
-        })
-        return createdId
-      },
-
-      updateExpense: (id, patch) => {
-        updateActive(get, set, (s) => ({
-          ...s,
-          expenses: s.expenses.map((e) => {
-            if (e.id !== id) return e
-            const merged = { ...e, ...patch } as Expense
-            if (patch.title !== undefined) merged.title = sanitizeTitle(patch.title)
-            return merged
-          }),
-        }))
-      },
-
-      removeExpense: (id) => {
-        updateActive(get, set, (s) => ({ ...s, expenses: s.expenses.filter((e) => e.id !== id) }))
-      },
-
-      restoreExpense: (expense, atIndex) => {
-        updateActive(get, set, (s) => {
-          if (s.expenses.some((e) => e.id === expense.id)) return s
-          if (s.expenses.length >= LIMITS.maxExpenses) return s
-          const idx = Math.max(0, Math.min(atIndex, s.expenses.length))
-          return { ...s, expenses: [...s.expenses.slice(0, idx), expense, ...s.expenses.slice(idx)] }
-        })
-      },
-
-      ensureSessionId: (entryId) => {
-        const found = get().entries.find((e) => e.entryId === entryId)
-        if (!found) return ''
-        if (found.session.sessionId) {
+          const sid = newSessionId()
           set({
             entries: get().entries.map((e) =>
               e.entryId === entryId
-                ? { ...e, meta: { ...e.meta, lastSharedAt: new Date().toISOString() } }
+                ? {
+                    ...e,
+                    session: { ...e.session, sessionId: sid },
+                    meta: { ...e.meta, lastSharedAt: new Date().toISOString() },
+                  }
                 : e
             ),
           })
-          return found.session.sessionId
-        }
-        const sid = newSessionId()
-        set({
-          entries: get().entries.map((e) =>
-            e.entryId === entryId
-              ? {
-                  ...e,
-                  session: { ...e.session, sessionId: sid },
-                  meta: { ...e.meta, lastSharedAt: new Date().toISOString() },
-                }
-              : e
-          ),
-        })
-        return sid
-      },
+          return sid
+        },
 
-      adoptSessionId: (entryId, sessionId) => {
-        set({
-          entries: get().entries.map((e) =>
-            e.entryId === entryId && e.session.sessionId === null
-              ? { ...e, session: { ...e.session, sessionId } }
-              : e
-          ),
-        })
-      },
+        adoptSessionId: (entryId, sessionId) => {
+          set({
+            entries: get().entries.map((e) =>
+              e.entryId === entryId && e.session.sessionId === null
+                ? { ...e, session: { ...e.session, sessionId } }
+                : e
+            ),
+          })
+        },
 
-      renameEntry: (entryId, title) => {
-        const sanitized = sanitizeSessionTitle(title) || null
-        set({
-          entries: get().entries.map((e) =>
-            e.entryId === entryId
-              ? {
-                  ...e,
-                  session: { ...e.session, title: sanitized },
-                  meta: { ...e.meta, lastEditedAt: new Date().toISOString() },
-                }
-              : e
-          ),
-        })
-      },
+        renameEntry: (entryId, title) => {
+          const sanitized = sanitizeSessionTitle(title) || null
+          set({
+            entries: get().entries.map((e) =>
+              e.entryId === entryId
+                ? {
+                    ...e,
+                    session: { ...e.session, title: sanitized },
+                    meta: { ...e.meta, lastEditedAt: new Date().toISOString() },
+                  }
+                : e
+            ),
+          })
+        },
 
-      duplicateEntry: (entryId) => {
-        const src = get().entries.find((e) => e.entryId === entryId)
-        if (!src) return ''
-        const now = new Date().toISOString()
-        const baseTitle = (src.session.title ?? 'Untitled split').trim()
-        const dup: LibraryEntry = {
-          entryId: newEntryId(),
-          session: {
-            ...src.session,
-            sessionId: null,
-            title: `${baseTitle} (copy)`,
-            createdAt: now,
-          },
-          meta: { lastEditedAt: now },
-        }
-        set({ entries: [...get().entries, dup], activeId: dup.entryId })
-        return dup.entryId
-      },
+        duplicateEntry: (entryId) => {
+          const src = get().entries.find((e) => e.entryId === entryId)
+          if (!src) return ''
+          const now = new Date().toISOString()
+          const baseTitle = (src.session.title ?? 'Untitled split').trim()
+          const dup: LibraryEntry = {
+            entryId: newEntryId(),
+            session: {
+              ...src.session,
+              sessionId: null,
+              title: `${baseTitle} (copy)`,
+              createdAt: now,
+            },
+            meta: { lastEditedAt: now },
+          }
+          set({ entries: [...get().entries, dup], activeId: dup.entryId })
+          return dup.entryId
+        },
 
-      replaceActiveSession: (next) => {
-        const { entries, activeId } = get()
-        const now = new Date().toISOString()
-        set({
-          entries: entries.map((e) =>
-            e.entryId === activeId
-              ? { ...e, session: next, meta: { ...e.meta, lastEditedAt: now, lastImportedAt: now } }
-              : e
-          ),
-        })
-      },
+        replaceActiveSession: (next) => {
+          const { entries, activeId } = get()
+          const now = new Date().toISOString()
+          set({
+            entries: entries.map((e) =>
+              e.entryId === activeId
+                ? { ...e, session: next, meta: { ...e.meta, lastEditedAt: now, lastImportedAt: now } }
+                : e
+            ),
+          })
+        },
 
-      createEntryFromImport: (session) => {
-        const now = new Date().toISOString()
-        const entry: LibraryEntry = {
-          entryId: newEntryId(),
-          session,
-          meta: { lastEditedAt: now, lastImportedAt: now },
-        }
-        set({ entries: [...get().entries, entry], activeId: entry.entryId })
-        return entry.entryId
-      },
-    }),
+        createEntryFromImport: (session) => {
+          const now = new Date().toISOString()
+          const entry: LibraryEntry = {
+            entryId: newEntryId(),
+            session,
+            meta: { lastEditedAt: now, lastImportedAt: now },
+          }
+          set({ entries: [...get().entries, entry], activeId: entry.entryId })
+          return entry.entryId
+        },
+      }
+    },
     {
       name: PERSIST_KEY,
       storage: createJSONStorage(() => quotaSafeStorage),
