@@ -118,7 +118,7 @@ const ExpenseSchema = z.discriminatedUnion('type', [
 
 export const SessionSchema = z.object({
   v: z.literal(SCHEMA_VERSION),
-  sessionId: z.string().nullable(),
+  sessionId: z.string().uuid().nullable(),
   currency: z.string().length(3),
   title: z.string().max(LIMITS.sessionTitle).nullable(),
   people: z.array(PersonSchema).max(LIMITS.maxPeople),
