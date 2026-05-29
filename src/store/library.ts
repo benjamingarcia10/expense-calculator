@@ -17,7 +17,7 @@ import {
   LIMITS,
 } from '../lib/validation'
 import { DEFAULT_CURRENCY, isCurrencyCode } from '../lib/currencies'
-import { newEntryId } from '../lib/ids'
+import { newEntryId, newSessionId } from '../lib/ids'
 
 const PERSIST_KEY = 'expense-calculator-library'
 
@@ -115,6 +115,14 @@ type LibraryStore = Library & {
   updateExpense: (id: string, patch: Partial<Expense>) => void
   removeExpense: (id: string) => void
   restoreExpense: (expense: Expense, atIndex: number) => void
+
+  // sessionId + import mutations (Task 8)
+  ensureSessionId: (entryId: string) => string
+  adoptSessionId: (entryId: string, sessionId: string) => void
+  renameEntry: (entryId: string, title: string) => void
+  duplicateEntry: (entryId: string) => string
+  replaceActiveSession: (next: Session) => void
+  createEntryFromImport: (session: Session) => string
 }
 
 type GetFn = () => LibraryStore
@@ -253,6 +261,101 @@ export const useLibrary = create<LibraryStore>()(
           const idx = Math.max(0, Math.min(atIndex, s.expenses.length))
           return { ...s, expenses: [...s.expenses.slice(0, idx), expense, ...s.expenses.slice(idx)] }
         })
+      },
+
+      ensureSessionId: (entryId) => {
+        const found = get().entries.find((e) => e.entryId === entryId)
+        if (!found) return ''
+        if (found.session.sessionId) {
+          set({
+            entries: get().entries.map((e) =>
+              e.entryId === entryId
+                ? { ...e, meta: { ...e.meta, lastSharedAt: new Date().toISOString() } }
+                : e
+            ),
+          })
+          return found.session.sessionId
+        }
+        const sid = newSessionId()
+        set({
+          entries: get().entries.map((e) =>
+            e.entryId === entryId
+              ? {
+                  ...e,
+                  session: { ...e.session, sessionId: sid },
+                  meta: { ...e.meta, lastSharedAt: new Date().toISOString() },
+                }
+              : e
+          ),
+        })
+        return sid
+      },
+
+      adoptSessionId: (entryId, sessionId) => {
+        set({
+          entries: get().entries.map((e) =>
+            e.entryId === entryId && e.session.sessionId === null
+              ? { ...e, session: { ...e.session, sessionId } }
+              : e
+          ),
+        })
+      },
+
+      renameEntry: (entryId, title) => {
+        const sanitized = sanitizeSessionTitle(title) || null
+        set({
+          entries: get().entries.map((e) =>
+            e.entryId === entryId
+              ? {
+                  ...e,
+                  session: { ...e.session, title: sanitized },
+                  meta: { ...e.meta, lastEditedAt: new Date().toISOString() },
+                }
+              : e
+          ),
+        })
+      },
+
+      duplicateEntry: (entryId) => {
+        const src = get().entries.find((e) => e.entryId === entryId)
+        if (!src) return ''
+        const now = new Date().toISOString()
+        const baseTitle = (src.session.title ?? 'Untitled split').trim()
+        const dup: LibraryEntry = {
+          entryId: newEntryId(),
+          session: {
+            ...src.session,
+            sessionId: null,
+            title: `${baseTitle} (copy)`,
+            createdAt: now,
+          },
+          meta: { lastEditedAt: now },
+        }
+        set({ entries: [...get().entries, dup], activeId: dup.entryId })
+        return dup.entryId
+      },
+
+      replaceActiveSession: (next) => {
+        const { entries, activeId } = get()
+        const now = new Date().toISOString()
+        set({
+          entries: entries.map((e) =>
+            e.entryId === activeId
+              ? { ...e, session: next, meta: { ...e.meta, lastEditedAt: now, lastImportedAt: now } }
+              : e
+          ),
+        })
+      },
+
+      createEntryFromImport: (session) => {
+        const now = new Date().toISOString()
+        const entry: LibraryEntry = {
+          entryId: newEntryId(),
+          session,
+          meta: { lastEditedAt: now, lastImportedAt: now },
+        }
+        set({ entries: [...get().entries, entry], activeId: entry.entryId })
+        return entry.entryId
       },
     }),
     {

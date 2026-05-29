@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useLibrary } from './library'
 import { LIMITS } from '../lib/validation'
+import type { Session } from '../types'
 
 describe('useLibrary — entry mutations', () => {
   beforeEach(() => {
@@ -192,5 +193,92 @@ describe('useLibrary — active-routed mutations', () => {
     const second = useLibrary.getState().entries.find((e) => e.entryId !== firstActive)!
     expect(first.session.people.map((p) => p.name)).toEqual(['Alice'])
     expect(second.session.people.map((p) => p.name)).toEqual(['Bob'])
+  })
+})
+
+describe('useLibrary — sessionId + import mutations', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    useLibrary.getState().wipeAndSeed()
+  })
+
+  function active() {
+    const s = useLibrary.getState()
+    return s.entries.find((e) => e.entryId === s.activeId)!
+  }
+
+  it('ensureSessionId mints once and is idempotent', () => {
+    expect(active().session.sessionId).toBeNull()
+    const id1 = useLibrary.getState().ensureSessionId(active().entryId)
+    expect(active().session.sessionId).toBe(id1)
+    const id2 = useLibrary.getState().ensureSessionId(active().entryId)
+    expect(id2).toBe(id1)
+  })
+
+  it('ensureSessionId updates meta.lastSharedAt', () => {
+    expect(active().meta.lastSharedAt).toBeUndefined()
+    useLibrary.getState().ensureSessionId(active().entryId)
+    expect(active().meta.lastSharedAt).toBeDefined()
+  })
+
+  it('adoptSessionId sets sessionId on an entry without one', () => {
+    const sid = '11111111-2222-4333-8444-555555555555'
+    useLibrary.getState().adoptSessionId(active().entryId, sid)
+    expect(active().session.sessionId).toBe(sid)
+  })
+
+  it('adoptSessionId is a no-op when entry already has one', () => {
+    const original = useLibrary.getState().ensureSessionId(active().entryId)
+    useLibrary.getState().adoptSessionId(active().entryId, '00000000-0000-4000-8000-000000000000')
+    expect(active().session.sessionId).toBe(original)
+  })
+
+  it('renameEntry updates the entry title', () => {
+    useLibrary.getState().renameEntry(active().entryId, 'New Title')
+    expect(active().session.title).toBe('New Title')
+  })
+
+  it('duplicateEntry creates a copy with fresh sessionId and " (copy)" suffix', () => {
+    useLibrary.getState().setTitle('Berlin')
+    useLibrary.getState().addPerson('Alice')
+    useLibrary.getState().ensureSessionId(active().entryId)
+    const originalId = active().entryId
+    const dupId = useLibrary.getState().duplicateEntry(originalId)
+    expect(dupId).not.toBe(originalId)
+    expect(useLibrary.getState().activeId).toBe(dupId)
+    const dup = useLibrary.getState().entries.find((e) => e.entryId === dupId)!
+    expect(dup.session.title).toBe('Berlin (copy)')
+    expect(dup.session.people.map((p) => p.name)).toEqual(['Alice'])
+    expect(dup.session.sessionId).toBeNull()
+  })
+
+  it('replaceActiveSession swaps the active session content', () => {
+    const incoming: Session = {
+      v: 1,
+      sessionId: '11111111-2222-4333-8444-555555555555',
+      currency: 'EUR',
+      title: 'From import',
+      people: [],
+      expenses: [],
+      createdAt: '2026-05-28T00:00:00.000Z',
+    }
+    useLibrary.getState().replaceActiveSession(incoming)
+    expect(active().session).toEqual(incoming)
+    expect(active().meta.lastImportedAt).toBeDefined()
+  })
+
+  it('createEntryFromImport appends and activates', () => {
+    const incoming: Session = {
+      v: 1,
+      sessionId: '99999999-2222-4333-8444-555555555555',
+      currency: 'EUR',
+      title: 'Imported',
+      people: [],
+      expenses: [],
+      createdAt: '2026-05-28T00:00:00.000Z',
+    }
+    const newId = useLibrary.getState().createEntryFromImport(incoming)
+    expect(useLibrary.getState().entries.find((e) => e.entryId === newId)!.session).toEqual(incoming)
+    expect(useLibrary.getState().entries.find((e) => e.entryId === newId)!.meta.lastImportedAt).toBeDefined()
   })
 })
