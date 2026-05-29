@@ -11,6 +11,7 @@ import { ShareDialog } from './components/share/ShareDialog'
 import { OnboardingOverlay } from './components/onboarding/OnboardingOverlay'
 import { UpdatedImportDialog } from './components/UpdatedImportDialog'
 import { TitleStrip } from './components/TitleStrip'
+import { ManageLibrarySheet } from './components/library/ManageLibrarySheet'
 import { useUrlImport } from './hooks/useUrlImport'
 import { useOnboarding } from './hooks/useOnboarding'
 
@@ -22,6 +23,7 @@ const PANEL_ENTRANCE = {
 export default function App() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [manageOpen, setManageOpen] = useState(false)
   const { pending, acceptReplace, acceptKeepBoth, reject } = useUrlImport()
   const { view: onboardingView, dismiss: dismissOnboarding, startTour } = useOnboarding()
 
@@ -39,7 +41,7 @@ export default function App() {
         onOpenSummary={() => setSummaryOpen(true)}
         onOpenShare={() => setShareOpen(true)}
         onReplayTour={startTour}
-        onOpenManage={() => {}}
+        onOpenManage={() => setManageOpen(true)}
       />
       <main
         id="main"
@@ -79,6 +81,7 @@ export default function App() {
       </main>
       <SummaryView open={summaryOpen} onClose={() => setSummaryOpen(false)} />
       <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} />
+      <ManageLibrarySheet open={manageOpen} onClose={() => setManageOpen(false)} />
       <OnboardingOverlay view={onboardingView} onDismiss={dismissOnboarding} onStartTour={startTour} />
       <Toaster
         position="bottom-center"
