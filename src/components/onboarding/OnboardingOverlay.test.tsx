@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { OnboardingOverlay } from './OnboardingOverlay'
 import { APP_NAME } from '../../lib/branding'
 import { resetSession, useSession } from '../../store/session'
+import { useLibrary } from '../../store/library'
 
 const WELCOME = `Welcome to ${APP_NAME}`
 
@@ -70,22 +71,20 @@ describe('OnboardingOverlay — welcome back', () => {
     seedSession()
     const onDismiss = vi.fn()
     render(<OnboardingOverlay view="welcome-back" onDismiss={onDismiss} onStartTour={() => {}} />)
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Continue' }))
+    await userEvent.setup().click(screen.getByRole('button', { name: /Continue this one/i }))
     expect(onDismiss).toHaveBeenCalledOnce()
     expect(useSession.getState().people).toHaveLength(2)
   })
 
-  it('Start fresh asks for confirmation before erasing the session', async () => {
+  it('"Start a new split" creates a new entry without erasing the existing one', async () => {
     seedSession()
     const onDismiss = vi.fn()
+    const entriesBefore = useLibrary.getState().entries.length
     render(<OnboardingOverlay view="welcome-back" onDismiss={onDismiss} onStartTour={() => {}} />)
-    const user = userEvent.setup()
 
-    await user.click(screen.getByRole('button', { name: 'Start fresh' }))
-    // Session is untouched until the confirmation is accepted.
-    expect(useSession.getState().people).toHaveLength(2)
-
-    await user.click(screen.getByRole('button', { name: 'Erase everything' }))
+    await userEvent.setup().click(screen.getByRole('button', { name: /Start a new split/i }))
+    // Old entry is preserved in the library; we're switched to a fresh blank.
+    expect(useLibrary.getState().entries.length).toBe(entriesBefore + 1)
     expect(useSession.getState().people).toHaveLength(0)
     expect(useSession.getState().expenses).toHaveLength(0)
     expect(onDismiss).toHaveBeenCalledOnce()

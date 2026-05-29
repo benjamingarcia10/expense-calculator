@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
 import { toast } from 'sonner'
 import { contentFingerprint, decodeShareHash } from '../lib/url-share'
+import { LIMITS } from '../lib/validation'
 import { useLibrary } from '../store/library'
 import type { LibraryEntry, Session } from '../types'
 
@@ -71,12 +72,19 @@ export function useUrlImport(): {
 
     const result = decodeShareHash(hash)
     if (!result.ok) {
+      toast.error("Couldn't load that link — it looks corrupted or from an older version.")
       history.replaceState(null, '', window.location.pathname + window.location.search)
       processedHash.current = hash
       return
     }
     const incoming = result.session
     const library = useLibrary.getState()
+
+    // Mark hash as attempted up-front so we don't retry on every render. URL
+    // clear, however, is deferred to after the mutation succeeds — if the
+    // library's quota rollback fires, we want the link to stay visible in
+    // the address bar so the user can copy it before refreshing.
+    processedHash.current = hash
 
     const sessionIdMatch = incoming.sessionId
       ? library.entries.find((e) => e.session.sessionId === incoming.sessionId)
@@ -87,10 +95,8 @@ export function useUrlImport(): {
         library.switchEntry(sessionIdMatch.entryId)
         toast.success(`Already in your library — switched to "${displayTitle(sessionIdMatch.session)}"`)
         history.replaceState(null, '', window.location.pathname + window.location.search)
-        processedHash.current = hash
         return
       }
-      processedHash.current = hash
       setPendingExternal({ kind: 'updated', matched: sessionIdMatch, incoming })
       return
     }
@@ -105,13 +111,16 @@ export function useUrlImport(): {
       library.switchEntry(contentMatch.entryId)
       toast.success(`Already in your library — switched to "${displayTitle(contentMatch.session)}"`)
       history.replaceState(null, '', window.location.pathname + window.location.search)
-      processedHash.current = hash
       return
     }
 
-    library.createEntryFromImport(incoming)
-    history.replaceState(null, '', window.location.pathname + window.location.search)
-    processedHash.current = hash
+    const newId = library.createEntryFromImport(incoming)
+    const committed = useLibrary.getState().entries.some((e) => e.entryId === newId)
+    if (committed) {
+      history.replaceState(null, '', window.location.pathname + window.location.search)
+    }
+    // If the create rolled back due to quota, the library's wrapped set
+    // already toasted "Library is full" — leave the URL in place.
   }, [hash])
 
   const acceptReplace = useCallback(() => {
@@ -120,7 +129,13 @@ export function useUrlImport(): {
     const library = useLibrary.getState()
     library.switchEntry(current.matched.entryId)
     library.replaceActiveSession(current.incoming)
-    history.replaceState(null, '', window.location.pathname + window.location.search)
+    // Only clear URL if the replace actually committed (the library's quota
+    // wrapper would otherwise have rolled the entry back to its prior state).
+    const after = useLibrary.getState().entries.find((e) => e.entryId === current.matched.entryId)
+    const committed = !!after && contentFingerprint(after.session) === contentFingerprint(current.incoming)
+    if (committed) {
+      history.replaceState(null, '', window.location.pathname + window.location.search)
+    }
     setPendingExternal(null)
   }, [])
 
@@ -128,17 +143,27 @@ export function useUrlImport(): {
     const current = getPendingSnapshot()
     if (!current) return
     const library = useLibrary.getState()
-    const base = displayTitle(current.incoming)
+    // Pre-truncate the base title so we never produce a candidate longer than
+    // LIMITS.sessionTitle once the disambiguation suffix is appended.
+    const rawBase = displayTitle(current.incoming)
     let suffix = ' (imported)'
+    const headroom = LIMITS.sessionTitle - suffix.length
+    let base = rawBase.length > headroom ? rawBase.slice(0, headroom).trimEnd() : rawBase
     let candidate = base + suffix
     let counter = 2
     while (library.entries.some((e) => (e.session.title ?? '') === candidate)) {
       suffix = ` (imported ${counter})`
+      const h = LIMITS.sessionTitle - suffix.length
+      base = rawBase.length > h ? rawBase.slice(0, h).trimEnd() : rawBase
       candidate = base + suffix
       counter++
+      if (counter > 999) break // pathological cap — prefer a duplicate-title entry to an infinite loop
     }
-    library.createEntryFromImport({ ...current.incoming, title: candidate })
-    history.replaceState(null, '', window.location.pathname + window.location.search)
+    const newId = library.createEntryFromImport({ ...current.incoming, title: candidate })
+    const committed = useLibrary.getState().entries.some((e) => e.entryId === newId)
+    if (committed) {
+      history.replaceState(null, '', window.location.pathname + window.location.search)
+    }
     setPendingExternal(null)
   }, [])
 

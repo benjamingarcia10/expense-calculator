@@ -307,4 +307,31 @@ describe('useLibrary — quota rollback', () => {
     setItem.mockRestore()
     errorSpy.mockRestore()
   })
+
+  it('falls back to in-memory + toasts once when localStorage is unavailable', async () => {
+    const errorSpy = vi.spyOn(toast, 'error').mockImplementation(() => '')
+    // Safari private mode / disabled storage typically throws SecurityError.
+    const setItem = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new DOMException('storage disabled', 'SecurityError')
+    })
+
+    // The mutation should NOT roll back — we want the user to keep working in
+    // memory even though persistence is dead.
+    const before = useLibrary.getState().entries.length
+    useLibrary.getState().createEntry()
+    expect(useLibrary.getState().entries.length).toBe(before + 1)
+
+    // The warning toast is dispatched on a microtask; flush it.
+    await Promise.resolve()
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringMatching(/Saving disabled/))
+
+    // A second mutation does not re-toast.
+    errorSpy.mockClear()
+    useLibrary.getState().createEntry()
+    await Promise.resolve()
+    expect(errorSpy).not.toHaveBeenCalledWith(expect.stringMatching(/Saving disabled/))
+
+    setItem.mockRestore()
+    errorSpy.mockRestore()
+  })
 })

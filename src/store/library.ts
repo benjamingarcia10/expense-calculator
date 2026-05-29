@@ -149,19 +149,64 @@ export class LibraryQuotaError extends Error {
   }
 }
 
-const quotaSafeStorage: StateStorage = {
-  getItem: (k) => localStorage.getItem(k),
+/**
+ * Storage shim used by Zustand persist. Tries localStorage; on any failure
+ * (Safari private mode, disabled storage, corporate-locked profile, etc.)
+ * falls back to an in-memory Map so the app keeps working. The first time we
+ * notice persistence is dead, we surface a one-time warning toast.
+ *
+ * QuotaExceededError is re-thrown as LibraryQuotaError so the wrapped `set`
+ * can roll back the offending mutation. Every other DOMException
+ * (SecurityError on Safari private + cookies-blocked, InvalidAccessError,
+ * etc.) is treated as "localStorage is unusable" and we silently switch to
+ * in-memory for the rest of the session.
+ */
+const _memory = new Map<string, string>()
+let _persistenceBroken = false
+
+function markBrokenOnce(): void {
+  if (_persistenceBroken) return
+  _persistenceBroken = true
+  // toast is dispatched on a microtask so the warning surfaces after the
+  // current React render commit, not during it.
+  queueMicrotask(() => {
+    toast.error("Saving disabled — your library won't persist across reloads.")
+  })
+}
+
+const safeStorage: StateStorage = {
+  getItem: (k) => {
+    try {
+      return localStorage.getItem(k)
+    } catch {
+      markBrokenOnce()
+      return _memory.get(k) ?? null
+    }
+  },
   setItem: (k, v) => {
+    if (_persistenceBroken) {
+      _memory.set(k, v)
+      return
+    }
     try {
       localStorage.setItem(k, v)
     } catch (e) {
       if (e instanceof DOMException && e.name === 'QuotaExceededError') {
         throw new LibraryQuotaError()
       }
-      throw e
+      // Any other failure: fall back to in-memory + warn.
+      markBrokenOnce()
+      _memory.set(k, v)
     }
   },
-  removeItem: (k) => localStorage.removeItem(k),
+  removeItem: (k) => {
+    try {
+      localStorage.removeItem(k)
+    } catch {
+      markBrokenOnce()
+    }
+    _memory.delete(k)
+  },
 }
 
 export const useLibrary = create<LibraryStore>()(
@@ -400,7 +445,7 @@ export const useLibrary = create<LibraryStore>()(
     },
     {
       name: PERSIST_KEY,
-      storage: createJSONStorage(() => quotaSafeStorage),
+      storage: createJSONStorage(() => safeStorage),
       partialize: (s) => ({ entries: s.entries, activeId: s.activeId }) as Library,
     }
   )

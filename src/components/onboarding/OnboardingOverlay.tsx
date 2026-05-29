@@ -276,7 +276,6 @@ function WelcomeBackCard({ onDismiss, onStartTour }: { onDismiss: () => void; on
   const expenses = useSession((s) => s.expenses)
   const currency = useSession((s) => s.currency)
   const createdAt = useSession((s) => s.createdAt)
-  const [confirming, setConfirming] = useState(false)
   const continueRef = useRef<HTMLButtonElement>(null)
   const titleId = useId()
 
@@ -305,38 +304,26 @@ function WelcomeBackCard({ onDismiss, onStartTour }: { onDismiss: () => void; on
 
       <SessionSummaryCard session={{ currency, title, people, expenses, createdAt }} />
 
-      {confirming ? (
-        <div className="flex flex-col gap-2 rounded-xl border border-red-600/30 bg-red-600/5 p-3">
-          <p className="text-sm">
-            Erase this split? Everyone and every expense will be removed. This can&apos;t be undone.
-          </p>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setConfirming(false)}>
-              Keep it
-            </Button>
-            <Button variant="danger" size="sm" onClick={startFresh}>
-              Erase everything
-            </Button>
-          </div>
+      <div className="flex flex-col gap-3">
+        <p className="text-xs text-[var(--color-muted)]">
+          Starting a new split keeps this one saved in your library — you can switch back from the title bar
+          at any time.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={startFresh}>
+            Start a new split
+          </Button>
+          <Button ref={continueRef} onClick={onDismiss}>
+            Continue this one
+          </Button>
         </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setConfirming(true)}>
-              Start fresh
-            </Button>
-            <Button ref={continueRef} onClick={onDismiss}>
-              Continue
-            </Button>
-          </div>
-          <button
-            onClick={onStartTour}
-            className="self-center text-xs text-[var(--color-muted)] underline underline-offset-2 transition-colors hover:text-[var(--color-ink)]"
-          >
-            New to {APP_NAME}? Take the quick tour
-          </button>
-        </div>
-      )}
+        <button
+          onClick={onStartTour}
+          className="self-center text-xs text-[var(--color-muted)] underline underline-offset-2 transition-colors hover:text-[var(--color-ink)]"
+        >
+          New to {APP_NAME}? Take the quick tour
+        </button>
+      </div>
     </div>
   )
 }
