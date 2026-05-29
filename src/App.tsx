@@ -9,7 +9,7 @@ import { SettleUpPanel } from './components/SettleUpPanel'
 import { SummaryView } from './components/summary/SummaryView'
 import { ShareDialog } from './components/share/ShareDialog'
 import { OnboardingOverlay } from './components/onboarding/OnboardingOverlay'
-import { ImportDialog } from './components/ImportDialog'
+import { UpdatedImportDialog } from './components/UpdatedImportDialog'
 import { TitleStrip } from './components/TitleStrip'
 import { useUrlImport } from './hooks/useUrlImport'
 import { useOnboarding } from './hooks/useOnboarding'
@@ -22,7 +22,7 @@ const PANEL_ENTRANCE = {
 export default function App() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
-  const { pending, accept, reject } = useUrlImport()
+  const { pending, acceptReplace, acceptKeepBoth, reject } = useUrlImport()
   const { view: onboardingView, dismiss: dismissOnboarding, startTour } = useOnboarding()
 
   return (
@@ -96,7 +96,12 @@ export default function App() {
           },
         }}
       />
-      <ImportDialog pending={pending} onAccept={accept} onReject={reject} />
+      <UpdatedImportDialog
+        pending={pending}
+        onReplace={acceptReplace}
+        onKeepBoth={acceptKeepBoth}
+        onReject={reject}
+      />
     </div>
   )
 }
