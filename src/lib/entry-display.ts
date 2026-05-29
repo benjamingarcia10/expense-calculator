@@ -1,25 +1,30 @@
-import type { LibraryEntry } from '../types'
+import type { LibraryEntry, Session } from '../types'
 
 const UNTITLED_FALLBACK = 'Untitled split'
 
 /**
- * Human-readable label for a library entry. Falls back through:
+ * Human-readable label for a session. Falls back through:
  *   1. The user-set title (if non-blank).
  *   2. The first one or two people's names, joined.
  *   3. "Untitled split" as a final fallback when there's no signal.
  *
- * Used by the SessionSwitcher dropdown and the ManageLibrarySheet rows so a
- * fresh-from-the-factory library with three blank entries doesn't show three
- * identical-looking "Untitled split" rows.
+ * Used by the SessionSwitcher dropdown, ManageLibrarySheet rows, and the
+ * silent-import toast so a fresh library with three blank entries doesn't
+ * show three identical-looking "Untitled split" rows.
  */
-export function entryDisplayTitle(entry: LibraryEntry): string {
-  const t = entry.session.title?.trim()
+export function sessionDisplayTitle(session: Pick<Session, 'title' | 'people'>): string {
+  const t = session.title?.trim()
   if (t && t.length > 0) return t
-  const names = entry.session.people.map((p) => p.name.trim()).filter(Boolean)
+  const names = session.people.map((p) => p.name.trim()).filter(Boolean)
   if (names.length === 1) return `${names[0]}'s split`
   if (names.length === 2) return `${names[0]} & ${names[1]}`
   if (names.length >= 3) return `${names[0]}, ${names[1]} +${names.length - 2}`
   return UNTITLED_FALLBACK
+}
+
+/** Convenience wrapper for a LibraryEntry. Delegates to sessionDisplayTitle. */
+export function entryDisplayTitle(entry: LibraryEntry): string {
+  return sessionDisplayTitle(entry.session)
 }
 
 /**

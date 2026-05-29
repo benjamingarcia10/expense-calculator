@@ -1,17 +1,12 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
 import { toast } from 'sonner'
 import { contentFingerprint, decodeShareHash } from '../lib/url-share'
+import { sessionDisplayTitle } from '../lib/entry-display'
 import { LIMITS } from '../lib/validation'
 import { useLibrary } from '../store/library'
 import type { LibraryEntry, Session } from '../types'
 
 export type PendingImport = { kind: 'updated'; matched: LibraryEntry; incoming: Session } | null
-
-const UNTITLED = 'Untitled split'
-function displayTitle(s: { title: string | null }): string {
-  const t = s.title?.trim()
-  return t && t.length > 0 ? t : UNTITLED
-}
 
 // ---------------------------------------------------------------------------
 // Tiny external pending-import store so that `setPending` in the effect
@@ -93,7 +88,9 @@ export function useUrlImport(): {
     if (sessionIdMatch) {
       if (contentFingerprint(sessionIdMatch.session) === contentFingerprint(incoming)) {
         library.switchEntry(sessionIdMatch.entryId)
-        toast.success(`Already in your library — switched to "${displayTitle(sessionIdMatch.session)}"`)
+        toast.success(
+          `Already in your library — switched to "${sessionDisplayTitle(sessionIdMatch.session)}"`
+        )
         history.replaceState(null, '', window.location.pathname + window.location.search)
         return
       }
@@ -109,7 +106,7 @@ export function useUrlImport(): {
         library.adoptSessionId(contentMatch.entryId, incoming.sessionId)
       }
       library.switchEntry(contentMatch.entryId)
-      toast.success(`Already in your library — switched to "${displayTitle(contentMatch.session)}"`)
+      toast.success(`Already in your library — switched to "${sessionDisplayTitle(contentMatch.session)}"`)
       history.replaceState(null, '', window.location.pathname + window.location.search)
       return
     }
@@ -145,7 +142,7 @@ export function useUrlImport(): {
     const library = useLibrary.getState()
     // Pre-truncate the base title so we never produce a candidate longer than
     // LIMITS.sessionTitle once the disambiguation suffix is appended.
-    const rawBase = displayTitle(current.incoming)
+    const rawBase = sessionDisplayTitle(current.incoming)
     let suffix = ' (imported)'
     const headroom = LIMITS.sessionTitle - suffix.length
     let base = rawBase.length > headroom ? rawBase.slice(0, headroom).trimEnd() : rawBase
