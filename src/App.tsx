@@ -12,6 +12,7 @@ import { OnboardingOverlay } from './components/onboarding/OnboardingOverlay'
 import { UpdatedImportDialog } from './components/UpdatedImportDialog'
 import { TitleStrip } from './components/TitleStrip'
 import { ManageLibrarySheet } from './components/library/ManageLibrarySheet'
+import { useLibrary } from './store/library'
 import { useUrlImport } from './hooks/useUrlImport'
 import { useOnboarding } from './hooks/useOnboarding'
 
@@ -39,7 +40,13 @@ export default function App() {
       </a>
       <Header
         onOpenSummary={() => setSummaryOpen(true)}
-        onOpenShare={() => setShareOpen(true)}
+        onOpenShare={() => {
+          // Mint sessionId before the dialog renders so the encoded URL is
+          // correct on the first frame (avoids a brief stale-URL flash).
+          const { activeId, ensureSessionId } = useLibrary.getState()
+          ensureSessionId(activeId)
+          setShareOpen(true)
+        }}
         onReplayTour={startTour}
         onOpenManage={() => setManageOpen(true)}
       />

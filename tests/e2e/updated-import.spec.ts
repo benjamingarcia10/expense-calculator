@@ -75,8 +75,8 @@ test.describe('Updated-import dialog', () => {
     const dropdown = page.getByRole('listbox')
     // The listbox holds the entry rows (buttons whose names contain titles)
     // plus the New/Manage footer actions.
-    const rows = await dropdown.getByRole('button').count()
-    // 3 entries (initial blank after wipe + Alice import + Keep-both copy) + 2 footer actions
-    expect(rows).toBe(5)
+    const rows = await dropdown.getByRole('option').count()
+    // 3 entries (initial blank after wipe + Alice import + Keep-both copy).
+    expect(rows).toBe(3)
   })
 })

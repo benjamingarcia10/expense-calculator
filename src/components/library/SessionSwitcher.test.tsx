@@ -35,7 +35,8 @@ describe('SessionSwitcher', () => {
     useLibrary.getState().setTitle('Second')
     render(<SessionSwitcher onOpenManage={() => {}} />)
     await user.click(screen.getByRole('button', { name: /Second/ }))
-    await user.click(screen.getByRole('button', { name: /First/ }))
+    // Rows inside the listbox have role="option" (not button).
+    await user.click(screen.getByRole('option', { name: /First/ }))
     expect(useLibrary.getState().activeId).toBe(firstId)
   })
 
@@ -56,5 +57,17 @@ describe('SessionSwitcher', () => {
     await user.click(screen.getByRole('button'))
     await user.click(screen.getByRole('button', { name: /Manage library/ }))
     expect(onOpenManage).toHaveBeenCalled()
+  })
+
+  it('renders options with proper ARIA semantics', async () => {
+    const user = userEvent.setup()
+    useLibrary.getState().setTitle('First')
+    render(<SessionSwitcher onOpenManage={() => {}} />)
+    await user.click(screen.getByRole('button', { name: /First/ }))
+    const listbox = screen.getByRole('listbox')
+    expect(listbox).toBeInTheDocument()
+    const options = screen.getAllByRole('option')
+    expect(options.length).toBe(1)
+    expect(options[0]).toHaveAttribute('aria-selected', 'true')
   })
 })

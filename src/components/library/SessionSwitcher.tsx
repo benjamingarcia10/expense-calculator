@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ChevronDown, Plus, Settings } from 'lucide-react'
 import { useLibrary } from '../../store/library'
 import { LibraryEntryRow } from './LibraryEntryRow'
@@ -11,30 +11,66 @@ export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) 
   const switchEntry = useLibrary((s) => s.switchEntry)
   const createEntry = useLibrary((s) => s.createEntry)
   const [open, setOpen] = useState(false)
+  const [focusedIdx, setFocusedIdx] = useState(0)
   const rootRef = useRef<HTMLDivElement>(null)
+  const rowRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   const active = entries.find((e) => e.entryId === activeId)
   const sorted = [...entries].sort((a, b) => b.meta.lastEditedAt.localeCompare(a.meta.lastEditedAt))
+
+  function openDropdown() {
+    // Seed keyboard focus to the active row so arrow nav starts where the
+    // user expects. Handled in the click handler instead of an effect so the
+    // state write doesn't violate the set-state-in-effect lint rule.
+    const idx = sorted.findIndex((e) => e.entryId === activeId)
+    setFocusedIdx(idx === -1 ? 0 : idx)
+    setOpen(true)
+  }
+
+  // Move browser focus to the row matching focusedIdx so users get a visible
+  // focus ring and screen readers announce the selection.
+  useLayoutEffect(() => {
+    if (!open) return
+    rowRefs.current[focusedIdx]?.focus()
+  }, [open, focusedIdx])
 
   useEffect(() => {
     if (!open) return
     const onClick = (e: MouseEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
     }
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        return
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setFocusedIdx((i) => Math.min(i + 1, sorted.length - 1))
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setFocusedIdx((i) => Math.max(i - 1, 0))
+      } else if (e.key === 'Home') {
+        e.preventDefault()
+        setFocusedIdx(0)
+      } else if (e.key === 'End') {
+        e.preventDefault()
+        setFocusedIdx(sorted.length - 1)
+      }
+    }
     window.addEventListener('mousedown', onClick)
     window.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('mousedown', onClick)
       window.removeEventListener('keydown', onKey)
     }
-  }, [open])
+  }, [open, sorted.length])
 
   return (
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => (open ? setOpen(false) : openDropdown())}
         aria-haspopup="listbox"
         aria-expanded={open}
         className="flex items-center gap-1.5 border-b border-dashed border-[var(--color-border)] pb-0.5 text-base font-medium tracking-tight text-[var(--color-ink)] outline-none transition-colors hover:border-solid hover:border-[var(--color-muted)] focus:border-solid focus:border-[var(--color-accent)]"
@@ -45,13 +81,19 @@ export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) 
       {open && (
         <div
           role="listbox"
+          aria-label="Saved sessions"
           className="absolute top-full left-0 z-40 mt-2 min-w-72 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-xl"
         >
-          {sorted.map((e) => (
+          {sorted.map((e, i) => (
             <LibraryEntryRow
               key={e.entryId}
+              ref={(el) => {
+                rowRefs.current[i] = el
+              }}
               entry={e}
               active={e.entryId === activeId}
+              role="option"
+              tabIndex={focusedIdx === i ? 0 : -1}
               onSelect={() => {
                 switchEntry(e.entryId)
                 setOpen(false)
@@ -65,7 +107,7 @@ export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) 
               createEntry()
               setOpen(false)
             }}
-            className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-[var(--color-muted)] transition-colors hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-ink)]"
+            className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-[var(--color-muted)] transition-colors hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-ink)] focus-visible:bg-[var(--color-accent-soft)] focus-visible:text-[var(--color-ink)] focus-visible:outline-none"
           >
             <Plus className="size-3.5" aria-hidden="true" /> New session
           </button>
@@ -75,7 +117,7 @@ export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) 
               onOpenManage()
               setOpen(false)
             }}
-            className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-[var(--color-muted)] transition-colors hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-ink)]"
+            className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-[var(--color-muted)] transition-colors hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-ink)] focus-visible:bg-[var(--color-accent-soft)] focus-visible:text-[var(--color-ink)] focus-visible:outline-none"
           >
             <Settings className="size-3.5" aria-hidden="true" /> Manage library…
           </button>

@@ -33,10 +33,11 @@ test.describe('Sessions library', () => {
     await expect(page.getByText('Carol')).toBeVisible()
 
     // Switch back to entry 1 via dropdown — most-recent-first order means
-    // the current (Carol) is at the top, then Bob, then Alice
+    // the current (Carol) is at the top, then Bob, then Alice. Entry rows
+    // have role="option" inside the listbox; footer actions remain buttons.
     await switcher.click()
     const dropdown = page.getByRole('listbox')
-    await dropdown.getByRole('button').nth(2).click()
+    await dropdown.getByRole('option').nth(2).click()
     await expect(page.getByText('Alice')).toBeVisible()
 
     // Open manage library, delete the Bob entry
@@ -56,8 +57,7 @@ test.describe('Sessions library', () => {
     // Close the manage sheet (via close button or Escape) before opening switcher.
     await page.keyboard.press('Escape')
     await switcher.click()
-    const remaining = await page.getByRole('listbox').getByRole('button').count()
-    // Listbox includes the entry rows plus the two footer actions (New + Manage)
-    expect(remaining).toBe(2 + 2)
+    const remaining = await page.getByRole('listbox').getByRole('option').count()
+    expect(remaining).toBe(2)
   })
 })

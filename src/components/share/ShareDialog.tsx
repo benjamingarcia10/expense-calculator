@@ -1,7 +1,6 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { Dialog, Button, Input } from '../ui'
 import { useSession } from '../../store/session'
-import { useLibrary } from '../../store/library'
 import { buildShareUrl, encodeSession, URL_HARD_LENGTH, URL_WARN_LENGTH } from '../../lib/url-share'
 import type { Session } from '../../types'
 
@@ -27,13 +26,9 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
 
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
 
-  // Mint a sessionId on first share so re-imports can be detected as updates.
-  // ensureSessionId is idempotent — no-op if the active entry already has one.
-  useEffect(() => {
-    if (!open) return
-    const activeId = useLibrary.getState().activeId
-    useLibrary.getState().ensureSessionId(activeId)
-  }, [open])
+  // sessionId is minted by the parent (App.tsx) when the Share button is
+  // clicked, so by the time we render here it's already attached to the
+  // active session — no in-dialog effect needed and no first-frame stale URL.
 
   const { url, length } = useMemo(() => {
     const url = buildShareUrl(window.location.href, session)

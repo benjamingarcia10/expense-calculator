@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ComponentType } from 'react'
 import { Copy, Files, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -121,6 +121,22 @@ function ManageRow({
   const title = entry.session.title?.trim() || UNTITLED
   const isLarge = entrySize(entry) > ENTRY_WARN_BYTES
   const isShared = entry.session.sessionId !== null
+
+  // Close the overflow menu on outside click or Escape, matching the
+  // SessionSwitcher dropdown pattern.
+  useEffect(() => {
+    if (!menuOpen) return
+    const onClick = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false)
+    window.addEventListener('mousedown', onClick)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('mousedown', onClick)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [menuOpen])
 
   return (
     <li
