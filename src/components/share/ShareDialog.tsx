@@ -1,7 +1,8 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Dialog, Button, Input } from '../ui'
 import { useSession } from '../../store/session'
-import { buildShareUrl, encodeSession, URL_WARN_LENGTH } from '../../lib/url-share'
+import { useLibrary } from '../../store/library'
+import { buildShareUrl, encodeSession, URL_HARD_LENGTH, URL_WARN_LENGTH } from '../../lib/url-share'
 import type { Session } from '../../types'
 
 // QR code rendering ships ~30kB of unused weight on the initial bundle for any
@@ -25,11 +26,22 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
   const session: Session = { v, sessionId, currency, title, people, expenses, createdAt }
 
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
+
+  // Mint a sessionId on first share so re-imports can be detected as updates.
+  // ensureSessionId is idempotent — no-op if the active entry already has one.
+  useEffect(() => {
+    if (!open) return
+    const activeId = useLibrary.getState().activeId
+    useLibrary.getState().ensureSessionId(activeId)
+  }, [open])
+
   const { url, length } = useMemo(() => {
     const url = buildShareUrl(window.location.href, session)
     return { url, length: encodeSession(session).length }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [v, sessionId, currency, title, people, expenses, createdAt])
+
+  const tooLong = length > URL_HARD_LENGTH
 
   function copy() {
     navigator.clipboard
@@ -44,7 +56,7 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
       })
   }
 
-  const qrEligible = url.length <= QR_MAX_LENGTH
+  const qrEligible = !tooLong && url.length <= QR_MAX_LENGTH
 
   return (
     <Dialog open={open} onClose={onClose} title="Share session">
@@ -80,7 +92,12 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
             QR unavailable — link too long for a single code.
           </p>
         )}
-        {length > URL_WARN_LENGTH && (
+        {tooLong && (
+          <p className="text-xs text-red-600">
+            Session too large to share — split into multiple sessions, or use the JSON download from Summary.
+          </p>
+        )}
+        {!tooLong && length > URL_WARN_LENGTH && (
           <p className="text-xs text-amber-600">
             Long URL — may not render in some chat apps. Use the JSON download from Summary as a fallback.
           </p>
@@ -94,7 +111,9 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
-          <Button onClick={copy}>{copyState === 'copied' ? 'Copied!' : 'Copy link'}</Button>
+          <Button onClick={copy} disabled={tooLong}>
+            {copyState === 'copied' ? 'Copied!' : 'Copy link'}
+          </Button>
         </div>
       </div>
     </Dialog>

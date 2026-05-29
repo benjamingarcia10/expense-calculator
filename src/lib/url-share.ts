@@ -3,6 +3,7 @@ import { type Expense, type Session, SCHEMA_VERSION } from '../types'
 import { validateSession } from './validation'
 
 export const URL_WARN_LENGTH = 2000
+export const URL_HARD_LENGTH = 6000
 const HASH_PREFIX = '#d='
 
 /**

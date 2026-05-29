@@ -3,6 +3,7 @@ import {
   encodeSession,
   decodeShareHash,
   URL_WARN_LENGTH,
+  URL_HARD_LENGTH,
   buildShareUrl,
   contentFingerprint,
 } from './url-share'
@@ -60,6 +61,10 @@ describe('encodeSession / decodeShareHash', () => {
 
   it('exposes a length-warning threshold', () => {
     expect(URL_WARN_LENGTH).toBe(2000)
+  })
+
+  it('exposes a hard URL length cap', () => {
+    expect(URL_HARD_LENGTH).toBe(6000)
   })
 
   it('builds a share URL with hash appended', () => {
