@@ -14,7 +14,11 @@ const HASH_PREFIX = '#d='
  * array; the same trick is applied recursively for rooms inside a
  * lodging expense.
  *
- *   [v, currency, title, createdAt, peopleNames, expenses]
+ *   [v, sessionId, currency, title, createdAt, peopleNames, expenses]
+ *
+ * `sessionId` is null until the session has been shared or imported
+ * from a link that already carried one. See the spec at
+ * `docs/superpowers/specs/2026-05-28-sessions-library-design.md`.
  *
  * Each expense is a tuple keyed on a small type code (0–5):
  *
@@ -56,6 +60,7 @@ const CODE_LODGING_MODE = ['simple', 'tiered'] as const
 type EncodedExpense = unknown[]
 type EncodedSession = [
   v: number,
+  sessionId: string | null,
   currency: string,
   title: string | null,
   createdAt: string,
@@ -226,17 +231,17 @@ function sessionToTuple(s: Session): EncodedSession {
   s.people.forEach((p, i) => idIdx.set(p.id, i))
   const peopleNames = s.people.map((p) => p.name)
   const expenses = s.expenses.map((e) => encodeExpense(e, idIdx))
-  return [s.v, s.currency, s.title, s.createdAt, peopleNames, expenses]
+  return [s.v, s.sessionId, s.currency, s.title, s.createdAt, peopleNames, expenses]
 }
 
 function tupleToSession(tuple: EncodedSession): Session {
-  const [v, currency, title, createdAt, peopleNames, encExpenses] = tuple
+  const [v, sessionId, currency, title, createdAt, peopleNames, encExpenses] = tuple
   const people = peopleNames.map((name, i) => ({ id: `p${i}`, name }))
   const idxToId = people.map((p) => p.id)
   const expenses = encExpenses.map((arr, i) => decodeExpense(arr, i, idxToId))
   return {
     v: v as typeof SCHEMA_VERSION,
-    sessionId: null,
+    sessionId,
     currency,
     title,
     people,
@@ -278,4 +283,13 @@ export function decodeShareHash(hash: string): DecodeResult {
 export function buildShareUrl(base: string, session: Session): string {
   const trimmed = base.replace(/#.*$/, '')
   return `${trimmed}${HASH_PREFIX}${encodeSession(session)}`
+}
+
+/**
+ * Stable, canonical fingerprint of a session's content with sessionId
+ * stripped. Two sessions have identical content iff their fingerprints match.
+ * Reuses the existing positional encoder so we sidestep JSON key-order issues.
+ */
+export function contentFingerprint(session: Session): string {
+  return encodeSession({ ...session, sessionId: null })
 }
