@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { HelpCircle, MoreVertical, RotateCcw } from 'lucide-react'
+import { HelpCircle, MoreVertical, Trash2 } from 'lucide-react'
 import { useSession } from '../store/session'
 import { CURRENCIES, isCurrencyCode, type CurrencyCode } from '../lib/currencies'
 import { APP_FULL_TITLE, APP_NAME } from '../lib/branding'
@@ -89,11 +89,11 @@ export function Header({
           </button>
           <button
             onClick={() => setConfirming(true)}
-            aria-label="reset session"
-            title="Reset session"
+            aria-label="delete this session"
+            title="Delete this session"
             className="grid size-9 place-items-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)]"
           >
-            <RotateCcw className="size-4" />
+            <Trash2 className="size-4" />
           </button>
         </div>
 
@@ -160,16 +160,20 @@ export function Header({
                 onClick={withMenuClose(() => setConfirming(true))}
                 className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-red-600 transition-colors hover:bg-red-600/10"
               >
-                <RotateCcw className="size-4" aria-hidden="true" />
-                Reset session
+                <Trash2 className="size-4" aria-hidden="true" />
+                Delete this session
               </button>
             </div>
           )}
         </div>
       </div>
-      <Dialog open={confirming} onClose={() => setConfirming(false)} title="Reset session?">
+      <Dialog
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        title={title?.trim() ? `Delete "${title.trim()}"?` : 'Delete this session?'}
+      >
         <div className="flex flex-col gap-3">
-          <p className="text-sm">This clears all people and expenses. This cannot be undone.</p>
+          <p className="text-sm">This cannot be undone.</p>
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setConfirming(false)}>
               Cancel
@@ -181,7 +185,7 @@ export function Header({
                 setConfirming(false)
               }}
             >
-              Reset
+              Delete
             </Button>
           </div>
         </div>
