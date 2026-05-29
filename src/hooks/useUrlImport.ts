@@ -35,6 +35,13 @@ function subscribeToPending(callback: () => void): () => void {
   return () => _listeners.delete(callback)
 }
 
+/** Test-only helper. Resets the module-level pending state between tests so
+ *  one test's leftover dialog doesn't leak into the next. */
+export function __resetPendingForTests(): void {
+  _pending = null
+  _listeners.clear()
+}
+
 // ---------------------------------------------------------------------------
 // Hash subscription helpers
 // ---------------------------------------------------------------------------

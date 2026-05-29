@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { toast } from 'sonner'
-import { useUrlImport } from './useUrlImport'
+import { useUrlImport, __resetPendingForTests } from './useUrlImport'
 import { useLibrary } from '../store/library'
 import { encodeSession } from '../lib/url-share'
 import type { Session } from '../types'
@@ -28,6 +28,7 @@ describe('useUrlImport', () => {
     localStorage.clear()
     useLibrary.getState().wipeAndSeed()
     history.replaceState(null, '', window.location.pathname + window.location.search)
+    __resetPendingForTests()
   })
 
   it('fresh import creates a new entry and switches to it', () => {
