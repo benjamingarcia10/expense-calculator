@@ -1,24 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
-import { HelpCircle, MoreVertical, Pencil, RotateCcw } from 'lucide-react'
+import { HelpCircle, MoreVertical, RotateCcw } from 'lucide-react'
 import { useSession } from '../store/session'
 import { CURRENCIES, isCurrencyCode, type CurrencyCode } from '../lib/currencies'
 import { APP_FULL_TITLE, APP_NAME } from '../lib/branding'
 import { Button, CurrencyPicker, Dialog, Wordmark } from './ui'
-import { LIMITS } from '../lib/validation'
+import { SessionSwitcher } from './library/SessionSwitcher'
 
 export function Header({
   onOpenSummary,
   onOpenShare,
   onReplayTour,
+  onOpenManage,
 }: {
   onOpenSummary: () => void
   onOpenShare: () => void
   onReplayTour: () => void
+  onOpenManage: () => void
 }) {
   const currency = useSession((s) => s.currency)
   const setCurrency = useSession((s) => s.setCurrency)
   const title = useSession((s) => s.title)
-  const setTitle = useSession((s) => s.setTitle)
   const reset = useSession((s) => s.reset)
   const [confirming, setConfirming] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -64,27 +65,7 @@ export function Header({
             <span aria-hidden="true" className="text-[var(--color-rule)]">
               ⁄
             </span>
-            {/* max-w-md caps the dashed underline at a designed length so it
-              doesn't stretch across hundreds of empty pixels on wide viewports.
-              The wrapper still flex-1 so a long title fills up to the cap. */}
-            <div className="group relative min-w-0 max-w-md flex-1">
-              <input
-                aria-label="session title"
-                placeholder="Untitled split"
-                value={title ?? ''}
-                onChange={(e) => setTitle(e.target.value)}
-                maxLength={LIMITS.sessionTitle}
-                // Dashed underline by default signals "this is editable" without
-                // shouting; solidifies + colors on hover/focus. The trailing
-                // pencil reinforces the affordance for users who haven't yet
-                // learned the dashed-underline convention.
-                className="w-full min-w-0 border-b border-dashed border-[var(--color-border)] bg-transparent pr-6 pb-0.5 text-base font-medium tracking-tight text-[var(--color-ink)] outline-none transition-colors placeholder:text-[var(--color-muted)] hover:border-solid hover:border-[var(--color-muted)] focus:border-solid focus:border-[var(--color-accent)]"
-              />
-              <Pencil
-                aria-hidden="true"
-                className="pointer-events-none absolute top-1/2 right-1 size-3.5 -translate-y-1/2 text-[var(--color-muted)] opacity-60 transition-opacity group-focus-within:opacity-0"
-              />
-            </div>
+            <SessionSwitcher onOpenManage={onOpenManage} />
           </div>
         </div>
 

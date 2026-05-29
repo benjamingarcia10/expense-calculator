@@ -39,6 +39,7 @@ export default function App() {
         onOpenSummary={() => setSummaryOpen(true)}
         onOpenShare={() => setShareOpen(true)}
         onReplayTour={startTour}
+        onOpenManage={() => {}}
       />
       <main
         id="main"
