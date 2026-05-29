@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, Check, Handshake, Receipt as ReceiptIcon, Sparkles, Users } from 'lucide-react'
 import { useSession } from '../../store/session'
+import { useLibrary } from '../../store/library'
 import { APP_NAME } from '../../lib/branding'
 import { Button } from '../ui'
 import { SessionSummaryCard } from '../SessionSummaryCard'
@@ -269,7 +270,7 @@ function TourCard({ onDismiss }: { onDismiss: () => void }) {
 // ── Welcome-back card ──────────────────────────────────────────────────────
 
 function WelcomeBackCard({ onDismiss, onStartTour }: { onDismiss: () => void; onStartTour: () => void }) {
-  const reset = useSession((s) => s.reset)
+  const createEntry = useLibrary((s) => s.createEntry)
   const title = useSession((s) => s.title)
   const people = useSession((s) => s.people)
   const expenses = useSession((s) => s.expenses)
@@ -284,7 +285,9 @@ function WelcomeBackCard({ onDismiss, onStartTour }: { onDismiss: () => void; on
   }, [])
 
   function startFresh() {
-    reset()
+    // Preserve the existing session in the library — start on a new blank entry
+    // instead of wiping. The user can return to the old data via the switcher.
+    createEntry()
     onDismiss()
   }
 
