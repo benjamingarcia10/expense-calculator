@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ChevronDown, Plus, Settings } from 'lucide-react'
+import { ChevronDown, Pencil, Plus, Settings } from 'lucide-react'
 import { useLibrary } from '../../store/library'
 import { entryDisplayTitle, entryHasGivenTitle } from '../../lib/entry-display'
+import { LIMITS } from '../../lib/validation'
 import { LibraryEntryRow } from './LibraryEntryRow'
 
 export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) {
@@ -9,7 +10,9 @@ export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) 
   const activeId = useLibrary((s) => s.activeId)
   const switchEntry = useLibrary((s) => s.switchEntry)
   const createEntry = useLibrary((s) => s.createEntry)
+  const renameEntry = useLibrary((s) => s.renameEntry)
   const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [focusedIdx, setFocusedIdx] = useState(0)
   const rootRef = useRef<HTMLDivElement>(null)
   const rowRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -24,6 +27,11 @@ export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) 
     const idx = sorted.findIndex((e) => e.entryId === activeId)
     setFocusedIdx(idx === -1 ? 0 : idx)
     setOpen(true)
+  }
+
+  function beginEditing() {
+    setOpen(false)
+    setEditing(true)
   }
 
   // Move browser focus to the row matching focusedIdx so users get a visible
@@ -65,23 +73,48 @@ export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) 
     }
   }, [open, sorted.length])
 
+  if (editing && active) {
+    return (
+      <InlineRename
+        initial={entryHasGivenTitle(active) ? (active.session.title ?? '') : ''}
+        placeholder={entryDisplayTitle(active)}
+        onSubmit={(t) => {
+          renameEntry(active.entryId, t)
+          setEditing(false)
+        }}
+        onCancel={() => setEditing(false)}
+      />
+    )
+  }
+
   const triggerLabel = active ? entryDisplayTitle(active) : 'Untitled split'
   const triggerIsPlaceholder = !active || !entryHasGivenTitle(active)
 
   return (
     <div ref={rootRef} className="relative">
-      <button
-        type="button"
-        onClick={() => (open ? setOpen(false) : openDropdown())}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        className={`flex max-w-xs items-center gap-1.5 border-b border-dashed border-[var(--color-border)] pb-0.5 text-base font-medium tracking-tight outline-none transition-colors hover:border-solid hover:border-[var(--color-muted)] focus:border-solid focus:border-[var(--color-accent)] ${
-          triggerIsPlaceholder ? 'text-[var(--color-muted)] italic' : 'text-[var(--color-ink)]'
-        }`}
-      >
-        <span className="truncate">{triggerLabel}</span>
-        <ChevronDown className="size-3.5 shrink-0 text-[var(--color-muted)]" aria-hidden="true" />
-      </button>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => (open ? setOpen(false) : openDropdown())}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          className={`flex max-w-xs items-center gap-1.5 border-b border-dashed border-[var(--color-border)] pb-1 text-base leading-tight font-medium tracking-tight outline-none transition-colors hover:border-solid hover:border-[var(--color-muted)] focus:border-solid focus:border-[var(--color-accent)] ${
+            triggerIsPlaceholder ? 'text-[var(--color-muted)] italic' : 'text-[var(--color-ink)]'
+          }`}
+        >
+          <span className="truncate">{triggerLabel}</span>
+          <ChevronDown className="size-3.5 shrink-0 text-[var(--color-muted)]" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={beginEditing}
+          aria-label="rename session"
+          title="Rename session"
+          className="grid size-7 shrink-0 place-items-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)] focus-visible:bg-[var(--color-border)]/40 focus-visible:text-[var(--color-ink)] focus-visible:outline-none"
+        >
+          <Pencil className="size-3.5" aria-hidden="true" />
+        </button>
+      </div>
       {open && (
         <div
           role="listbox"
@@ -128,5 +161,40 @@ export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) 
         </div>
       )}
     </div>
+  )
+}
+
+function InlineRename({
+  initial,
+  placeholder,
+  onSubmit,
+  onCancel,
+}: {
+  initial: string
+  placeholder: string
+  onSubmit: (t: string) => void
+  onCancel: () => void
+}) {
+  const [value, setValue] = useState(initial)
+  return (
+    <input
+      autoFocus
+      aria-label="session title"
+      placeholder={placeholder}
+      value={value}
+      maxLength={LIMITS.sessionTitle}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={() => onSubmit(value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          onSubmit(value)
+        } else if (e.key === 'Escape') {
+          e.preventDefault()
+          onCancel()
+        }
+      }}
+      className="w-56 max-w-xs border-b border-dashed border-[var(--color-accent)] bg-transparent pb-0.5 text-base font-medium tracking-tight text-[var(--color-ink)] outline-none placeholder:text-[var(--color-muted)]"
+    />
   )
 }

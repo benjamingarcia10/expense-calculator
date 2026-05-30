@@ -43,8 +43,7 @@ describe('SessionSwitcher', () => {
   it('"New session" creates a fresh entry and switches to it', async () => {
     const user = userEvent.setup()
     render(<SessionSwitcher onOpenManage={() => {}} />)
-    const trigger = screen.getByRole('button')
-    await user.click(trigger)
+    await user.click(screen.getByRole('button', { name: /Untitled split/i }))
     const before = useLibrary.getState().entries.length
     await user.click(screen.getByRole('button', { name: /New session/ }))
     expect(useLibrary.getState().entries.length).toBe(before + 1)
@@ -54,9 +53,21 @@ describe('SessionSwitcher', () => {
     const onOpenManage = vi.fn()
     const user = userEvent.setup()
     render(<SessionSwitcher onOpenManage={onOpenManage} />)
-    await user.click(screen.getByRole('button'))
+    await user.click(screen.getByRole('button', { name: /Untitled split/i }))
     await user.click(screen.getByRole('button', { name: /Manage library/ }))
     expect(onOpenManage).toHaveBeenCalled()
+  })
+
+  it('pencil button opens an inline rename for the active entry', async () => {
+    const user = userEvent.setup()
+    useLibrary.getState().setTitle('Old name')
+    render(<SessionSwitcher onOpenManage={() => {}} />)
+    await user.click(screen.getByRole('button', { name: /rename session/i }))
+    const input = await screen.findByDisplayValue('Old name')
+    await user.clear(input)
+    await user.type(input, 'Berlin May{enter}')
+    const active = useLibrary.getState().entries.find((e) => e.entryId === useLibrary.getState().activeId)!
+    expect(active.session.title).toBe('Berlin May')
   })
 
   it('renders options with proper ARIA semantics', async () => {
