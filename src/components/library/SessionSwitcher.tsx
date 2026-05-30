@@ -98,7 +98,7 @@ export function SessionSwitcher({ onOpenManage }: { onOpenManage: () => void }) 
           onClick={() => (open ? setOpen(false) : openDropdown())}
           aria-haspopup="listbox"
           aria-expanded={open}
-          className={`flex max-w-xs items-center gap-1.5 border-b border-dashed border-[var(--color-border)] pb-1 text-base leading-tight font-medium tracking-tight outline-none transition-colors hover:border-solid hover:border-[var(--color-muted)] focus:border-solid focus:border-[var(--color-accent)] ${
+          className={`flex max-w-xs items-center gap-1.5 border-b border-dashed border-[var(--color-border)] pb-2 text-base leading-normal font-medium tracking-tight outline-none transition-colors hover:border-solid hover:border-[var(--color-muted)] focus:border-solid focus:border-[var(--color-accent)] ${
             triggerIsPlaceholder ? 'text-[var(--color-muted)] italic' : 'text-[var(--color-ink)]'
           }`}
         >
