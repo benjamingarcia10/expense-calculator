@@ -1,9 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { encodeSession, decodeShareHash, URL_WARN_LENGTH, buildShareUrl } from './url-share'
+import {
+  encodeSession,
+  decodeShareHash,
+  URL_WARN_LENGTH,
+  URL_HARD_LENGTH,
+  buildShareUrl,
+  contentFingerprint,
+} from './url-share'
 import { SCHEMA_VERSION, type Session } from '../types'
 
 const fixture: Session = {
   v: SCHEMA_VERSION,
+  sessionId: null,
   currency: 'USD',
   title: 'Tahoe',
   people: [{ id: 'p0', name: 'Alice' }],
@@ -55,6 +63,10 @@ describe('encodeSession / decodeShareHash', () => {
     expect(URL_WARN_LENGTH).toBe(2000)
   })
 
+  it('exposes a hard URL length cap', () => {
+    expect(URL_HARD_LENGTH).toBe(6000)
+  })
+
   it('builds a share URL with hash appended', () => {
     const base = 'https://example.com/app'
     const url = buildShareUrl(base, fixture)
@@ -97,6 +109,7 @@ describe('encodeSession / decodeShareHash', () => {
   it('round-trips every expense type together', () => {
     const complex: Session = {
       v: SCHEMA_VERSION,
+      sessionId: null,
       currency: 'EUR',
       title: 'Europe Roadtrip',
       people: [
@@ -186,6 +199,7 @@ describe('encodeSession / decodeShareHash', () => {
   it('handles empty people and expenses', () => {
     const empty: Session = {
       v: SCHEMA_VERSION,
+      sessionId: null,
       currency: 'USD',
       title: null,
       people: [],
@@ -202,5 +216,40 @@ describe('encodeSession / decodeShareHash', () => {
     const result = decodeShareHash('#d=invalidbase64url')
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.reason).toBe('malformed')
+  })
+})
+
+describe('sessionId in wire format', () => {
+  it('round-trips a non-null sessionId', () => {
+    const s: Session = { ...fixture, sessionId: '11111111-2222-4333-8444-555555555555' }
+    const encoded = encodeSession(s)
+    const result = decodeShareHash(`#d=${encoded}`)
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.session.sessionId).toBe('11111111-2222-4333-8444-555555555555')
+  })
+
+  it('round-trips a null sessionId', () => {
+    const encoded = encodeSession(fixture) // fixture has sessionId: null
+    const result = decodeShareHash(`#d=${encoded}`)
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.session.sessionId).toBeNull()
+  })
+})
+
+describe('contentFingerprint', () => {
+  it('returns the same value for sessions that differ only in sessionId', () => {
+    const a: Session = { ...fixture, sessionId: null }
+    const b: Session = { ...fixture, sessionId: '11111111-2222-4333-8444-555555555555' }
+    expect(contentFingerprint(a)).toBe(contentFingerprint(b))
+  })
+
+  it('returns different values for sessions that differ in content', () => {
+    const a = fixture
+    const b: Session = { ...fixture, title: 'Different title' }
+    expect(contentFingerprint(a)).not.toBe(contentFingerprint(b))
+  })
+
+  it('is stable across multiple calls', () => {
+    expect(contentFingerprint(fixture)).toBe(contentFingerprint(fixture))
   })
 })

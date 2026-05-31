@@ -9,8 +9,10 @@ import { SettleUpPanel } from './components/SettleUpPanel'
 import { SummaryView } from './components/summary/SummaryView'
 import { ShareDialog } from './components/share/ShareDialog'
 import { OnboardingOverlay } from './components/onboarding/OnboardingOverlay'
-import { ImportDialog } from './components/ImportDialog'
+import { UpdatedImportDialog } from './components/UpdatedImportDialog'
 import { TitleStrip } from './components/TitleStrip'
+import { ManageLibrarySheet } from './components/library/ManageLibrarySheet'
+import { useLibrary } from './store/library'
 import { useUrlImport } from './hooks/useUrlImport'
 import { useOnboarding } from './hooks/useOnboarding'
 
@@ -22,7 +24,8 @@ const PANEL_ENTRANCE = {
 export default function App() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
-  const { pending, accept, reject } = useUrlImport()
+  const [manageOpen, setManageOpen] = useState(false)
+  const { pending, acceptReplace, acceptKeepBoth, reject } = useUrlImport()
   const { view: onboardingView, dismiss: dismissOnboarding, startTour } = useOnboarding()
 
   return (
@@ -37,14 +40,21 @@ export default function App() {
       </a>
       <Header
         onOpenSummary={() => setSummaryOpen(true)}
-        onOpenShare={() => setShareOpen(true)}
+        onOpenShare={() => {
+          // Mint sessionId before the dialog renders so the encoded URL is
+          // correct on the first frame (avoids a brief stale-URL flash).
+          const { activeId, ensureSessionId } = useLibrary.getState()
+          ensureSessionId(activeId)
+          setShareOpen(true)
+        }}
         onReplayTour={startTour}
+        onOpenManage={() => setManageOpen(true)}
       />
       <main
         id="main"
         className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10 [padding-bottom:max(env(safe-area-inset-bottom),2rem)] [scroll-margin-top:5rem]"
       >
-        <TitleStrip />
+        <TitleStrip onOpenManage={() => setManageOpen(true)} />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
           {/* Mobile (stacked) reorders to match the natural workflow:
             People → Expenses → Balances → Settle Up. Desktop stays as the
@@ -78,6 +88,7 @@ export default function App() {
       </main>
       <SummaryView open={summaryOpen} onClose={() => setSummaryOpen(false)} />
       <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} />
+      <ManageLibrarySheet open={manageOpen} onClose={() => setManageOpen(false)} />
       <OnboardingOverlay view={onboardingView} onDismiss={dismissOnboarding} onStartTour={startTour} />
       <Toaster
         position="bottom-center"
@@ -96,7 +107,12 @@ export default function App() {
           },
         }}
       />
-      <ImportDialog pending={pending} onAccept={accept} onReject={reject} />
+      <UpdatedImportDialog
+        pending={pending}
+        onReplace={acceptReplace}
+        onKeepBoth={acceptKeepBoth}
+        onReject={reject}
+      />
     </div>
   )
 }

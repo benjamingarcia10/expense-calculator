@@ -31,6 +31,7 @@ describe('sanitizeTitle', () => {
 describe('validateSession', () => {
   const valid = {
     v: 1,
+    sessionId: null,
     currency: 'USD',
     title: null,
     people: [{ id: 'p1', name: 'Alice' }],

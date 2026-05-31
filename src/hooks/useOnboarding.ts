@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { useSession } from '../store/session'
+import { useLibrary } from '../store/library'
 import { hasSeenOnboarding, markOnboardingSeen } from '../lib/onboarding'
 
 export type OnboardingView = 'tour' | 'welcome-back' | null
@@ -11,10 +11,12 @@ function initialView(): OnboardingView {
     return null
   }
   if (hasSeenOnboarding()) return null
-  const { people, expenses } = useSession.getState()
-  // Has real work but never completed onboarding — e.g. data arrived through an
-  // earlier share import. Greet them rather than dropping a tour over live data.
-  if (people.length > 0 || expenses.length > 0) return 'welcome-back'
+  // "Has data" is library-wide so an empty active entry next to a populated
+  // sibling still routes to welcome-back, not the first-run tour.
+  const hasAny = useLibrary
+    .getState()
+    .entries.some((e) => e.session.people.length > 0 || e.session.expenses.length > 0)
+  if (hasAny) return 'welcome-back'
   return 'tour'
 }
 
