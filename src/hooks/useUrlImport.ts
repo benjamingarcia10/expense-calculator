@@ -156,7 +156,11 @@ export function useUrlImport(): {
       counter++
       if (counter > 999) break // pathological cap — prefer a duplicate-title entry to an infinite loop
     }
-    const newId = library.createEntryFromImport({ ...current.incoming, title: candidate })
+    // Clear sessionId — Keep both is an explicit fork of lineage. Leaving the
+    // incoming sessionId on the new entry would mean two entries share a
+    // sessionId, breaking dedup/update detection from that point on. The user
+    // can mint a fresh sessionId by sharing the new entry.
+    const newId = library.createEntryFromImport({ ...current.incoming, title: candidate, sessionId: null })
     const committed = useLibrary.getState().entries.some((e) => e.entryId === newId)
     if (committed) {
       history.replaceState(null, '', window.location.pathname + window.location.search)

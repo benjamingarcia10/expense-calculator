@@ -105,4 +105,17 @@ describe('useUrlImport', () => {
     act(() => result.current.acceptKeepBoth())
     expect(useLibrary.getState().entries.length).toBe(before + 1)
   })
+
+  it('updated import — Keep-both forks the sessionId so two entries do not share lineage', () => {
+    const sid = '11111111-2222-4333-8444-555555555555'
+    useLibrary.getState().createEntryFromImport(buildSession({ sessionId: sid, title: 'Original' }))
+    setHash(buildSession({ sessionId: sid, title: 'Original — revised' }))
+    const { result } = renderHook(() => useUrlImport())
+    act(() => result.current.acceptKeepBoth())
+    const withSid = useLibrary.getState().entries.filter((e) => e.session.sessionId === sid)
+    expect(withSid).toHaveLength(1)
+    // The newly imported entry should have its own (null) sessionId until shared.
+    const imported = useLibrary.getState().entries.find((e) => e.session.title?.includes('(imported)'))
+    expect(imported?.session.sessionId).toBeNull()
+  })
 })
