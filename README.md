@@ -21,11 +21,23 @@ A standalone, static, single-page app for splitting bills with friends. No backe
 - Three export paths: copy as text, download PNG (via `html-to-image`), download JSON
 - Cosmetic "receipt number" derived from `createdAt + total`
 
+**Sessions library**
+
+- Multiple saved sessions side-by-side — switch between trips/events from the title-area dropdown
+- Each entry shows its own people + expenses; no cross-contamination
+- Library sheet (Manage library…) for rename, delete, duplicate, copy share link, with a usage indicator
+- Friendly fallback titles for un-named entries: `Alice's split` / `Alice & Bob` / `Alice, Bob +2`
+- Falls back to an in-memory store if `localStorage` is unavailable (e.g. Safari private mode), so the app keeps working without crashing
+
 **Share by URL**
 
 - Entire session encodes into the URL hash fragment — never sent to a server
 - Positional-tuple format → `pako.deflate` → `base64url`; ~44% smaller than naive JSON-gzip on a realistic 4-person/10-expense trip
-- Length is surfaced to the user; warning past 2000 chars
+- Length is surfaced to the user; amber warning past 2000 chars, hard cap at 6000 chars
+- **Smart re-imports** via a per-entry `sessionId` lineage marker:
+  - Click the same link twice → silent switch back to the matching entry (no dialog)
+  - Get an updated version of the same shared receipt → "Updated version of …" dialog with **Replace** or **Keep both**
+  - Brand-new content → creates a new entry, leaves your active one untouched
 
 **Polish**
 
@@ -51,7 +63,7 @@ npm run build        # production build (writes dist/ + 404.html SPA shim)
 npm run preview      # preview the production build
 npm run test         # vitest unit + component tests
 npm run test:e2e     # playwright end-to-end
-npm run typecheck    # tsc --noEmit
+npm run typecheck    # tsc -b --noEmit (recurses into referenced projects)
 npm run lint         # eslint --max-warnings 0
 npm run format       # prettier --write .
 npm run format:check # prettier --check .
@@ -59,19 +71,19 @@ npm run format:check # prettier --check .
 
 ## Architecture
 
-| Concern      | Choice                                                                                  |
-| ------------ | --------------------------------------------------------------------------------------- |
-| Framework    | Vite + React 19 + TypeScript                                                            |
-| Styling      | Tailwind v4 (CSS-first `@theme` tokens, no `tailwind.config.js`)                        |
-| State        | Zustand with localStorage persistence                                                   |
-| Routing      | None — single page; deep links resolved client-side via the URL hash fragment           |
-| Sharing      | `pako` gzip + `base64url`, encoded over a positional tuple (see `src/lib/url-share.ts`) |
-| Animation    | `framer-motion`                                                                         |
-| Image export | `html-to-image`                                                                         |
-| Tests        | Vitest (`happy-dom` + `@testing-library/react`) for unit/component, Playwright for E2E  |
-| Validation   | Zod schema (`src/lib/validation.ts`) — validates incoming share-URL data                |
-| Icons        | `lucide-react`                                                                          |
-| Typography   | Fraunces (italic display serif), Inter (body), JetBrains Mono (numerics/tags)           |
+| Concern      | Choice                                                                                                                     |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Framework    | Vite + React 19 + TypeScript                                                                                               |
+| Styling      | Tailwind v4 (CSS-first `@theme` tokens, no `tailwind.config.js`)                                                           |
+| State        | Zustand (`useLibrary` source of truth, `useSession` thin compat wrapper); localStorage persistence with in-memory fallback |
+| Routing      | None — single page; deep links resolved client-side via the URL hash fragment                                              |
+| Sharing      | `pako` gzip + `base64url`, encoded over a positional tuple (see `src/lib/url-share.ts`)                                    |
+| Animation    | `framer-motion`                                                                                                            |
+| Image export | `html-to-image`                                                                                                            |
+| Tests        | Vitest (`happy-dom` + `@testing-library/react`) for unit/component, Playwright for E2E                                     |
+| Validation   | Zod schema (`src/lib/validation.ts`) — validates incoming share-URL data                                                   |
+| Icons        | `lucide-react`                                                                                                             |
+| Typography   | Fraunces (italic display serif), Inter (body), JetBrains Mono (numerics/tags)                                              |
 
 ## Deployment
 
