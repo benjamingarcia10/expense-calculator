@@ -5,9 +5,9 @@ import { useSession } from '../../store/session'
 import { computeBalances } from '../../lib/compute-balances'
 import { simplifyDebts } from '../../lib/simplify-debts'
 import { formatMoney, formatDate } from '../../lib/format'
-import { buildSummaryText, downloadJson, downloadImage, EXPENSE_TYPE_LABELS } from './exports'
+import { canCopyImage, copyImage, downloadImage, EXPENSE_TYPE_LABELS, safeFilenameBase } from './exports'
 import { APP_NAME } from '../../lib/branding'
-import { expenseTotal, type Session } from '../../types'
+import { expenseTotal } from '../../types'
 import type { CurrencyCode } from '../../lib/currencies'
 
 const SANS = "'Inter', system-ui, sans-serif"
@@ -27,29 +27,27 @@ function makeSerial(createdAt: string, total: number): string {
 }
 
 export function SummaryView({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const v = useSession((s) => s.v)
-  const sessionId = useSession((s) => s.sessionId)
   const currency = useSession((s) => s.currency)
   const title = useSession((s) => s.title)
   const people = useSession((s) => s.people)
   const expenses = useSession((s) => s.expenses)
   const createdAt = useSession((s) => s.createdAt)
-  const session: Session = { v, sessionId, currency, title, people, expenses, createdAt }
 
   const cardRef = useRef<HTMLDivElement>(null)
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
+  const [feedback, setFeedback] = useState<'idle' | 'copied' | 'saved' | 'error'>('idle')
   // `html-to-image` lazy-loads (~50kB) and rasterizes the receipt — both steps
   // typically take longer than the 300ms perceived-snappiness threshold, so the
-  // button shows a "Saving…" state and disables to prevent double-clicks.
-  const [exporting, setExporting] = useState(false)
+  // button shows a working state and disables to prevent double-clicks.
+  const [busy, setBusy] = useState<null | 'save' | 'copy'>(null)
+  const supportsCopyImage = canCopyImage()
   const debts = useMemo(() => simplifyDebts(computeBalances(people, expenses)), [people, expenses])
   const totalSpent = expenses.reduce((s, e) => s + expenseTotal(e), 0)
   const c = currency as CurrencyCode
-  const displayTitle = title?.trim() || `Split ${APP_NAME}`
+  const displayTitle = title?.trim() || 'Untitled split'
   const serial = makeSerial(createdAt, totalSpent)
 
   return (
-    <Dialog open={open} onClose={onClose} title="Summary" size="lg">
+    <Dialog open={open} onClose={onClose} title="Receipt" size="lg">
       <div className="flex flex-col gap-3">
         <motion.div
           initial={{ opacity: 0, y: 16, scale: 0.97 }}
@@ -231,58 +229,65 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
           </div>
         </motion.div>
 
-        {copyState !== 'idle' && (
+        {feedback !== 'idle' && (
           <p
-            className={`text-xs ${copyState === 'copied' ? 'text-emerald-600' : 'text-red-500'}`}
+            className={`text-xs ${feedback === 'error' ? 'text-red-500' : 'text-emerald-600'}`}
             role="status"
+            aria-live="polite"
           >
-            {copyState === 'copied' ? 'Copied to clipboard' : 'Couldn’t copy — select and copy manually'}
+            {feedback === 'copied'
+              ? 'Image copied — paste it anywhere'
+              : feedback === 'saved'
+                ? 'Saved'
+                : 'Couldn’t do that — try the other option'}
           </p>
         )}
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(buildSummaryText(session))
-                setCopyState('copied')
-              } catch {
-                setCopyState('error')
-              }
-              setTimeout(() => setCopyState('idle'), 2000)
-            }}
-          >
-            Copy as Text
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Done
           </Button>
+          {supportsCopyImage && (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={busy !== null}
+              onClick={async () => {
+                const node = cardRef.current
+                if (!node) return
+                setBusy('copy')
+                try {
+                  await copyImage(node)
+                  setFeedback('copied')
+                } catch {
+                  setFeedback('error')
+                } finally {
+                  setBusy(null)
+                  setTimeout(() => setFeedback('idle'), 2500)
+                }
+              }}
+            >
+              {busy === 'copy' ? 'Copying…' : 'Copy image'}
+            </Button>
+          )}
           <Button
             size="sm"
-            variant="ghost"
-            disabled={exporting}
+            disabled={busy !== null}
             onClick={async () => {
               const node = cardRef.current
               if (!node) return
-              setExporting(true)
+              setBusy('save')
               try {
-                await downloadImage(
-                  node,
-                  `${(title ?? 'expense-summary').replace(/[^a-z0-9-]+/gi, '-').toLowerCase()}.png`
-                )
+                await downloadImage(node, `${safeFilenameBase(title)}.png`)
+                setFeedback('saved')
               } catch {
-                setCopyState('error')
-                setTimeout(() => setCopyState('idle'), 2500)
+                setFeedback('error')
               } finally {
-                setExporting(false)
+                setBusy(null)
+                setTimeout(() => setFeedback('idle'), 2500)
               }
             }}
           >
-            {exporting ? 'Saving…' : 'Download Image'}
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => downloadJson(session)}>
-            Download JSON
-          </Button>
-          <Button size="sm" onClick={onClose}>
-            Close
+            {busy === 'save' ? 'Saving…' : 'Save image'}
           </Button>
         </div>
       </div>
