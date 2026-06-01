@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
+import { X } from 'lucide-react'
 import { type ReactNode, useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -62,9 +63,26 @@ export function Dialog({
               }}
               className={`pointer-events-auto ${widthClass} rounded-2xl bg-[var(--color-surface)] p-6 shadow-2xl`}
             >
-              <h2 id={titleId} className="mb-3 text-lg font-semibold">
-                {title}
-              </h2>
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <h2 id={titleId} className="text-lg font-semibold">
+                  {title}
+                </h2>
+                {/* Universal dismiss control. 44pt mobile touch target via
+                  size-11; -m-2 pulls the visual back so the title row doesn't
+                  feel oversized while the actual clickable box stays large.
+                  Confirmation dialogs still keep their explicit Cancel/Keep
+                  editing buttons because those are semantically paired with
+                  the destructive CTA — the X is a supplementary escape route,
+                  not a replacement. */}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close"
+                  className="-m-2 grid size-11 shrink-0 place-items-center rounded-md text-[var(--color-muted)] transition-colors hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)] focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none"
+                >
+                  <X className="size-4" aria-hidden="true" />
+                </button>
+              </div>
               {children}
             </motion.div>
           </div>

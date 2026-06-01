@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Dialog, Button } from '../ui'
 import { useSession } from '../../store/session'
@@ -39,6 +39,20 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
   // typically take longer than the 300ms perceived-snappiness threshold, so the
   // button shows a working state and disables to prevent double-clicks.
   const [busy, setBusy] = useState<null | 'save' | 'copy'>(null)
+  // Hold the feedback-reset timer so back-to-back actions cancel the previous
+  // timer instead of leaving it to fire later and clobber the new feedback
+  // state (e.g. Copy → Save within 2.5s would otherwise reset "Saved!" early).
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(
+    () => () => {
+      if (feedbackTimer.current) clearTimeout(feedbackTimer.current)
+    },
+    []
+  )
+  const scheduleReset = (ms = 2500) => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current)
+    feedbackTimer.current = setTimeout(() => setFeedback('idle'), ms)
+  }
   const supportsCopyImage = canCopyImage()
   const debts = useMemo(() => simplifyDebts(computeBalances(people, expenses)), [people, expenses])
   const totalSpent = expenses.reduce((s, e) => s + expenseTotal(e), 0)
@@ -50,13 +64,21 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
     <Dialog open={open} onClose={onClose} title="Receipt" size="lg">
       <div className="flex flex-col gap-3">
         <motion.div
+          className="flex justify-center"
           initial={{ opacity: 0, y: 16, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.42, ease: [0.22, 0.61, 0.36, 1] }}
         >
+          {/* Centering lives on the parent (`flex justify-center`) — NOT on
+            cardRef via `mx-auto`. html-to-image inlines the cardRef's
+            computed styles when it clones; an `mx-auto` element with a
+            wide parent resolves to a concrete `margin-left: <Npx>`. That
+            inlined margin survives the clone and shifts the card sideways
+            inside the SVG-bounded export, producing the empty-left /
+            no-right asymmetry. */}
           <div
             ref={cardRef}
-            className="receipt-card mx-auto"
+            className="receipt-card"
             style={{
               fontFamily: SANS,
               // Fill the dialog up to a 420px design cap so the card never
@@ -229,28 +251,21 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
           </div>
         </motion.div>
 
-        {feedback !== 'idle' && (
-          <p
-            className={`text-xs ${feedback === 'error' ? 'text-red-500' : 'text-emerald-600'}`}
-            role="status"
-            aria-live="polite"
-          >
-            {feedback === 'copied'
-              ? 'Image copied — paste it anywhere'
-              : feedback === 'saved'
-                ? 'Saved'
-                : 'Couldn’t do that — try the other option'}
+        {/* Success feedback lives on the triggering button itself (label
+          + color flip to green). Only failures get a status line because
+          they need an explanation the button alone can't carry. */}
+        {feedback === 'error' && (
+          <p className="text-xs text-red-500" role="status">
+            Couldn’t do that — try the other option
           </p>
         )}
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Done
-          </Button>
           {supportsCopyImage && (
             <Button
               variant="ghost"
               size="sm"
               disabled={busy !== null}
+              className={feedback === 'copied' ? '!text-emerald-600' : ''}
               onClick={async () => {
                 const node = cardRef.current
                 if (!node) return
@@ -262,16 +277,17 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
                   setFeedback('error')
                 } finally {
                   setBusy(null)
-                  setTimeout(() => setFeedback('idle'), 2500)
+                  scheduleReset()
                 }
               }}
             >
-              {busy === 'copy' ? 'Copying…' : 'Copy image'}
+              {busy === 'copy' ? 'Copying…' : feedback === 'copied' ? 'Copied!' : 'Copy image'}
             </Button>
           )}
           <Button
             size="sm"
             disabled={busy !== null}
+            className={feedback === 'saved' ? '!bg-emerald-600' : ''}
             onClick={async () => {
               const node = cardRef.current
               if (!node) return
@@ -283,11 +299,11 @@ export function SummaryView({ open, onClose }: { open: boolean; onClose: () => v
                 setFeedback('error')
               } finally {
                 setBusy(null)
-                setTimeout(() => setFeedback('idle'), 2500)
+                scheduleReset()
               }
             }}
           >
-            {busy === 'save' ? 'Saving…' : 'Save image'}
+            {busy === 'save' ? 'Saving…' : feedback === 'saved' ? 'Saved!' : 'Save image'}
           </Button>
         </div>
       </div>

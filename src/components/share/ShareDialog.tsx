@@ -1,5 +1,5 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
-import { Mail, Share2, Type } from 'lucide-react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Share2, Type } from 'lucide-react'
 import { Dialog, Button, Input } from '../ui'
 import { useSession } from '../../store/session'
 import { buildShareUrl, encodeSession, URL_HARD_LENGTH, URL_WARN_LENGTH } from '../../lib/url-share'
@@ -50,9 +50,21 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
   const qrEligible = !tooLong && url.length <= QR_MAX_LENGTH
   const supportsShare = canNativeShare()
 
+  // Hold the feedback-reset timer so back-to-back actions cancel the previous
+  // timer instead of leaving it to fire later and clobber the new feedback
+  // state (e.g. Copy link then Copy as text within 1.5s would otherwise reset
+  // "Copied as text" early).
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(
+    () => () => {
+      if (feedbackTimer.current) clearTimeout(feedbackTimer.current)
+    },
+    []
+  )
   function flash(state: typeof feedback, ms = 1500) {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current)
     setFeedback(state)
-    setTimeout(() => setFeedback('idle'), ms)
+    feedbackTimer.current = setTimeout(() => setFeedback('idle'), ms)
   }
 
   function copyLink() {
@@ -79,15 +91,14 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
         url,
       })
       .catch((err) => {
-        // AbortError = user dismissed the share sheet. No error to surface.
-        if (err instanceof Error && err.name !== 'AbortError') flash('error', 2500)
+        // AbortError       = user dismissed the share sheet.
+        // InvalidStateError = a share is already in progress (the user clicked
+        //                     "Share via…" again while the OS sheet was open).
+        // Neither is an actual failure — don't flash a misleading error.
+        if (!(err instanceof Error)) return
+        if (err.name === 'AbortError' || err.name === 'InvalidStateError') return
+        flash('error', 2500)
       })
-  }
-
-  function emailShare() {
-    const subject = title?.trim() ? `${title.trim()} — ${APP_NAME}` : `${APP_NAME} — split`
-    const body = `${buildSummaryText(session)}\n\nOpen in ${APP_NAME}:\n${url}\n`
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   }
 
   return (
@@ -134,16 +145,9 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
             Long URL — may not render in some chat apps. Try “Share via…” for the most reliable handoff.
           </p>
         )}
-        {feedback === 'linkCopied' && (
-          <p className="text-xs text-emerald-600" role="status" aria-live="polite">
-            Link copied
-          </p>
-        )}
-        {feedback === 'textCopied' && (
-          <p className="text-xs text-emerald-600" role="status" aria-live="polite">
-            Summary + link copied — paste it anywhere
-          </p>
-        )}
+        {/* Success feedback lives on the triggering button itself (label flips
+          to "Copied!" / "Copied as text"). No duplicate status text — only
+          failures get a status line because they need explanation. */}
         {feedback === 'error' && (
           <p className="text-xs text-red-500" role="status">
             Couldn’t copy — select the link above and copy manually
@@ -151,9 +155,6 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
         )}
 
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>
-            Close
-          </Button>
           {supportsShare && (
             <Button variant="ghost" onClick={nativeShare} disabled={tooLong}>
               <Share2 className="size-3.5" aria-hidden="true" />
@@ -171,19 +172,12 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
             type="button"
             onClick={copyText}
             disabled={tooLong}
-            className="inline-flex items-center gap-1.5 underline-offset-2 transition-colors hover:text-[var(--color-ink)] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+            className={`inline-flex items-center gap-1.5 underline-offset-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+              feedback === 'textCopied' ? 'text-emerald-600' : 'hover:text-[var(--color-ink)] hover:underline'
+            }`}
           >
             <Type className="size-3.5" aria-hidden="true" />
-            Copy as text
-          </button>
-          <button
-            type="button"
-            onClick={emailShare}
-            disabled={tooLong}
-            className="inline-flex items-center gap-1.5 underline-offset-2 transition-colors hover:text-[var(--color-ink)] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Mail className="size-3.5" aria-hidden="true" />
-            Email
+            {feedback === 'textCopied' ? 'Copied as text' : 'Copy as text'}
           </button>
         </div>
       </div>
