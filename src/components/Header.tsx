@@ -74,7 +74,7 @@ export function Header({
           <CurrencyPicker value={currency as CurrencyCode} onChange={(next) => setCurrency(next)} />
           <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-[var(--color-border)]" />
           <Button variant="ghost" size="sm" onClick={onOpenSummary}>
-            Summary
+            Receipt
           </Button>
           <Button size="sm" onClick={onOpenShare}>
             Share
@@ -121,7 +121,7 @@ export function Header({
                 onClick={withMenuClose(onOpenSummary)}
                 className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[var(--color-ink)] transition-colors hover:bg-[var(--color-accent-soft)]"
               >
-                Summary
+                Receipt
               </button>
               <button
                 role="menuitem"

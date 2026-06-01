@@ -24,25 +24,15 @@ export function buildSummaryText(session: Session): string {
   return lines.join('\n')
 }
 
-function safeFilenameBase(title: string | null): string {
+export function safeFilenameBase(title: string | null): string {
   const raw = title ?? 'expense-summary'
   return raw.replace(/[^a-z0-9-]+/gi, '-').toLowerCase()
 }
 
-export function downloadJson(session: Session): void {
-  const blob = new Blob([JSON.stringify(session, null, 2)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${safeFilenameBase(session.title)}.json`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-}
-
-export async function downloadImage(node: HTMLElement, filename: string): Promise<void> {
-  const { toPng } = await import('html-to-image')
+// Rasterize the receipt card into a PNG. Used by both the save-to-disk and
+// copy-to-clipboard paths so they share font-readiness + paper-tinted edges.
+async function rasterize(node: HTMLElement): Promise<Blob> {
+  const { toBlob } = await import('html-to-image')
   // Wait for any custom fonts to load before rasterizing so the export uses the
   // designed display + mono fonts rather than fallbacks (Georgia, ui-monospace).
   try {
@@ -50,17 +40,44 @@ export async function downloadImage(node: HTMLElement, filename: string): Promis
   } catch {
     /* ignore — old browsers without document.fonts will fall back to whatever loaded */
   }
-  const dataUrl = await toPng(node, {
+  const blob = await toBlob(node, {
     pixelRatio: 2,
     // Match the receipt's paper color so any antialiased edges blend in.
     backgroundColor: '#f5ecd9',
   })
+  if (!blob) throw new Error('Failed to rasterize receipt')
+  return blob
+}
+
+export async function downloadImage(node: HTMLElement, filename: string): Promise<void> {
+  const blob = await rasterize(node)
+  const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  a.href = dataUrl
+  a.href = url
   a.download = filename
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+/**
+ * Whether the runtime supports writing an image to the system clipboard.
+ * Used to feature-detect Copy image so we don't surface a button that would
+ * just throw on older Safari / Firefox.
+ */
+export function canCopyImage(): boolean {
+  return (
+    typeof navigator !== 'undefined' &&
+    typeof navigator.clipboard?.write === 'function' &&
+    typeof window !== 'undefined' &&
+    typeof window.ClipboardItem !== 'undefined'
+  )
+}
+
+export async function copyImage(node: HTMLElement): Promise<void> {
+  const blob = await rasterize(node)
+  await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })])
 }
 
 export const EXPENSE_TYPE_LABELS = {

@@ -1,7 +1,10 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Share2, Type } from 'lucide-react'
 import { Dialog, Button, Input } from '../ui'
 import { useSession } from '../../store/session'
 import { buildShareUrl, encodeSession, URL_HARD_LENGTH, URL_WARN_LENGTH } from '../../lib/url-share'
+import { buildSummaryText } from '../summary/exports'
+import { APP_NAME } from '../../lib/branding'
 import type { Session } from '../../types'
 
 // QR code rendering ships ~30kB of unused weight on the initial bundle for any
@@ -14,6 +17,13 @@ const QRCodeSVG = lazy(() => import('qrcode.react').then((m) => ({ default: m.QR
 // Our share URLs can exceed that for big sessions, so we gate the QR on a safer cap.
 const QR_MAX_LENGTH = 2000
 
+// Native Web Share is the headline shortcut on mobile — one tap into Messages /
+// WhatsApp / Mail / Slack / anything installed. Hide entirely when unsupported
+// (desktop browsers without secure context or older Safari/Firefox).
+function canNativeShare(): boolean {
+  return typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+}
+
 export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const v = useSession((s) => s.v)
   const sessionId = useSession((s) => s.sessionId)
@@ -24,7 +34,7 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
   const createdAt = useSession((s) => s.createdAt)
   const session: Session = { v, sessionId, currency, title, people, expenses, createdAt }
 
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
+  const [feedback, setFeedback] = useState<'idle' | 'linkCopied' | 'textCopied' | 'error'>('idle')
 
   // sessionId is minted by the parent (App.tsx) when the Share button is
   // clicked, so by the time we render here it's already attached to the
@@ -37,21 +47,59 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
   }, [v, sessionId, currency, title, people, expenses, createdAt])
 
   const tooLong = length > URL_HARD_LENGTH
+  const qrEligible = !tooLong && url.length <= QR_MAX_LENGTH
+  const supportsShare = canNativeShare()
 
-  function copy() {
-    navigator.clipboard
-      .writeText(url)
-      .then(() => {
-        setCopyState('copied')
-        setTimeout(() => setCopyState('idle'), 1500)
-      })
-      .catch(() => {
-        setCopyState('error')
-        setTimeout(() => setCopyState('idle'), 2500)
-      })
+  // Hold the feedback-reset timer so back-to-back actions cancel the previous
+  // timer instead of leaving it to fire later and clobber the new feedback
+  // state (e.g. Copy link then Copy as text within 1.5s would otherwise reset
+  // "Copied as text" early).
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(
+    () => () => {
+      if (feedbackTimer.current) clearTimeout(feedbackTimer.current)
+    },
+    []
+  )
+  function flash(state: typeof feedback, ms = 1500) {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current)
+    setFeedback(state)
+    feedbackTimer.current = setTimeout(() => setFeedback('idle'), ms)
   }
 
-  const qrEligible = !tooLong && url.length <= QR_MAX_LENGTH
+  function copyLink() {
+    navigator.clipboard
+      .writeText(url)
+      .then(() => flash('linkCopied'))
+      .catch(() => flash('error', 2500))
+  }
+
+  function copyText() {
+    navigator.clipboard
+      .writeText(`${buildSummaryText(session)}\n\n${url}`)
+      .then(() => flash('textCopied', 2200))
+      .catch(() => flash('error', 2500))
+  }
+
+  function nativeShare() {
+    // Wrap text + URL together so the receiving app gets context, not just a
+    // mystery link. Most platforms surface the URL as a preview anyway.
+    void navigator
+      .share({
+        title: title?.trim() || `${APP_NAME} — split`,
+        text: buildSummaryText(session),
+        url,
+      })
+      .catch((err) => {
+        // AbortError       = user dismissed the share sheet.
+        // InvalidStateError = a share is already in progress (the user clicked
+        //                     "Share via…" again while the OS sheet was open).
+        // Neither is an actual failure — don't flash a misleading error.
+        if (!(err instanceof Error)) return
+        if (err.name === 'AbortError' || err.name === 'InvalidStateError') return
+        flash('error', 2500)
+      })
+  }
 
   return (
     <Dialog open={open} onClose={onClose} title="Share session">
@@ -89,26 +137,48 @@ export function ShareDialog({ open, onClose }: { open: boolean; onClose: () => v
         )}
         {tooLong && (
           <p className="text-xs text-red-600">
-            Session too large to share — split into multiple sessions, or use the JSON download from Summary.
+            Session too large to share — split it across multiple sessions.
           </p>
         )}
         {!tooLong && length > URL_WARN_LENGTH && (
           <p className="text-xs text-amber-600">
-            Long URL — may not render in some chat apps. Use the JSON download from Summary as a fallback.
+            Long URL — may not render in some chat apps. Try “Share via…” for the most reliable handoff.
           </p>
         )}
-        {copyState === 'error' && (
+        {/* Success feedback lives on the triggering button itself (label flips
+          to "Copied!" / "Copied as text"). No duplicate status text — only
+          failures get a status line because they need explanation. */}
+        {feedback === 'error' && (
           <p className="text-xs text-red-500" role="status">
             Couldn’t copy — select the link above and copy manually
           </p>
         )}
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>
-            Close
+
+        <div className="flex flex-wrap justify-end gap-2">
+          {supportsShare && (
+            <Button variant="ghost" onClick={nativeShare} disabled={tooLong}>
+              <Share2 className="size-3.5" aria-hidden="true" />
+              Share via…
+            </Button>
+          )}
+          <Button onClick={copyLink} disabled={tooLong}>
+            {feedback === 'linkCopied' ? 'Copied!' : 'Copy link'}
           </Button>
-          <Button onClick={copy} disabled={tooLong}>
-            {copyState === 'copied' ? 'Copied!' : 'Copy link'}
-          </Button>
+        </div>
+
+        <div className="-mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[var(--color-border)]/60 pt-3 text-xs text-[var(--color-muted)]">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase">Other ways</span>
+          <button
+            type="button"
+            onClick={copyText}
+            disabled={tooLong}
+            className={`inline-flex items-center gap-1.5 underline-offset-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+              feedback === 'textCopied' ? 'text-emerald-600' : 'hover:text-[var(--color-ink)] hover:underline'
+            }`}
+          >
+            <Type className="size-3.5" aria-hidden="true" />
+            {feedback === 'textCopied' ? 'Copied as text' : 'Copy as text'}
+          </button>
         </div>
       </div>
     </Dialog>
